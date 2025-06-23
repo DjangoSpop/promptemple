@@ -1,0 +1,118 @@
+{
+  "id": "flutter_app_scaffold",
+  "title": "Flutter App Scaffold",
+  "description": "Generate a complete Flutter app structure with best practices",
+  "category": "Development",
+  "author": "Prompt Forge",
+  "version": "1.0.0",
+  "tags": ["flutter", "mobile", "scaffold", "architecture"],
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z",
+  "templateContent": "Create a Flutter app with the following specifications:\n\nApp Name: {{app_name}}\nDescription: {{app_description}}\nTarget Platforms: {{platforms}}\nState Management: {{state_management}}\nArchitecture Pattern: {{architecture}}\n\nCore Features:\n{{core_features}}\n\nUI Requirements:\n- Theme: {{theme_preference}}\n- Navigation: {{navigation_type}}\n- Responsive Design: {{responsive}}\n\nTechnical Requirements:\n- Minimum SDK: {{min_sdk}}\n- Dependencies: {{dependencies}}\n- Testing: {{testing_approach}}\n\nAdditional Notes:\n{{additional_notes}}\n\nPlease generate a complete project structure with:\n1. Main app files and folder organization\n2. State management setup\n3. Routing configuration\n4. Theme configuration\n5. Basic screens and widgets\n6. Testing setup\n7. Documentation",
+  "fields": [
+    {
+      "id": "app_name",
+      "label": "App Name",
+      "placeholder": "e.g., TaskManager",
+      "type": "text",
+      "isRequired": true,
+      "helpText": "Choose a descriptive name for your Flutter app"
+    },
+    {
+      "id": "app_description",
+      "label": "App Description",
+      "placeholder": "Brief description of what your app does...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "Describe the main purpose and functionality of your app"
+    },
+    {
+      "id": "platforms",
+      "label": "Target Platforms",
+      "type": "checkbox",
+      "options": ["Android", "iOS", "Web", "Desktop"],
+      "defaultValue": ["Android", "iOS"],
+      "isRequired": true
+    },
+    {
+      "id": "state_management",
+      "label": "State Management Solution",
+      "type": "dropdown",
+      "options": ["Provider", "Riverpod", "Bloc", "GetX", "setState"],
+      "defaultValue": "Provider",
+      "isRequired": true,
+      "helpText": "Choose your preferred state management approach"
+    },
+    {
+      "id": "architecture",
+      "label": "Architecture Pattern",
+      "type": "dropdown",
+      "options": ["Clean Architecture", "MVVM", "MVC", "Simple"],
+      "defaultValue": "Clean Architecture",
+      "isRequired": true
+    },
+    {
+      "id": "core_features",
+      "label": "Core Features",
+      "placeholder": "List the main features of your app...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "Describe the key features users will interact with"
+    },
+    {
+      "id": "theme_preference",
+      "label": "Theme Preference",
+      "type": "radio",
+      "options": ["Light", "Dark", "System", "Both"],
+      "defaultValue": "Both",
+      "isRequired": true
+    },
+    {
+      "id": "navigation_type",
+      "label": "Navigation Type",
+      "type": "dropdown",
+      "options": ["Bottom Navigation", "Drawer", "Tab Bar", "Custom"],
+      "defaultValue": "Bottom Navigation",
+      "isRequired": true
+    },
+    {
+      "id": "responsive",
+      "label": "Responsive Design",
+      "type": "radio",
+      "options": ["Yes", "No"],
+      "defaultValue": "Yes",
+      "isRequired": true
+    },
+    {
+      "id": "min_sdk",
+      "label": "Minimum SDK Version",
+      "type": "number",
+      "defaultValue": "21",
+      "isRequired": true,
+      "helpText": "Minimum Android SDK version (e.g., 21)"
+    },
+    {
+      "id": "dependencies",
+      "label": "Additional Dependencies",
+      "placeholder": "http, shared_preferences, sqflite...",
+      "type": "textarea",
+      "helpText": "List any specific packages you want to include"
+    },
+    {
+      "id": "testing_approach",
+      "label": "Testing Approach",
+      "type": "dropdown",
+      "options": ["Unit + Widget", "Integration", "All", "Basic"],
+      "defaultValue": "Unit + Widget",
+      "isRequired": true
+    },
+    {
+      "id": "additional_notes",
+      "label": "Additional Requirements",
+      "placeholder": "Any specific requirements or preferences...",
+      "type": "textarea",
+      "helpText": "Include any special requirements or constraints"
+    }
+  ]
+}
+

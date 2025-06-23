@@ -1,0 +1,152 @@
+[
+  {
+    "model": "templates.templatecategory",
+    "pk": 1,
+    "fields": {
+      "name": "Business",
+      "description": "Templates for business communication and documents",
+      "icon": "business",
+      "color_code": "#2196F3",
+      "is_active": true,
+      "parent": null,
+      "order": 1,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 2,
+    "fields": {
+      "name": "Education",
+      "description": "Templates for learning, teaching, and academic content",
+      "icon": "school",
+      "color_code": "#4CAF50",
+      "is_active": true,
+      "parent": null,
+      "order": 2,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 3,
+    "fields": {
+      "name": "Creative Writing",
+      "description": "Templates for stories, fiction, and creative content",
+      "icon": "create",
+      "color_code": "#FF9800",
+      "is_active": true,
+      "parent": null,
+      "order": 3,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 4,
+    "fields": {
+      "name": "Technical",
+      "description": "Templates for technical documentation and instructions",
+      "icon": "code",
+      "color_code": "#9C27B0",
+      "is_active": true,
+      "parent": null,
+      "order": 4,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 5,
+    "fields": {
+      "name": "Marketing",
+      "description": "Templates for advertising, social media, and promotion",
+      "icon": "campaign",
+      "color_code": "#E91E63",
+      "is_active": true,
+      "parent": null,
+      "order": 5,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 6,
+    "fields": {
+      "name": "Personal",
+      "description": "Templates for personal use and self-improvement",
+      "icon": "person",
+      "color_code": "#00BCD4",
+      "is_active": true,
+      "parent": null,
+      "order": 6,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 7,
+    "fields": {
+      "name": "Email",
+      "description": "Templates specifically for email communication",
+      "icon": "email",
+      "color_code": "#3F51B5",
+      "is_active": true,
+      "parent": 1,
+      "order": 1,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 8,
+    "fields": {
+      "name": "Meeting",
+      "description": "Templates for meeting agendas and minutes",
+      "icon": "groups",
+      "color_code": "#2196F3",
+      "is_active": true,
+      "parent": 1,
+      "order": 2,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 9,
+    "fields": {
+      "name": "Fiction",
+      "description": "Templates for fiction writing",
+      "icon": "auto_stories",
+      "color_code": "#FF9800",
+      "is_active": true,
+      "parent": 3,
+      "order": 1,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "templates.templatecategory",
+    "pk": 10,
+    "fields": {
+      "name": "Poetry",
+      "description": "Templates for poetry and verse",
+      "icon": "history_edu",
+      "color_code": "#FF9800",
+      "is_active": true,
+      "parent": 3,
+      "order": 2,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  }
+]

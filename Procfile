@@ -1,0 +1,1 @@
+web: gunicorn promptcraft.wsgi

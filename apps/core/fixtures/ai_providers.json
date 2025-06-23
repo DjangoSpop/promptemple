@@ -1,0 +1,56 @@
+[
+  {
+    "model": "ai_services.aiprovider",
+    "pk": 1,
+    "fields": {
+      "name": "openai",
+      "display_name": "OpenAI",
+      "api_endpoint": "https://api.openai.com/v1",
+      "is_active": true,
+      "max_tokens": 8000,
+      "cost_per_token": "0.00001000",
+      "rate_limit_per_hour": 500,
+      "supports_text_analysis": true,
+      "supports_content_generation": true,
+      "supports_optimization": true,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "ai_services.aiprovider",
+    "pk": 2,
+    "fields": {
+      "name": "anthropic",
+      "display_name": "Anthropic",
+      "api_endpoint": "https://api.anthropic.com/v1",
+      "is_active": true,
+      "max_tokens": 8000,
+      "cost_per_token": "0.00002000",
+      "rate_limit_per_hour": 300,
+      "supports_text_analysis": true,
+      "supports_content_generation": true,
+      "supports_optimization": true,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  },
+  {
+    "model": "ai_services.aiprovider",
+    "pk": 3,
+    "fields": {
+      "name": "local",
+      "display_name": "Local Models",
+      "api_endpoint": "http://localhost:8000",
+      "is_active": false,
+      "max_tokens": 4000,
+      "cost_per_token": "0.00000000",
+      "rate_limit_per_hour": 1000,
+      "supports_text_analysis": true,
+      "supports_content_generation": true,
+      "supports_optimization": false,
+      "created_at": "2025-06-01T12:00:00Z",
+      "updated_at": "2025-06-01T12:00:00Z"
+    }
+  }
+]

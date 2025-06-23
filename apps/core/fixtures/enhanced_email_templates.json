@@ -1,0 +1,488 @@
+[
+  {
+    "id": "email_sequence_builder",
+    "title": "Email Sequence Builder",
+    "description": "Create multi-touch email sequences for marketing, onboarding, or follow-ups",
+    "category": "Communication",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["email", "sequence", "marketing", "automation", "drip-campaign"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Create a {{sequence_length}}-email sequence for {{sequence_purpose}} with the following specifications:\n\n**Campaign Overview:**\nSequence Type: {{sequence_type}}\nTarget Audience: {{target_audience}}\nIndustry/Context: {{industry_context}}\nOverall Goal: {{campaign_goal}}\nTone: {{email_tone}}\n\n**Email Sequence Structure:**\nEmail Timing: {{email_timing}}\nSequence Flow: {{sequence_flow}}\n\n**Content Guidelines:**\nKey Messages: {{key_messages}}\nValue Propositions: {{value_propositions}}\nCall-to-Actions: {{cta_progression}}\n\n**Personalization Elements:**\nPersonalization Level: {{personalization_level}}\nCustom Variables: {{custom_variables}}\n\n**Brand Guidelines:**\nBrand Voice: {{brand_voice}}\nBrand Values: {{brand_values}}\n\n{{#if specific_offers}}\n**Offers/Incentives:**\n{{specific_offers}}\n{{/if}}\n\n{{#if objection_handling}}\n**Common Objections to Address:**\n{{objection_handling}}\n{{/if}}\n\nPlease create:\n1. Complete email sequence with subject lines\n2. Timing recommendations between emails\n3. A/B testing suggestions for key elements\n4. Performance metrics to track\n5. Follow-up strategy for non-responders\n6. Segmentation recommendations",
+    "fields": [
+      {
+        "id": "sequence_type",
+        "label": "Sequence Type",
+        "type": "dropdown",
+        "options": ["Welcome/Onboarding", "Lead Nurturing", "Sales Follow-up", "Re-engagement", "Educational Series", "Product Launch", "Event Promotion", "Customer Retention"],
+        "defaultValue": "Lead Nurturing",
+        "isRequired": true
+      },
+      {
+        "id": "sequence_length",
+        "label": "Number of Emails",
+        "type": "dropdown",
+        "options": ["3", "5", "7", "10", "12", "15"],
+        "defaultValue": "5",
+        "isRequired": true
+      },
+      {
+        "id": "sequence_purpose",
+        "label": "Sequence Purpose",
+        "placeholder": "e.g., converting free trial users to paid customers",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What specific outcome should this sequence achieve?"
+      },
+      {
+        "id": "target_audience",
+        "label": "Target Audience",
+        "placeholder": "e.g., SaaS founders, marketing managers at mid-size companies",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "industry_context",
+        "label": "Industry/Context",
+        "placeholder": "e.g., B2B SaaS, E-commerce, Professional Services",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "campaign_goal",
+        "label": "Primary Campaign Goal",
+        "type": "dropdown",
+        "options": ["Generate Sales", "Book Meetings", "Drive Downloads", "Increase Engagement", "Build Trust", "Educate Audience", "Gather Feedback"],
+        "isRequired": true
+      },
+      {
+        "id": "email_tone",
+        "label": "Email Tone",
+        "type": "dropdown",
+        "options": ["Professional", "Friendly", "Expert/Authoritative", "Conversational", "Inspiring", "Helpful", "Urgent"],
+        "defaultValue": "Professional",
+        "isRequired": true
+      },
+      {
+        "id": "email_timing",
+        "label": "Email Timing Strategy",
+        "type": "dropdown",
+        "options": ["Daily", "Every 2-3 days", "Weekly", "Bi-weekly", "Custom intervals", "Behavior-triggered"],
+        "defaultValue": "Every 2-3 days",
+        "isRequired": true
+      },
+      {
+        "id": "sequence_flow",
+        "label": "Sequence Flow Strategy",
+        "placeholder": "e.g., Intro → Value → Social Proof → Objection Handling → Close",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Describe the logical progression of your emails"
+      },
+      {
+        "id": "key_messages",
+        "label": "Key Messages",
+        "placeholder": "e.g., Our tool saves 5 hours/week, 94% customer satisfaction, Easy 5-minute setup",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "value_propositions",
+        "label": "Value Propositions",
+        "placeholder": "e.g., Reduce manual work, Increase team productivity, Get insights faster",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "cta_progression",
+        "label": "Call-to-Action Progression",
+        "placeholder": "e.g., Email 1: Download guide → Email 3: Book demo → Email 5: Start trial",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "How should CTAs progress through the sequence?"
+      },
+      {
+        "id": "personalization_level",
+        "label": "Personalization Level",
+        "type": "dropdown",
+        "options": ["Basic (Name only)", "Moderate (Name + Company)", "Advanced (Behavioral data)", "Hyper-personalized (Individual research)"],
+        "defaultValue": "Moderate (Name + Company)",
+        "isRequired": true
+      },
+      {
+        "id": "custom_variables",
+        "label": "Custom Personalization Variables",
+        "placeholder": "e.g., {{company_name}}, {{industry}}, {{pain_point}}, {{previous_interaction}}",
+        "type": "textarea",
+        "helpText": "List merge tags/variables for personalization"
+      },
+      {
+        "id": "brand_voice",
+        "label": "Brand Voice",
+        "placeholder": "e.g., Innovative, trustworthy, approachable, expert-level",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "brand_values",
+        "label": "Brand Values",
+        "placeholder": "e.g., Transparency, customer success, innovation, simplicity",
+        "type": "textarea",
+        "helpText": "Key brand values to communicate"
+      },
+      {
+        "id": "specific_offers",
+        "label": "Offers/Incentives",
+        "placeholder": "e.g., 30% discount, Free consultation, Extended trial period",
+        "type": "textarea",
+        "helpText": "Any special offers to include in the sequence"
+      },
+      {
+        "id": "objection_handling",
+        "label": "Common Objections",
+        "placeholder": "e.g., Too expensive, Don't have time to implement, Not sure it works for our industry",
+        "type": "textarea",
+        "helpText": "What objections should the sequence address?"
+      }
+    ]
+  },
+  {
+    "id": "cold_outreach_optimizer",
+    "title": "Cold Outreach Optimizer",
+    "description": "Generate high-converting cold emails with personalization and A/B testing variations",
+    "category": "Communication",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["cold-email", "outreach", "sales", "personalization", "conversion"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Create a high-converting cold outreach email with the following specifications:\n\n**Target Details:**\nRecipient Name: {{recipient_name}}\nRecipient Title: {{recipient_title}}\nCompany: {{company_name}}\nIndustry: {{industry}}\nCompany Size: {{company_size}}\n\n**Research Insights:**\nRecent Company News: {{company_news}}\nPersonal/Professional Triggers: {{personal_triggers}}\nPain Points Identified: {{pain_points}}\nRelevant Connections: {{mutual_connections}}\n\n**Outreach Strategy:**\nOutreach Goal: {{outreach_goal}}\nValue Proposition: {{value_proposition}}\nSocial Proof: {{social_proof}}\nCredibility Builders: {{credibility_elements}}\n\n**Email Structure:**\nEmail Length: {{email_length}}\nPersonalization Level: {{personalization_level}}\nTone: {{email_tone}}\nCall-to-Action: {{primary_cta}}\n\n**Supporting Elements:**\nRelevant Case Study: {{case_study}}\nSpecific Benefit: {{specific_benefit}}\nRisk Reversal: {{risk_reversal}}\n\n{{#if follow_up_strategy}}\n**Follow-up Strategy:**\n{{follow_up_strategy}}\n{{/if}}\n\nPlease create:\n1. Main cold email with optimized subject line\n2. Three A/B testing variations for subject lines\n3. Two alternative email body variations\n4. Follow-up email template\n5. Personalization checklist\n6. Timing recommendations\n7. Success metrics to track",
+    "fields": [
+      {
+        "id": "recipient_name",
+        "label": "Recipient Name",
+        "placeholder": "e.g., Sarah Johnson",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "recipient_title",
+        "label": "Recipient Title",
+        "placeholder": "e.g., VP of Marketing",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "company_name",
+        "label": "Company Name",
+        "placeholder": "e.g., TechCorp Inc",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "industry",
+        "label": "Industry",
+        "placeholder": "e.g., B2B SaaS, Healthcare, Manufacturing",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "company_size",
+        "label": "Company Size",
+        "type": "dropdown",
+        "options": ["Startup (1-10)", "Small (11-50)", "Medium (51-200)", "Large (201-1000)", "Enterprise (1000+)"],
+        "isRequired": true
+      },
+      {
+        "id": "company_news",
+        "label": "Recent Company News/Events",
+        "placeholder": "e.g., Recent funding round, new product launch, expansion, leadership changes",
+        "type": "textarea",
+        "helpText": "Any recent developments that could be referenced"
+      },
+      {
+        "id": "personal_triggers",
+        "label": "Personal/Professional Triggers",
+        "placeholder": "e.g., LinkedIn post about scaling challenges, mentioned in industry article",
+        "type": "textarea",
+        "helpText": "Recent activities or mentions that create outreach opportunities"
+      },
+      {
+        "id": "pain_points",
+        "label": "Identified Pain Points",
+        "placeholder": "e.g., Manual reporting processes, lack of real-time data, team communication issues",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Specific challenges your solution addresses"
+      },
+      {
+        "id": "mutual_connections",
+        "label": "Mutual Connections",
+        "placeholder": "e.g., John Smith (former colleague), Mary Johnson (LinkedIn connection)",
+        "type": "text",
+        "helpText": "Any shared connections or referral sources"
+      },
+      {
+        "id": "outreach_goal",
+        "label": "Primary Outreach Goal",
+        "type": "dropdown",
+        "options": ["Book a Meeting", "Schedule Demo", "Get Referral", "Start Conversation", "Download Resource", "Join Event"],
+        "defaultValue": "Book a Meeting",
+        "isRequired": true
+      },
+      {
+        "id": "value_proposition",
+        "label": "Core Value Proposition",
+        "placeholder": "e.g., Reduce reporting time by 75% while increasing data accuracy",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "social_proof",
+        "label": "Relevant Social Proof",
+        "placeholder": "e.g., Used by 500+ companies like theirs, 95% customer satisfaction, award winner",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "credibility_elements",
+        "label": "Credibility Builders",
+        "placeholder": "e.g., Featured in TechCrunch, SOC2 compliant, 99.9% uptime",
+        "type": "textarea",
+        "helpText": "Elements that build trust and credibility"
+      },
+      {
+        "id": "email_length",
+        "label": "Email Length",
+        "type": "dropdown",
+        "options": ["Short (50-75 words)", "Medium (75-125 words)", "Long (125-200 words)"],
+        "defaultValue": "Medium (75-125 words)",
+        "isRequired": true
+      },
+      {
+        "id": "personalization_level",
+        "label": "Personalization Level",
+        "type": "dropdown",
+        "options": ["High (Company-specific research)", "Medium (Industry insights)", "Low (Basic demographics)"],
+        "defaultValue": "High (Company-specific research)",
+        "isRequired": true
+      },
+      {
+        "id": "email_tone",
+        "label": "Email Tone",
+        "type": "dropdown",
+        "options": ["Professional", "Conversational", "Consultative", "Direct", "Friendly"],
+        "defaultValue": "Professional",
+        "isRequired": true
+      },
+      {
+        "id": "primary_cta",
+        "label": "Primary Call-to-Action",
+        "placeholder": "e.g., Book a 15-minute call to discuss your reporting challenges",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "case_study",
+        "label": "Relevant Case Study",
+        "placeholder": "e.g., Similar company increased efficiency by 60% in 3 months",
+        "type": "textarea",
+        "helpText": "Brief relevant success story"
+      },
+      {
+        "id": "specific_benefit",
+        "label": "Specific Quantified Benefit",
+        "placeholder": "e.g., Save 10 hours per week, Increase accuracy by 40%, Reduce costs by $50k annually",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "risk_reversal",
+        "label": "Risk Reversal/Guarantee",
+        "placeholder": "e.g., No-commitment demo, Money-back guarantee, Free trial period",
+        "type": "text",
+        "helpText": "Ways to reduce perceived risk"
+      },
+      {
+        "id": "follow_up_strategy",
+        "label": "Follow-up Strategy",
+        "placeholder": "e.g., Follow up in 1 week with industry report, Touch base in 2 weeks with case study",
+        "type": "textarea",
+        "helpText": "Plan for subsequent outreach if no response"
+      }
+    ]
+  },
+  {
+    "id": "crisis_communication_email",
+    "title": "Crisis Communication Email",
+    "description": "Craft sensitive crisis communication emails with empathy and clarity",
+    "category": "Communication",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["crisis", "communication", "pr", "sensitive", "stakeholder"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Create a crisis communication email addressing the following situation:\n\n**Crisis Details:**\nCrisis Type: {{crisis_type}}\nSeverity Level: {{severity_level}}\nAffected Parties: {{affected_parties}}\nCrisis Description: {{crisis_description}}\nCurrent Status: {{current_status}}\n\n**Communication Strategy:**\nAudience: {{target_audience}}\nCommunication Goal: {{communication_goal}}\nTone Requirements: {{tone_requirements}}\nUrgency Level: {{urgency_level}}\n\n**Key Information:**\nWhat Happened: {{what_happened}}\nWhen It Occurred: {{when_occurred}}\nWhy It Happened: {{root_cause}}\nImmediate Actions Taken: {{immediate_actions}}\nOngoing Response: {{ongoing_response}}\n\n**Stakeholder Considerations:**\nPrimary Concerns: {{primary_concerns}}\nAccountability Message: {{accountability_stance}}\nSupport Offered: {{support_measures}}\nNext Steps: {{next_steps}}\n\n**Legal/Compliance:**\nLegal Constraints: {{legal_constraints}}\nRegulatory Requirements: {{regulatory_requirements}}\n\n{{#if timeline_updates}}\n**Timeline for Updates:**\n{{timeline_updates}}\n{{/if}}\n\n{{#if media_considerations}}\n**Media Considerations:**\n{{media_considerations}}\n{{/if}}\n\nPlease create:\n1. Primary crisis communication email\n2. Alternative version for different stakeholder groups\n3. Follow-up email template\n4. FAQ section for common questions\n5. Key talking points summary\n6. Internal communication guidelines\n7. Media response strategy",
+    "fields": [
+      {
+        "id": "crisis_type",
+        "label": "Crisis Type",
+        "type": "dropdown",
+        "options": ["Data Breach", "Product Recall", "Service Outage", "Financial Issue", "PR Scandal", "Natural Disaster", "Legal Issue", "Personnel Crisis", "Supply Chain", "Other"],
+        "isRequired": true
+      },
+      {
+        "id": "severity_level",
+        "label": "Severity Level",
+        "type": "dropdown",
+        "options": ["Low", "Medium", "High", "Critical"],
+        "isRequired": true
+      },
+      {
+        "id": "affected_parties",
+        "label": "Affected Parties",
+        "placeholder": "e.g., All customers, Premium subscribers, Employees, Specific region",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "crisis_description",
+        "label": "Crisis Description",
+        "placeholder": "Brief, factual description of the situation...",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Provide a clear, factual overview"
+      },
+      {
+        "id": "current_status",
+        "label": "Current Status",
+        "type": "dropdown",
+        "options": ["Ongoing", "Contained", "Resolved", "Under Investigation"],
+        "isRequired": true
+      },
+      {
+        "id": "target_audience",
+        "label": "Primary Audience",
+        "type": "dropdown",
+        "options": ["Customers", "Employees", "Investors", "Partners", "Media", "General Public", "Regulatory Bodies"],
+        "isRequired": true
+      },
+      {
+        "id": "communication_goal",
+        "label": "Primary Communication Goal",
+        "type": "dropdown",
+        "options": ["Inform about incident", "Apologize and rebuild trust", "Provide reassurance", "Give instructions", "Prevent panic", "Show accountability"],
+        "isRequired": true
+      },
+      {
+        "id": "tone_requirements",
+        "label": "Required Tone",
+        "type": "dropdown",
+        "options": ["Apologetic", "Reassuring", "Factual/Neutral", "Empathetic", "Authoritative", "Transparent"],
+        "defaultValue": "Empathetic",
+        "isRequired": true
+      },
+      {
+        "id": "urgency_level",
+        "label": "Communication Urgency",
+        "type": "dropdown",
+        "options": ["Immediate", "Within hours", "Within 24 hours", "Planned timing"],
+        "isRequired": true
+      },
+      {
+        "id": "what_happened",
+        "label": "What Happened",
+        "placeholder": "Clear, concise explanation of the incident...",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Factual description without speculation"
+      },
+      {
+        "id": "when_occurred",
+        "label": "When It Occurred",
+        "placeholder": "e.g., January 15, 2024 at 2:30 PM EST",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "root_cause",
+        "label": "Root Cause (if known)",
+        "placeholder": "e.g., System malfunction, Human error, External attack",
+        "type": "textarea",
+        "helpText": "Only include if definitively known"
+      },
+      {
+        "id": "immediate_actions",
+        "label": "Immediate Actions Taken",
+        "placeholder": "e.g., Systems shut down, affected customers notified, investigation launched",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "ongoing_response",
+        "label": "Ongoing Response Efforts",
+        "placeholder": "e.g., Working with security experts, implementing additional safeguards",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "primary_concerns",
+        "label": "Primary Stakeholder Concerns",
+        "placeholder": "e.g., Data security, service reliability, financial impact",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What are stakeholders most worried about?"
+      },
+      {
+        "id": "accountability_stance",
+        "label": "Accountability Message",
+        "type": "dropdown",
+        "options": ["Full responsibility", "Shared responsibility", "External factors", "Under investigation"],
+        "isRequired": true
+      },
+      {
+        "id": "support_measures",
+        "label": "Support Offered",
+        "placeholder": "e.g., Credit monitoring, refunds, extended warranties, dedicated support",
+        "type": "textarea",
+        "helpText": "What support are you providing to affected parties?"
+      },
+      {
+        "id": "next_steps",
+        "label": "Next Steps",
+        "placeholder": "e.g., Complete investigation within 48 hours, implement new security measures",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "legal_constraints",
+        "label": "Legal Constraints",
+        "placeholder": "e.g., Ongoing investigation limits details, regulatory approval needed",
+        "type": "textarea",
+        "helpText": "Any legal limitations on what can be communicated"
+      },
+      {
+        "id": "regulatory_requirements",
+        "label": "Regulatory Requirements",
+        "placeholder": "e.g., GDPR notification requirements, SEC disclosure rules",
+        "type": "textarea",
+        "helpText": "Compliance requirements for communication"
+      },
+      {
+        "id": "timeline_updates",
+        "label": "Update Timeline",
+        "placeholder": "e.g., Daily updates until resolved, Weekly progress reports",
+        "type": "textarea",
+        "helpText": "When will you provide updates?"
+      },
+      {
+        "id": "media_considerations",
+        "label": "Media Considerations",
+        "placeholder": "e.g., Media statements prepared, spokesperson designated, press conference planned",
+        "type": "textarea",
+        "helpText": "Media handling strategy"
+      }
+    ]
+  }
+]

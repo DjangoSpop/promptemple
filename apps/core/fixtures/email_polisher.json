@@ -1,0 +1,60 @@
+{
+  "id": "email_polisher",
+  "title": "Email Polisher",
+  "description": "Transform rough email drafts into professional, polished messages",
+  "category": "Communication",
+  "author": "Prompt Forge",
+  "version": "1.0.0",
+  "tags": ["email", "professional", "communication", "business"],
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z",
+  "templateContent": "Please help me polish and improve this email:\n\nRecipient: {{recipient}}\nSubject: {{subject}}\nTone: {{tone}}\nPurpose: {{purpose}}\n\nOriginal Draft:\n{{original_draft}}\n\nPlease rewrite this email to:\n- Maintain a {{tone}} tone\n- Be clear and concise\n- Follow professional email etiquette\n- Include appropriate greetings and closings\n- Ensure the message achieves its purpose: {{purpose}}\n{{#if specific_requests}}\nSpecific requests:\n{{specific_requests}}\n{{/if}}\n\nPlease provide:\n1. The polished email\n2. A brief explanation of key improvements made\n3. Alternative subject line suggestions if needed",
+  "fields": [
+    {
+      "id": "recipient",
+      "label": "Recipient",
+      "placeholder": "e.g., John Smith, HR Department, Client",
+      "type": "text",
+      "isRequired": true,
+      "helpText": "Who are you sending this email to?"
+    },
+    {
+      "id": "subject",
+      "label": "Current Subject Line",
+      "placeholder": "Enter your current subject line...",
+      "type": "text",
+      "isRequired": true
+    },
+    {
+      "id": "tone",
+      "label": "Desired Tone",
+      "type": "dropdown",
+      "options": ["Professional", "Friendly", "Formal", "Casual", "Urgent", "Apologetic"],
+      "defaultValue": "Professional",
+      "isRequired": true
+    },
+    {
+      "id": "purpose",
+      "label": "Email Purpose",
+      "type": "dropdown",
+      "options": ["Request information", "Schedule meeting", "Follow up", "Apologize", "Thank someone", "Provide update", "Make complaint", "Other"],
+      "isRequired": true,
+      "helpText": "What do you want to achieve with this email?"
+    },
+    {
+      "id": "original_draft",
+      "label": "Original Email Draft",
+      "placeholder": "Paste your rough email draft here...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "Include your current email content that needs polishing"
+    },
+    {
+      "id": "specific_requests",
+      "label": "Specific Improvements Needed",
+      "placeholder": "e.g., Make it shorter, add call-to-action, fix grammar...",
+      "type": "textarea",
+      "helpText": "Any specific areas you want me to focus on?"
+    }
+  ]
+}

@@ -1,0 +1,944 @@
+[
+  {
+    "id": "business_plan_generator",
+    "title": "Business Plan Generator",
+    "description": "Create comprehensive business plans for startups, funding, or strategic planning",
+    "category": "Business Strategy",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["business-plan", "startup", "strategy", "funding", "entrepreneur"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Create a comprehensive business plan for:\n\n**Business Overview:**\nBusiness Name: {{business_name}}\nBusiness Type: {{business_type}}\nIndustry: {{industry}}\nBusiness Stage: {{business_stage}}\nLocation: {{location}}\n\n**Business Concept:**\nProblem Statement: {{problem_statement}}\nSolution Description: {{solution_description}}\nUnique Value Proposition: {{value_proposition}}\nBusiness Model: {{business_model}}\nRevenue Streams: {{revenue_streams}}\n\n**Market Analysis:**\nTarget Market: {{target_market}}\nMarket Size: {{market_size}}\nTarget Customer Profile: {{customer_profile}}\nCompetitive Landscape: {{competition}}\nMarket Trends: {{market_trends}}\n\n**Product/Service Details:**\nOffering Description: {{offering_description}}\nKey Features: {{key_features}}\nDevelopment Stage: {{development_stage}}\nIntellectual Property: {{ip_strategy}}\nPricing Strategy: {{pricing_strategy}}\n\n**Marketing & Sales:**\nMarketing Strategy: {{marketing_strategy}}\nSales Strategy: {{sales_strategy}}\nCustomer Acquisition: {{customer_acquisition}}\nDistribution Channels: {{distribution}}\nPartnership Strategy: {{partnerships}}\n\n**Operations:**\nOperational Model: {{operations}}\nSupply Chain: {{supply_chain}}\nTechnology Requirements: {{technology}}\nQuality Control: {{quality_control}}\nScaling Strategy: {{scaling}}\n\n**Management Team:**\nFounder Background: {{founder_background}}\nKey Team Members: {{team_members}}\nAdvisors: {{advisors}}\nHiring Plan: {{hiring_plan}}\nOrganizational Structure: {{org_structure}}\n\n**Financial Projections:**\nFunding Requirements: {{funding_needs}}\nRevenue Projections: {{revenue_projections}}\nExpense Breakdown: {{expense_breakdown}}\nProfitability Timeline: {{profitability}}\nFinancial Assumptions: {{financial_assumptions}}\n\n**Risk Analysis:**\nKey Risks: {{key_risks}}\nMitigation Strategies: {{risk_mitigation}}\nContingency Plans: {{contingency_plans}}\n\n**Implementation:**\nMilestones: {{milestones}}\nTimeline: {{timeline}}\nSuccess Metrics: {{success_metrics}}\n\n{{#if funding_purpose}}\n**Funding Details:**\nFunding Purpose: {{funding_purpose}}\nUse of Funds: {{use_of_funds}}\nInvestor Benefits: {{investor_benefits}}\nExit Strategy: {{exit_strategy}}\n{{/if}}\n\nPlease create:\n1. Executive summary (2-3 pages)\n2. Detailed business plan sections\n3. Financial model framework\n4. Market research methodology\n5. Competitive analysis matrix\n6. Risk assessment framework\n7. Implementation roadmap\n8. Investor pitch deck outline",
+    "fields": [
+      {
+        "id": "business_name",
+        "label": "Business Name",
+        "placeholder": "e.g., EcoTech Solutions",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "business_type",
+        "label": "Business Type",
+        "type": "dropdown",
+        "options": ["Startup", "Small Business", "Corporate Venture", "Franchise", "Non-Profit", "Social Enterprise"],
+        "isRequired": true
+      },
+      {
+        "id": "industry",
+        "label": "Industry",
+        "placeholder": "e.g., SaaS Technology, Renewable Energy, Healthcare",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "business_stage",
+        "label": "Business Stage",
+        "type": "dropdown",
+        "options": ["Idea Stage", "MVP Development", "Early Stage", "Growth Stage", "Expansion", "Mature"],
+        "isRequired": true
+      },
+      {
+        "id": "location",
+        "label": "Primary Location",
+        "placeholder": "e.g., San Francisco, CA",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "problem_statement",
+        "label": "Problem Statement",
+        "placeholder": "e.g., Small businesses struggle with inventory management, leading to 30% waste",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What specific problem does your business solve?"
+      },
+      {
+        "id": "solution_description",
+        "label": "Solution Description",
+        "placeholder": "e.g., AI-powered inventory optimization platform that reduces waste by 75%",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "value_proposition",
+        "label": "Unique Value Proposition",
+        "placeholder": "e.g., Only solution that provides real-time predictive analytics with 99% accuracy",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "business_model",
+        "label": "Business Model",
+        "type": "dropdown",
+        "options": ["SaaS Subscription", "Transaction-based", "Freemium", "Marketplace", "E-commerce", "Consulting", "Licensing", "Advertising"],
+        "isRequired": true
+      },
+      {
+        "id": "revenue_streams",
+        "label": "Revenue Streams",
+        "placeholder": "e.g., Monthly subscriptions $99/month, Premium features $299/month, Training $5k",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "target_market",
+        "label": "Target Market",
+        "placeholder": "e.g., Small to medium restaurants (50-500 employees) in North America",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "market_size",
+        "label": "Market Size",
+        "placeholder": "e.g., $2.5B TAM, $500M SAM, $50M SOM",
+        "type": "text",
+        "helpText": "Total Addressable Market, Serviceable Addressable Market, Serviceable Obtainable Market"
+      },
+      {
+        "id": "customer_profile",
+        "label": "Target Customer Profile",
+        "placeholder": "e.g., Restaurant managers, 25-45 years old, tech-savvy, cost-conscious",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "competition",
+        "label": "Competitive Landscape",
+        "placeholder": "e.g., Direct: Inventory Corp, Toast; Indirect: Excel, manual processes",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "market_trends",
+        "label": "Market Trends",
+        "placeholder": "e.g., Increasing focus on sustainability, labor shortages, digital transformation",
+        "type": "textarea",
+        "helpText": "Key trends affecting your market"
+      },
+      {
+        "id": "offering_description",
+        "label": "Product/Service Description",
+        "placeholder": "e.g., Cloud-based platform with mobile app, AI analytics dashboard, integration APIs",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "key_features",
+        "label": "Key Features",
+        "placeholder": "e.g., Real-time tracking, predictive analytics, automated reordering, waste reporting",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "development_stage",
+        "label": "Development Stage",
+        "type": "dropdown",
+        "options": ["Concept", "Prototype", "MVP", "Beta", "Market Ready", "Scaling"],
+        "isRequired": true
+      },
+      {
+        "id": "ip_strategy",
+        "label": "Intellectual Property Strategy",
+        "placeholder": "e.g., Patent pending on AI algorithm, trademark on brand name",
+        "type": "textarea",
+        "helpText": "Patents, trademarks, trade secrets, etc."
+      },
+      {
+        "id": "pricing_strategy",
+        "label": "Pricing Strategy",
+        "placeholder": "e.g., Competitive pricing 20% below market leader, freemium model",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "marketing_strategy",
+        "label": "Marketing Strategy",
+        "placeholder": "e.g., Content marketing, trade shows, partner referrals, digital advertising",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "sales_strategy",
+        "label": "Sales Strategy",
+        "placeholder": "e.g., Inside sales team, channel partners, self-service online",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "customer_acquisition",
+        "label": "Customer Acquisition Strategy",
+        "placeholder": "e.g., SEO/SEM, referrals, industry partnerships, free trials",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "distribution",
+        "label": "Distribution Channels",
+        "placeholder": "e.g., Direct online sales, reseller network, app stores",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "partnerships",
+        "label": "Partnership Strategy",
+        "placeholder": "e.g., Integration partners, resellers, technology alliances",
+        "type": "textarea",
+        "helpText": "Key partnerships for growth"
+      },
+      {
+        "id": "operations",
+        "label": "Operational Model",
+        "placeholder": "e.g., Cloud-based infrastructure, remote team, outsourced customer support",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "supply_chain",
+        "label": "Supply Chain",
+        "placeholder": "e.g., SaaS model - no physical supply chain, API dependencies",
+        "type": "textarea",
+        "helpText": "How you source, produce, and deliver"
+      },
+      {
+        "id": "technology",
+        "label": "Technology Requirements",
+        "placeholder": "e.g., AWS cloud infrastructure, React frontend, Python backend, ML models",
+        "type": "textarea",
+        "helpText": "Technology stack and requirements"
+      },
+      {
+        "id": "quality_control",
+        "label": "Quality Control",
+        "placeholder": "e.g., Automated testing, code reviews, customer feedback loops",
+        "type": "textarea",
+        "helpText": "How you ensure quality"
+      },
+      {
+        "id": "scaling",
+        "label": "Scaling Strategy",
+        "placeholder": "e.g., Horizontal scaling with microservices, geographic expansion plan",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "founder_background",
+        "label": "Founder Background",
+        "placeholder": "e.g., 10 years restaurant industry experience, former software engineer at Google",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "team_members",
+        "label": "Key Team Members",
+        "placeholder": "e.g., CTO: AI/ML expert, VP Sales: 15 years B2B sales",
+        "type": "textarea",
+        "helpText": "Current and planned key hires"
+      },
+      {
+        "id": "advisors",
+        "label": "Advisors",
+        "placeholder": "e.g., Former restaurant chain CEO, AI industry veteran",
+        "type": "textarea",
+        "helpText": "Advisory board members"
+      },
+      {
+        "id": "hiring_plan",
+        "label": "Hiring Plan",
+        "placeholder": "e.g., 5 engineers, 3 sales reps, 2 customer success by end of year",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "org_structure",
+        "label": "Organizational Structure",
+        "placeholder": "e.g., Flat structure, functional teams, remote-first culture",
+        "type": "text",
+        "helpText": "How your organization is structured"
+      },
+      {
+        "id": "funding_needs",
+        "label": "Funding Requirements",
+        "placeholder": "e.g., $2M Series A for growth and expansion",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "revenue_projections",
+        "label": "Revenue Projections",
+        "placeholder": "e.g., Year 1: $100K, Year 2: $500K, Year 3: $2M",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "expense_breakdown",
+        "label": "Expense Breakdown",
+        "placeholder": "e.g., 60% personnel, 20% technology, 15% marketing, 5% other",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "profitability",
+        "label": "Profitability Timeline",
+        "placeholder": "e.g., Break-even by month 18, profitable by month 24",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "financial_assumptions",
+        "label": "Key Financial Assumptions",
+        "placeholder": "e.g., 5% monthly churn, $150 CAC, 3x LTV/CAC ratio",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "key_risks",
+        "label": "Key Business Risks",
+        "placeholder": "e.g., Market adoption, competition, technology changes, regulatory",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "risk_mitigation",
+        "label": "Risk Mitigation Strategies",
+        "placeholder": "e.g., Diversified customer base, patent protection, regulatory compliance",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "contingency_plans",
+        "label": "Contingency Plans",
+        "placeholder": "e.g., Pivot to different market segment, licensing model, acquisition strategy",
+        "type": "textarea",
+        "helpText": "Backup plans if primary strategy doesn't work"
+      },
+      {
+        "id": "milestones",
+        "label": "Key Milestones",
+        "placeholder": "e.g., MVP launch Q1, first 100 customers Q2, Series A Q3",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "timeline",
+        "label": "Implementation Timeline",
+        "placeholder": "e.g., 18-month roadmap with quarterly goals",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "success_metrics",
+        "label": "Success Metrics",
+        "placeholder": "e.g., ARR growth, customer acquisition cost, net promoter score",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "funding_purpose",
+        "label": "Funding Purpose",
+        "placeholder": "e.g., Series A to accelerate growth and market expansion",
+        "type": "text",
+        "helpText": "Only fill if seeking funding"
+      },
+      {
+        "id": "use_of_funds",
+        "label": "Use of Funds",
+        "placeholder": "e.g., 50% engineering, 30% sales & marketing, 20% operations",
+        "type": "textarea",
+        "helpText": "How funding will be allocated"
+      },
+      {
+        "id": "investor_benefits",
+        "label": "Investor Benefits",
+        "placeholder": "e.g., High growth potential, experienced team, defensible moat",
+        "type": "textarea",
+        "helpText": "Why should investors fund you?"
+      },
+      {
+        "id": "exit_strategy",
+        "label": "Exit Strategy",
+        "placeholder": "e.g., Strategic acquisition by industry leader, IPO in 7-10 years",
+        "type": "text",
+        "helpText": "Long-term exit plans for investors"
+      }
+    ]
+  },
+  {
+    "id": "market_research_analyst",
+    "title": "Market Research Analyst",
+    "description": "Conduct comprehensive market research and competitive analysis",
+    "category": "Business Strategy",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["market-research", "analysis", "competitor", "customer", "insights"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Conduct comprehensive market research for:\n\n**Research Scope:**\nIndustry/Market: {{industry_market}}\nResearch Purpose: {{research_purpose}}\nTarget Geography: {{geography}}\nTime Frame: {{time_frame}}\nResearch Budget: {{budget_constraints}}\n\n**Market Overview:**\nMarket Definition: {{market_definition}}\nMarket Segments: {{market_segments}}\nMarket Maturity: {{market_maturity}}\nGrowth Drivers: {{growth_drivers}}\nMarket Barriers: {{market_barriers}}\n\n**Market Sizing:**\nSizing Approach: {{sizing_approach}}\nData Sources: {{data_sources}}\nTAM Analysis: {{tam_analysis}}\nSAM Analysis: {{sam_analysis}}\nSOM Calculation: {{som_calculation}}\n\n**Customer Analysis:**\nTarget Segments: {{target_segments}}\nCustomer Demographics: {{demographics}}\nCustomer Behavior: {{customer_behavior}}\nBuying Process: {{buying_process}}\nPain Points: {{customer_pain_points}}\nDecision Criteria: {{decision_criteria}}\n\n**Competitive Landscape:**\nDirect Competitors: {{direct_competitors}}\nIndirect Competitors: {{indirect_competitors}}\nCompetitive Positioning: {{competitive_positioning}}\nPricing Analysis: {{pricing_analysis}}\nSWOT Analysis: {{swot_analysis}}\n\n**Market Trends:**\nEmerging Trends: {{emerging_trends}}\nTechnology Impact: {{technology_trends}}\nRegulatory Changes: {{regulatory_trends}}\nSocial/Cultural Shifts: {{social_trends}}\nEconomic Factors: {{economic_trends}}\n\n**Opportunity Assessment:**\nMarket Gaps: {{market_gaps}}\nGrowth Opportunities: {{growth_opportunities}}\nThreat Assessment: {{threat_assessment}}\nEntry Barriers: {{entry_barriers}}\nSuccess Factors: {{success_factors}}\n\n**Research Methodology:**\nPrimary Research: {{primary_research}}\nSecondary Research: {{secondary_research}}\nData Collection: {{data_collection}}\nSample Size: {{sample_size}}\nValidation Methods: {{validation_methods}}\n\n{{#if specific_questions}}\n**Specific Research Questions:**\n{{specific_questions}}\n{{/if}}\n\n{{#if stakeholder_input}}\n**Stakeholder Input:**\n{{stakeholder_input}}\n{{/if}}\n\nPlease provide:\n1. Comprehensive market analysis report\n2. Market sizing calculations and methodology\n3. Competitive intelligence summary\n4. Customer persona profiles\n5. Market opportunity matrix\n6. Trend analysis and implications\n7. Strategic recommendations\n8. Research methodology and limitations",
+    "fields": [
+      {
+        "id": "industry_market",
+        "label": "Industry/Market",
+        "placeholder": "e.g., Cloud Computing SaaS, Electric Vehicle Charging, Telehealth",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "research_purpose",
+        "label": "Research Purpose",
+        "type": "dropdown",
+        "options": ["Market Entry", "Product Launch", "Investment Decision", "Strategic Planning", "Competitive Intelligence", "Customer Understanding"],
+        "isRequired": true
+      },
+      {
+        "id": "geography",
+        "label": "Target Geography",
+        "placeholder": "e.g., North America, EMEA, Global, Specific cities",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "time_frame",
+        "label": "Research Time Frame",
+        "type": "dropdown",
+        "options": ["2 weeks", "1 month", "3 months", "6 months", "Ongoing"],
+        "isRequired": true
+      },
+      {
+        "id": "budget_constraints",
+        "label": "Budget Constraints",
+        "type": "dropdown",
+        "options": ["Minimal (desk research)", "Low ($5K-$15K)", "Medium ($15K-$50K)", "High ($50K+)", "No constraints"],
+        "helpText": "Budget available for research activities"
+      },
+      {
+        "id": "market_definition",
+        "label": "Market Definition",
+        "placeholder": "e.g., Software solutions for SMB accounting and bookkeeping",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "How do you define the market you're researching?"
+      },
+      {
+        "id": "market_segments",
+        "label": "Market Segments",
+        "placeholder": "e.g., Enterprise (1000+ employees), SMB (50-1000), Startups (<50)",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "market_maturity",
+        "label": "Market Maturity",
+        "type": "dropdown",
+        "options": ["Emerging", "Growth", "Mature", "Declining", "Mixed"],
+        "isRequired": true
+      },
+      {
+        "id": "growth_drivers",
+        "label": "Market Growth Drivers",
+        "placeholder": "e.g., Digital transformation, regulatory compliance, cost reduction",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What factors are driving market growth?"
+      },
+      {
+        "id": "market_barriers",
+        "label": "Market Barriers",
+        "placeholder": "e.g., High switching costs, regulatory requirements, technical complexity",
+        "type": "textarea",
+        "helpText": "What barriers exist to market entry or growth?"
+      },
+      {
+        "id": "sizing_approach",
+        "label": "Market Sizing Approach",
+        "type": "dropdown",
+        "options": ["Top-down", "Bottom-up", "Comparative", "Mixed methodology"],
+        "isRequired": true
+      },
+      {
+        "id": "data_sources",
+        "label": "Data Sources",
+        "placeholder": "e.g., Gartner reports, company filings, industry surveys, expert interviews",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What data sources should be used?"
+      },
+      {
+        "id": "tam_analysis",
+        "label": "Total Addressable Market (TAM)",
+        "placeholder": "e.g., All businesses that could potentially use the solution globally",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "sam_analysis",
+        "label": "Serviceable Addressable Market (SAM)",
+        "placeholder": "e.g., Businesses in target geographies with sufficient budget",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "som_calculation",
+        "label": "Serviceable Obtainable Market (SOM)",
+        "placeholder": "e.g., Realistic market share achievable in 3-5 years",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "target_segments",
+        "label": "Primary Target Segments",
+        "placeholder": "e.g., Mid-market technology companies, fast-growing startups",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "demographics",
+        "label": "Customer Demographics",
+        "placeholder": "e.g., Company size, revenue, industry, decision makers' profiles",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "customer_behavior",
+        "label": "Customer Behavior Patterns",
+        "placeholder": "e.g., How they research solutions, buying frequency, budget cycles",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "buying_process",
+        "label": "Customer Buying Process",
+        "placeholder": "e.g., Problem identification → Research → Vendor evaluation → Purchase",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "customer_pain_points",
+        "label": "Key Customer Pain Points",
+        "placeholder": "e.g., Manual processes, lack of integration, high costs, poor support",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "decision_criteria",
+        "label": "Decision Criteria",
+        "placeholder": "e.g., Price, features, integration capabilities, vendor reputation",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What factors influence customer decisions?"
+      },
+      {
+        "id": "direct_competitors",
+        "label": "Direct Competitors",
+        "placeholder": "e.g., Salesforce, HubSpot, Pipedrive",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "indirect_competitors",
+        "label": "Indirect Competitors",
+        "placeholder": "e.g., Excel spreadsheets, custom-built solutions, manual processes",
+        "type": "textarea",
+        "helpText": "Alternative solutions customers might use"
+      },
+      {
+        "id": "competitive_positioning",
+        "label": "Competitive Positioning",
+        "placeholder": "e.g., Premium features vs. budget-friendly vs. ease-of-use",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "pricing_analysis",
+        "label": "Competitive Pricing Analysis",
+        "placeholder": "e.g., Enterprise: $100-500/user/month, SMB: $20-100/user/month",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "swot_analysis",
+        "label": "Competitive SWOT Focus",
+        "placeholder": "e.g., Analyze top 3 competitors' strengths, weaknesses, opportunities, threats",
+        "type": "textarea",
+        "helpText": "What should the SWOT analysis focus on?"
+      },
+      {
+        "id": "emerging_trends",
+        "label": "Emerging Market Trends",
+        "placeholder": "e.g., AI integration, mobile-first design, API-first architecture",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "technology_trends",
+        "label": "Technology Trends",
+        "placeholder": "e.g., Artificial intelligence, blockchain, IoT integration",
+        "type": "textarea",
+        "helpText": "Technology trends affecting the market"
+      },
+      {
+        "id": "regulatory_trends",
+        "label": "Regulatory Changes",
+        "placeholder": "e.g., GDPR compliance, data sovereignty laws, industry regulations",
+        "type": "textarea",
+        "helpText": "Regulatory factors affecting the market"
+      },
+      {
+        "id": "social_trends",
+        "label": "Social/Cultural Shifts",
+        "placeholder": "e.g., Remote work adoption, digital-first mindset, sustainability focus",
+        "type": "textarea",
+        "helpText": "Social trends impacting market demand"
+      },
+      {
+        "id": "economic_trends",
+        "label": "Economic Factors",
+        "placeholder": "e.g., Economic uncertainty, inflation, funding availability",
+        "type": "textarea",
+        "helpText": "Economic conditions affecting the market"
+      },
+      {
+        "id": "market_gaps",
+        "label": "Identified Market Gaps",
+        "placeholder": "e.g., No solution for mid-market with specific compliance needs",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Unmet needs or underserved segments"
+      },
+      {
+        "id": "growth_opportunities",
+        "label": "Growth Opportunities",
+        "placeholder": "e.g., International expansion, new verticals, adjacent products",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "threat_assessment",
+        "label": "Threat Assessment",
+        "placeholder": "e.g., New entrants, substitute products, changing customer needs",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "entry_barriers",
+        "label": "Market Entry Barriers",
+        "placeholder": "e.g., High customer acquisition costs, technical complexity, regulatory approval",
+        "type": "textarea",
+        "helpText": "Barriers for new companies entering the market"
+      },
+      {
+        "id": "success_factors",
+        "label": "Key Success Factors",
+        "placeholder": "e.g., Strong technology, customer relationships, channel partnerships",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "What factors lead to success in this market?"
+      },
+      {
+        "id": "primary_research",
+        "label": "Primary Research Methods",
+        "placeholder": "e.g., Customer surveys, expert interviews, focus groups",
+        "type": "textarea",
+        "helpText": "Original research to be conducted"
+      },
+      {
+        "id": "secondary_research",
+        "label": "Secondary Research Sources",
+        "placeholder": "e.g., Industry reports, company websites, news articles, academic papers",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "data_collection",
+        "label": "Data Collection Methods",
+        "placeholder": "e.g., Online surveys, phone interviews, web scraping, API data",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "sample_size",
+        "label": "Target Sample Size",
+        "placeholder": "e.g., 200 customer surveys, 20 expert interviews",
+        "type": "text",
+        "helpText": "Sample sizes for primary research"
+      },
+      {
+        "id": "validation_methods",
+        "label": "Data Validation Methods",
+        "placeholder": "e.g., Triangulation, expert validation, cross-referencing sources",
+        "type": "textarea",
+        "helpText": "How will research findings be validated?"
+      },
+      {
+        "id": "specific_questions",
+        "label": "Specific Research Questions",
+        "placeholder": "e.g., What's the average implementation time? How important is mobile access?",
+        "type": "textarea",
+        "helpText": "Specific questions you need answered"
+      },
+      {
+        "id": "stakeholder_input",
+        "label": "Stakeholder Requirements",
+        "placeholder": "e.g., Sales team needs competitor feature comparison, Marketing needs buyer personas",
+        "type": "textarea",
+        "helpText": "Input from internal stakeholders"
+      }
+    ]
+  },
+  {
+    "id": "legal_document_drafter",
+    "title": "Legal Document Drafter",
+    "description": "Draft professional legal documents and contracts with proper structure and clauses",
+    "category": "Legal & Compliance",
+    "author": "Prompt Forge Pro",
+    "version": "2.0.0",
+    "tags": ["legal", "contract", "agreement", "compliance", "documentation"],
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "templateContent": "Draft a {{document_type}} with the following specifications:\n\n**Document Details:**\nDocument Type: {{document_type}}\nJurisdiction: {{jurisdiction}}\nGoverning Law: {{governing_law}}\nParties Involved: {{parties}}\nDocument Purpose: {{document_purpose}}\n\n**Party Information:**\nFirst Party Details: {{first_party}}\nSecond Party Details: {{second_party}}\nParty Relationship: {{party_relationship}}\nSignatory Authority: {{signatory_authority}}\n\n**Key Terms & Conditions:**\nScope of Work/Agreement: {{scope}}\nKey Obligations: {{obligations}}\nPayment Terms: {{payment_terms}}\nDeliverables/Performance: {{deliverables}}\nTimeline/Duration: {{timeline}}\n\n**Legal Provisions:**\nLiability Limitations: {{liability}}\nIntellectual Property: {{ip_clauses}}\nConfidentiality: {{confidentiality}}\nTermination Conditions: {{termination}}\nDispute Resolution: {{dispute_resolution}}\n\n**Risk Management:**\nForce Majeure: {{force_majeure}}\nInsurance Requirements: {{insurance}}\nIndemnification: {{indemnification}}\nCompliance Requirements: {{compliance}}\n\n**Specific Clauses:**\nSpecial Provisions: {{special_provisions}}\nCustom Terms: {{custom_terms}}\nIndustry-Specific Requirements: {{industry_requirements}}\nRegulatory Compliance: {{regulatory_compliance}}\n\n**Amendment & Execution:**\nModification Process: {{modification_process}}\nExecution Method: {{execution_method}}\nWitness Requirements: {{witness_requirements}}\nNotarization Needs: {{notarization}}\n\n{{#if template_preferences}}\n**Template Preferences:**\n{{template_preferences}}\n{{/if}}\n\n{{#if risk_tolerance}}\n**Risk Tolerance:**\n{{risk_tolerance}}\n{{/if}}\n\n**IMPORTANT DISCLAIMER:**\nThis document is generated for informational purposes only and should be reviewed by qualified legal counsel before use. It does not constitute legal advice.\n\nPlease provide:\n1. Complete document draft with proper legal structure\n2. Key terms and definitions section\n3. Standard legal clauses appropriately tailored\n4. Risk mitigation provisions\n5. Execution instructions\n6. Review checklist for legal counsel\n7. Alternative clause options where applicable",
+    "fields": [
+      {
+        "id": "document_type",
+        "label": "Document Type",
+        "type": "dropdown",
+        "options": ["Service Agreement", "Employment Contract", "Non-Disclosure Agreement", "Partnership Agreement", "Licensing Agreement", "Terms of Service", "Privacy Policy", "Purchase Agreement", "Consulting Agreement", "Lease Agreement"],
+        "isRequired": true
+      },
+      {
+        "id": "jurisdiction",
+        "label": "Jurisdiction",
+        "placeholder": "e.g., California, USA; Ontario, Canada; England and Wales",
+        "type": "text",
+        "isRequired": true,
+        "helpText": "Where will this agreement be enforced?"
+      },
+      {
+        "id": "governing_law",
+        "label": "Governing Law",
+        "placeholder": "e.g., Laws of the State of California",
+        "type": "text",
+        "isRequired": true
+      },
+      {
+        "id": "parties",
+        "label": "Number of Parties",
+        "type": "dropdown",
+        "options": ["2 parties", "3 parties", "Multiple parties"],
+        "defaultValue": "2 parties",
+        "isRequired": true
+      },
+      {
+        "id": "document_purpose",
+        "label": "Document Purpose",
+        "placeholder": "e.g., Engage consultant for software development services",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Brief description of what this agreement accomplishes"
+      },
+      {
+        "id": "first_party",
+        "label": "First Party Details",
+        "placeholder": "e.g., TechCorp Inc., Delaware corporation, 123 Main St, San Francisco, CA",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Full legal name, entity type, and address"
+      },
+      {
+        "id": "second_party",
+        "label": "Second Party Details",
+        "placeholder": "e.g., John Smith Consulting LLC, California LLC, 456 Oak Ave, Los Angeles, CA",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Full legal name, entity type, and address"
+      },
+      {
+        "id": "party_relationship",
+        "label": "Party Relationship",
+        "type": "dropdown",
+        "options": ["Client-Service Provider", "Employer-Employee", "Business Partners", "Licensor-Licensee", "Buyer-Seller", "Landlord-Tenant"],
+        "isRequired": true
+      },
+      {
+        "id": "signatory_authority",
+        "label": "Signatory Authority",
+        "placeholder": "e.g., CEO has authority to bind corporation, individual acting on own behalf",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Who has authority to sign for each party?"
+      },
+      {
+        "id": "scope",
+        "label": "Scope of Work/Agreement",
+        "placeholder": "e.g., Development of mobile application with specified features and functionality",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Detailed description of what's being agreed to"
+      },
+      {
+        "id": "obligations",
+        "label": "Key Obligations",
+        "placeholder": "e.g., Client provides requirements and feedback; Consultant delivers code and documentation",
+        "type": "textarea",
+        "isRequired": true,
+        "helpText": "Primary responsibilities of each party"
+      },
+      {
+        "id": "payment_terms",
+        "label": "Payment Terms",
+        "placeholder": "e.g., $150/hour, invoiced monthly, Net 30 payment terms",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "deliverables",
+        "label": "Deliverables/Performance Standards",
+        "placeholder": "e.g., Working mobile app, source code, documentation, 99% uptime SLA",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "timeline",
+        "label": "Timeline/Duration",
+        "placeholder": "e.g., 6-month project term, renewable annually, ends December 31, 2024",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "liability",
+        "label": "Liability Limitations",
+        "type": "dropdown",
+        "options": ["Limited to fees paid", "Mutual liability caps", "No limitation", "Industry standard", "Custom limitation"],
+        "isRequired": true,
+        "helpText": "How should liability be limited?"
+      },
+      {
+        "id": "ip_clauses",
+        "label": "Intellectual Property Rights",
+        "placeholder": "e.g., Client owns all work product, Consultant retains pre-existing IP",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "confidentiality",
+        "label": "Confidentiality Requirements",
+        "type": "dropdown",
+        "options": ["Standard NDA provisions", "Mutual confidentiality", "One-way (specify direction)", "No confidentiality", "Industry-specific"],
+        "isRequired": true
+      },
+      {
+        "id": "termination",
+        "label": "Termination Conditions",
+        "placeholder": "e.g., Either party with 30 days notice, for cause immediately",
+        "type": "textarea",
+        "isRequired": true
+      },
+      {
+        "id": "dispute_resolution",
+        "label": "Dispute Resolution",
+        "type": "dropdown",
+        "options": ["Litigation in courts", "Binding arbitration", "Mediation then arbitration", "Mediation only", "Negotiation first"],
+        "isRequired": true
+      },
+      {
+        "id": "force_majeure",
+        "label": "Force Majeure Provision",
+        "type": "dropdown",
+        "options": ["Standard force majeure", "COVID-specific provisions", "No force majeure", "Limited circumstances"],
+        "helpText": "Protection from unforeseeable events"
+      },
+      {
+        "id": "insurance",
+        "label": "Insurance Requirements",
+        "placeholder": "e.g., $1M professional liability, general liability coverage",
+        "type": "textarea",
+        "helpText": "Required insurance coverage"
+      },
+      {
+        "id": "indemnification",
+        "label": "Indemnification",
+        "type": "dropdown",
+        "options": ["Mutual indemnification", "One-way (specify direction)", "Limited indemnification", "No indemnification"],
+        "helpText": "Protection from third-party claims"
+      },
+      {
+        "id": "compliance",
+        "label": "Compliance Requirements",
+        "placeholder": "e.g., GDPR compliance, SOC 2 certification, industry regulations",
+        "type": "textarea",
+        "helpText": "Regulatory or standard compliance required"
+      },
+      {
+        "id": "special_provisions",
+        "label": "Special Provisions",
+        "placeholder": "e.g., Non-compete clause, exclusivity requirements, milestone bonuses",
+        "type": "textarea",
+        "helpText": "Any unique clauses needed for this agreement"
+      },
+      {
+        "id": "custom_terms",
+        "label": "Custom Terms",
+        "placeholder": "e.g., Right of first refusal, automatic renewal, performance penalties",
+        "type": "textarea",
+        "helpText": "Specific terms unique to this relationship"
+      },
+      {
+        "id": "industry_requirements",
+        "label": "Industry-Specific Requirements",
+        "placeholder": "e.g., HIPAA compliance for healthcare, PCI compliance for payments",
+        "type": "textarea",
+        "helpText": "Requirements specific to your industry"
+      },
+      {
+        "id": "regulatory_compliance",
+        "label": "Regulatory Compliance",
+        "placeholder": "e.g., Export control laws, data privacy regulations, financial regulations",
+        "type": "textarea",
+        "helpText": "Applicable laws and regulations"
+      },
+      {
+        "id": "modification_process",
+        "label": "Modification Process",
+        "type": "dropdown",
+        "options": ["Written agreement only", "Email acceptable", "Signed amendments", "Mutual consent"],
+        "defaultValue": "Written agreement only",
+        "isRequired": true
+      },
+      {
+        "id": "execution_method",
+        "label": "Execution Method",
+        "type": "dropdown",
+        "options": ["Electronic signature", "Wet ink signatures", "Either method", "Notarized signatures"],
+        "defaultValue": "Electronic signature",
+        "isRequired": true
+      },
+      {
+        "id": "witness_requirements",
+        "label": "Witness Requirements",
+        "type": "dropdown",
+        "options": ["No witnesses required", "One witness per party", "Two witnesses", "Notary public"],
+        "defaultValue": "No witnesses required"
+      },
+      {
+        "id": "notarization",
+        "label": "Notarization Required",
+        "type": "dropdown",
+        "options": ["Yes", "No", "For certain clauses only"],
+        "defaultValue": "No"
+      },
+      {
+        "id": "template_preferences",
+        "label": "Template Style Preferences",
+        "placeholder": "e.g., Plain English preferred, formal legal language, business-friendly terms",
+        "type": "textarea",
+        "helpText": "Preferred style and approach for the document"
+      },
+      {
+        "id": "risk_tolerance",
+        "label": "Risk Tolerance",
+        "type": "dropdown",
+        "options": ["Conservative (maximum protection)", "Moderate (balanced approach)", "Aggressive (minimal restrictions)", "Industry standard"],
+        "helpText": "How risk-averse should the document be?"
+      }
+    ]
+  }
+]

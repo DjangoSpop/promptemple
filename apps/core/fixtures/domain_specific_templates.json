@@ -1,0 +1,284 @@
+{
+  "templates": [
+    {
+      "id": "ai_experiment_design",
+      "title": "AI Experiment Design Framework",
+      "description": "A comprehensive template for designing and documenting AI experiments",
+      "category": "AI Research",
+      "templateContent": "Research Question:\n{{research_question}}\n\nExperimental Setup:\n{{experimental_setup}}\n\nMethodology:\n{{methodology}}\n\nImplementation Details:\n{{implementation_details}}\n\nResults Analysis:\n{{results_analysis}}\n\nFuture Work:\n{{future_work}}",
+      "fields": [
+        {
+          "id": "experiment_name",
+          "label": "Experiment Name",
+          "placeholder": "Enter a descriptive name for your experiment",
+          "type": "text",
+          "isRequired": true
+        },
+        {
+          "id": "research_question",
+          "label": "Research Question",
+          "placeholder": "What problem are you trying to solve?",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "model_architecture",
+          "label": "Model Architecture",
+          "placeholder": "Describe the AI model architecture",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "dataset_selection",
+          "label": "Dataset Selection",
+          "placeholder": "Describe the datasets used",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "evaluation_metrics",
+          "label": "Evaluation Metrics",
+          "placeholder": "List the metrics used to evaluate the model",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "experimental_setup",
+          "label": "Experimental Setup",
+          "placeholder": "Describe the experimental setup and environment",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "methodology",
+          "label": "Methodology",
+          "placeholder": "Describe the methodology used",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "implementation_details",
+          "label": "Implementation Details",
+          "placeholder": "Provide technical implementation details",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "results_analysis",
+          "label": "Results Analysis",
+          "placeholder": "Analyze and interpret the results",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "future_work",
+          "label": "Future Work",
+          "placeholder": "Suggest future improvements and research directions",
+          "type": "textarea",
+          "isRequired": false
+        }
+      ],
+      "author": "AI Research Team",
+      "tags": ["AI", "Research", "Experiment", "Machine Learning"],
+      "version": "1.0.0",
+      "createdAt": "2024-03-20T00:00:00Z",
+      "updatedAt": "2024-03-20T00:00:00Z"
+    },
+    {
+      "id": "clinical_trial_protocol",
+      "title": "Clinical Trial Protocol",
+      "description": "A comprehensive template for clinical trial documentation",
+      "category": "Healthcare",
+      "templateContent": "Study Overview:\n{{study_overview}}\n\nStudy Design:\n{{study_design}}\n\nParticipant Information:\n{{participant_info}}\n\nStudy Procedures:\n{{study_procedures}}\n\nData Collection:\n{{data_collection}}\n\nStatistical Analysis:\n{{statistical_analysis}}\n\nEthics and Safety:\n{{ethics_safety}}",
+      "fields": [
+        {
+          "id": "trial_name",
+          "label": "Trial Name",
+          "placeholder": "Enter the official trial name",
+          "type": "text",
+          "isRequired": true
+        },
+        {
+          "id": "protocol_title",
+          "label": "Protocol Title",
+          "placeholder": "Enter the protocol title",
+          "type": "text",
+          "isRequired": true
+        },
+        {
+          "id": "study_objectives",
+          "label": "Study Objectives",
+          "placeholder": "List the primary and secondary objectives",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "inclusion_criteria",
+          "label": "Inclusion Criteria",
+          "placeholder": "List the inclusion criteria",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "exclusion_criteria",
+          "label": "Exclusion Criteria",
+          "placeholder": "List the exclusion criteria",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "study_overview",
+          "label": "Study Overview",
+          "placeholder": "Provide a comprehensive overview of the study",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "study_design",
+          "label": "Study Design",
+          "placeholder": "Describe the study design and methodology",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "participant_info",
+          "label": "Participant Information",
+          "placeholder": "Describe participant recruitment and management",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "study_procedures",
+          "label": "Study Procedures",
+          "placeholder": "Detail the study procedures and interventions",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "data_collection",
+          "label": "Data Collection",
+          "placeholder": "Describe data collection methods and schedule",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "statistical_analysis",
+          "label": "Statistical Analysis",
+          "placeholder": "Detail the statistical analysis plan",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "ethics_safety",
+          "label": "Ethics and Safety",
+          "placeholder": "Describe ethical considerations and safety measures",
+          "type": "textarea",
+          "isRequired": true
+        }
+      ],
+      "author": "Healthcare Research Team",
+      "tags": ["Healthcare", "Clinical Trial", "Research", "Medical"],
+      "version": "1.0.0",
+      "createdAt": "2024-03-20T00:00:00Z",
+      "updatedAt": "2024-03-20T00:00:00Z"
+    },
+    {
+      "id": "legal_contract",
+      "title": "Legal Contract Framework",
+      "description": "A comprehensive template for legal contracts",
+      "category": "Legal",
+      "templateContent": "Parties:\n{{parties}}\n\nRecitals:\n{{recitals}}\n\nDefinitions:\n{{definitions}}\n\nAgreement Terms:\n{{agreement_terms}}\n\nObligations:\n{{obligations}}\n\nIntellectual Property:\n{{intellectual_property}}\n\nDispute Resolution:\n{{dispute_resolution}}",
+      "fields": [
+        {
+          "id": "contract_name",
+          "label": "Contract Name",
+          "placeholder": "Enter the contract name",
+          "type": "text",
+          "isRequired": true
+        },
+        {
+          "id": "party_a_details",
+          "label": "Party A Details",
+          "placeholder": "Enter details for the first party",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "party_b_details",
+          "label": "Party B Details",
+          "placeholder": "Enter details for the second party",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "contract_background",
+          "label": "Contract Background",
+          "placeholder": "Describe the background and purpose of the contract",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "scope_of_work",
+          "label": "Scope of Work",
+          "placeholder": "Define the scope of work or services",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "parties",
+          "label": "Parties",
+          "placeholder": "List and describe all parties involved",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "recitals",
+          "label": "Recitals",
+          "placeholder": "State the background and purpose of the contract",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "definitions",
+          "label": "Definitions",
+          "placeholder": "Define key terms used in the contract",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "agreement_terms",
+          "label": "Agreement Terms",
+          "placeholder": "Detail the main terms of the agreement",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "obligations",
+          "label": "Obligations",
+          "placeholder": "List the obligations of each party",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "intellectual_property",
+          "label": "Intellectual Property",
+          "placeholder": "Define IP rights and ownership",
+          "type": "textarea",
+          "isRequired": true
+        },
+        {
+          "id": "dispute_resolution",
+          "label": "Dispute Resolution",
+          "placeholder": "Detail the dispute resolution process",
+          "type": "textarea",
+          "isRequired": true
+        }
+      ],
+      "author": "Legal Team",
+      "tags": ["Legal", "Contract", "Agreement", "Business"],
+      "version": "1.0.0",
+      "createdAt": "2024-03-20T00:00:00Z",
+      "updatedAt": "2024-03-20T00:00:00Z"
+    }
+  ]
+} 

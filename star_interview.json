@@ -1,0 +1,84 @@
+{
+  "id": "star_interview_answer",
+  "title": "STAR Interview Answer",
+  "description": "Create compelling behavioral interview responses using the STAR method",
+  "category": "Career",
+  "author": "Prompt Forge",
+  "version": "1.0.0",
+  "tags": ["interview", "behavioral", "STAR", "career", "job"],
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z",
+  "templateContent": "Help me create a compelling STAR method answer for this behavioral interview question:\n\nQuestion: {{interview_question}}\nPosition: {{target_position}}\nCompany/Industry: {{company_industry}}\n\nMy Experience Details:\n\nSituation:\n{{situation}}\n\nTask:\n{{task}}\n\nAction:\n{{action}}\n\nResult:\n{{result}}\n\nPlease help me:\n1. Structure this into a compelling 2-3 minute response\n2. Ensure it highlights relevant skills for {{target_position}}\n3. Make the story engaging and memorable\n4. Include specific metrics and outcomes where possible\n5. Connect the experience to the role requirements\n\n{{#if skills_to_highlight}}\nKey skills to highlight: {{skills_to_highlight}}\n{{/if}}\n\n{{#if additional_context}}\nAdditional context: {{additional_context}}\n{{/if}}\n\nProvide:\n- The polished STAR response\n- Key strengths demonstrated\n- Suggestions for delivery and emphasis",
+  "fields": [
+    {
+      "id": "interview_question",
+      "label": "Interview Question",
+      "placeholder": "e.g., Tell me about a time when you had to work under pressure...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "Enter the exact behavioral question you're preparing for"
+    },
+    {
+      "id": "target_position",
+      "label": "Target Position",
+      "placeholder": "e.g., Senior Software Engineer, Project Manager",
+      "type": "text",
+      "isRequired": true,
+      "helpText": "What role are you interviewing for?"
+    },
+    {
+      "id": "company_industry",
+      "label": "Company/Industry",
+      "placeholder": "e.g., Google, Healthcare, FinTech startup",
+      "type": "text",
+      "isRequired": true,
+      "helpText": "Company name or industry context"
+    },
+    {
+      "id": "situation",
+      "label": "Situation",
+      "placeholder": "Describe the context and background of your example...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "Set the scene - where, when, who was involved?"
+    },
+    {
+      "id": "task",
+      "label": "Task",
+      "placeholder": "What was your responsibility or what needed to be accomplished?",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "What was your specific role or what needed to be done?"
+    },
+    {
+      "id": "action",
+      "label": "Action",
+      "placeholder": "Describe the specific steps you took...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "What specific actions did YOU take? Be detailed and focus on your contributions"
+    },
+    {
+      "id": "result",
+      "label": "Result",
+      "placeholder": "What was the outcome? Include metrics if possible...",
+      "type": "textarea",
+      "isRequired": true,
+      "helpText": "What happened as a result of your actions? Include quantifiable outcomes"
+    },
+    {
+      "id": "skills_to_highlight",
+      "label": "Key Skills to Highlight",
+      "placeholder": "e.g., leadership, problem-solving, communication",
+      "type": "text",
+      "helpText": "What specific skills or competencies should this story demonstrate?"
+    },
+    {
+      "id": "additional_context",
+      "label": "Additional Context",
+      "placeholder": "Any other relevant details or constraints...",
+      "type": "textarea",
+      "helpText": "Any other information that might be relevant to your story?"
+    }
+  ]
+}
