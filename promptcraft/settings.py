@@ -32,7 +32,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Basic development settings
 SECRET_KEY = config('SECRET_KEY', default="django-insecure-=$&0cpo9(=xihchk^!6p&#um-7icn@#u4ut)04sqcxs6__i+gd")
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = [
+    'floating-chamber-26624-41879340871a.herokuapp.com',
+    'www.prompt-temple.com',
+     'prompt-temple.com',# add your production domain here
+    # add your custom domain here too, e.g. 'prompt-temple.com'
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
