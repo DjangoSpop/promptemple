@@ -34,8 +34,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Basic development settings
 SECRET_KEY = config('SECRET_KEY', default="django-insecure-=$&0cpo9(=xihchk^!6p&#um-7icn@#u4ut)04sqcxs6__i+gd")
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
+ALLOWED_HOSTS = ['www.prompt-temple.com', 'https://floating-chamber-26624-41879340871a.herokuapp.com/','prompt-temple.com']
 # Application definition - only include apps that exist
 DJANGO_APPS = [
     "django.contrib.admin",
@@ -172,17 +172,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Debug Toolbar Settings (only if installed)
 if 'debug_toolbar' in THIRD_PARTY_APPS:
     INTERNAL_IPS = [
-        "127.0.0.1",
-        "localhost",
+       'www.prompt-temple.com', 'https://floating-chamber-26624-41879340871a.herokuapp.com/','prompt-temple.com'
     ]
 
 # CORS settings (only if installed)
 if 'corsheaders' in THIRD_PARTY_APPS:
     CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",  # React dev server
-        "http://localhost:8000",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8000",
+'www.prompt-temple.com', 'https://floating-chamber-26624-41879340871a.herokuapp.com/','prompt-temple.com'
     ]
     CORS_ALLOW_CREDENTIALS = True
 

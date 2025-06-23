@@ -1,7 +1,7 @@
 from .base import *
 
-DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+DEBUG = False
+ALLOWED_HOSTS = ['www.prompt-temple.com', 'https://floating-chamber-26624-41879340871a.herokuapp.com/','prompt-temple.com']
 
 # Database for development
 DATABASES = {
@@ -72,10 +72,9 @@ SPECTACULAR_SETTINGS = {
 
 # CORS settings for development
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
+ 'www.prompt-temple.com', 
+ 'https://floating-chamber-26624-41879340871a.herokuapp.com/',
+ 'prompt-temple.com'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
