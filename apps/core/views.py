@@ -4,44 +4,56 @@ from rest_framework import status, permissions
 from django.db import connection
 from django.conf import settings
 from django.utils import timezone
+from .health_checks import api_health_check
 import platform
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class HealthCheckView(APIView):
     """
-    Health check endpoint for monitoring service status
+    Comprehensive health check endpoint for monitoring service status
     """
     permission_classes = [permissions.AllowAny]
     
     def get(self, request):
-        """Return health status"""
+        """Return comprehensive health status"""
         try:
-            # Check database connection
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
+            # Use our comprehensive health check
+            health_data = api_health_check()
             
-            return Response({
-                'status': 'healthy',
-                'timestamp': timezone.now().isoformat(),
-                'version': getattr(settings, 'VERSION', '1.0.0'),
-                'database': 'connected',
+            # Add additional system info
+            health_data.update({
                 'python_version': sys.version,
-                'platform': platform.platform()
+                'platform': platform.platform(),
+                'django_version': getattr(settings, 'VERSION', '1.0.0')
             })
+            
+            # Determine response status
+            if health_data['status'] == 'healthy':
+                response_status = status.HTTP_200_OK
+            else:
+                response_status = status.HTTP_503_SERVICE_UNAVAILABLE
+            
+            return Response(health_data, status=response_status)
+            
         except Exception as e:
+            logger.error(f"Health check failed: {e}")
             return Response({
-                'status': 'unhealthy',
+                'status': 'error',
+                'timestamp': timezone.now().isoformat(),
                 'error': str(e),
-                'timestamp': timezone.now().isoformat()
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                'message': 'Health check system failed'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AppConfigurationView(APIView):
     """
     App configuration endpoint
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Allow unauthenticated access to app config
     
     def get(self, request):
         """Return app configuration"""

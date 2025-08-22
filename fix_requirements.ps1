@@ -1,10 +1,12 @@
-# PowerShell script to fix requirements naming issue
+# PowerShell script to fix requirements and ensure all needed packages are installed
+Write-Host "PromptCraft Backend - Requirements Fix Tool" -ForegroundColor Cyan
+Write-Host "=========================================" -ForegroundColor Cyan
 
-# Paths for the files
+# 1. Fix misspelled requirements file
+Write-Host "`nStep 1: Fixing misspelled requirements file" -ForegroundColor Green
 $CorrectFile = Join-Path -Path $PSScriptRoot -ChildPath "requirements.txt"
 $MisspelledFile = Join-Path -Path $PSScriptRoot -ChildPath "requirments.txt"
 
-# Check if the misspelled file exists and the correct file doesn't
 if (Test-Path -Path $MisspelledFile) {
     Write-Host "Found misspelled requirements file" -ForegroundColor Yellow
     
@@ -43,4 +45,61 @@ if (Test-Path -Path $MisspelledFile) {
     Write-Host "No misspelled requirements file found" -ForegroundColor Green
 }
 
-Write-Host "Process completed" -ForegroundColor Green
+# 2. Check and add missing packages for template functionality
+Write-Host "`nStep 2: Ensuring required packages are in requirements.txt" -ForegroundColor Green
+$RequiredPackages = @(
+    "requests>=2.31.0",
+    "tabulate>=0.9.0",
+    "django>=4.2.0",
+    "djangorestframework>=3.14.0",
+    "python-dateutil>=2.8.2",
+    "uuid>=1.30"
+)
+
+$CurrentRequirements = Get-Content -Path $CorrectFile
+
+foreach ($package in $RequiredPackages) {
+    $packageName = $package.Split(">=")[0].Trim()
+    $packageFound = $false
+    
+    foreach ($line in $CurrentRequirements) {
+        if ($line.StartsWith("$packageName==") -or $line.StartsWith("$packageName>=")) {
+            $packageFound = $true
+            break
+        }
+    }
+    
+    if (-not $packageFound) {
+        Write-Host "Adding missing package: $package" -ForegroundColor Yellow
+        Add-Content -Path $CorrectFile -Value $package
+    } else {
+        Write-Host "Package already exists: $packageName" -ForegroundColor Green
+    }
+}
+
+# 3. Install all requirements
+Write-Host "`nStep 3: Installing all requirements" -ForegroundColor Green
+$InstallConfirmation = Read-Host "Would you like to install all requirements now? (y/n)"
+if ($InstallConfirmation -eq "y") {
+    Write-Host "Installing requirements..." -ForegroundColor Yellow
+    try {
+        & pip install -r $CorrectFile
+        Write-Host "All requirements installed successfully!" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Error installing requirements: $_" -ForegroundColor Red
+        Write-Host "Please try installing them manually with: pip install -r requirements.txt" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "Skipping installation. You can install requirements manually with:" -ForegroundColor Yellow
+    Write-Host "pip install -r requirements.txt" -ForegroundColor Cyan
+}
+
+# 4. Next steps
+Write-Host "`nNext Steps:" -ForegroundColor Green
+Write-Host "1. Make sure your database is configured correctly" -ForegroundColor Cyan
+Write-Host "2. Run migrations if needed: python manage.py migrate" -ForegroundColor Cyan
+Write-Host "3. Run template population script: python template_db_tool.py populate" -ForegroundColor Cyan
+Write-Host "4. Start development server: python manage.py runserver" -ForegroundColor Cyan
+
+Write-Host "`nProcess completed!" -ForegroundColor Green

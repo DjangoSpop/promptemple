@@ -117,3 +117,41 @@ class RecommendationView(APIView):
             'trending_prompts': [],
             'personalization_score': 0.75
         })
+
+
+class AnalyticsTrackView(APIView):
+    """
+    Track user analytics events - allows anonymous tracking
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        """Track an analytics event"""
+        event_type = request.data.get('event_type')
+        event_data = request.data.get('data', {})
+        user_id = None
+        
+        # If user is authenticated, include their ID
+        if request.user and request.user.is_authenticated:
+            user_id = request.user.id
+        
+        # Placeholder for analytics tracking logic
+        # In a real implementation, you would save this to a database
+        # or send it to an analytics service like Google Analytics, Mixpanel, etc.
+        
+        # Log the analytics event for debugging
+        print(f"Analytics Event: {event_type} from user {user_id} with data: {event_data}")
+        
+        return Response({
+            'status': 'success',
+            'message': 'Event tracked successfully',
+            'event_type': event_type,
+            'user_id': user_id,
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_201_CREATED)
+
+# NOTE:
+# - `track/` accepts anonymous events (AllowAny) so the frontend can record
+#   usage before login or for anonymous users.
+# - Other analytics endpoints (dashboard, user-insights, etc.) require
+#   authentication (IsAuthenticated) and expect a valid JWT or session cookie.

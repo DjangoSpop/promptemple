@@ -17,9 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Install dependencies
-COPY requirments.txt .
+COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install -r requirments.txt
+RUN pip install -r requirements.txt
 
 # Copy project
 COPY . .
@@ -32,3 +32,4 @@ EXPOSE 8000
 
 # Command to run the application
 CMD ["gunicorn", "promptcraft.wsgi:application", "--bind", "0.0.0.0:8000"]
+

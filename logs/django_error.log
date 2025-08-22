@@ -1,0 +1,118 @@
+ERROR 2025-08-17 21:35:43,539 log 31400 8816 Service Unavailable: /health/
+ERROR 2025-08-17 21:35:43,540 basehttp 31400 8816 "GET /health/ HTTP/1.1" 503 21552
+ERROR 2025-08-20 20:07:33,610 log 35100 33132 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:07:33,611 basehttp 35100 33132 "POST /api/v1/auth/login HTTP/1.1" 500 86193
+ERROR 2025-08-20 20:20:35,461 log 35100 37636 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:20:35,462 basehttp 35100 37636 "POST /api/v1/auth/login HTTP/1.1" 500 86193
+ERROR 2025-08-20 20:23:22,108 log 35100 11712 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:23:22,109 basehttp 35100 11712 "POST /api/v1/auth/login HTTP/1.1" 500 86207
+ERROR 2025-08-20 20:23:23,332 log 35100 36764 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:23:23,334 basehttp 35100 36764 "POST /api/v1/auth/login HTTP/1.1" 500 86207
+ERROR 2025-08-20 20:23:24,016 log 35100 12228 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:23:24,017 basehttp 35100 12228 "POST /api/v1/auth/login HTTP/1.1" 500 86207
+ERROR 2025-08-20 20:23:24,234 log 35100 35548 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:23:24,235 basehttp 35100 35548 "POST /api/v1/auth/login HTTP/1.1" 500 86207
+ERROR 2025-08-20 20:23:24,531 log 35100 36132 Internal Server Error: /api/v1/auth/login
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to 127.0.0.1:8000/api/v1/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-08-20 20:23:24,532 basehttp 35100 36132 "POST /api/v1/auth/login HTTP/1.1" 500 86207
+ERROR 2025-08-22 23:18:12,231 log 30064 30068 Internal Server Error: /api/v2/auth/logout/
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\apps\users\views.py", line 349, in post
+    return logout_view(request)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 492, in dispatch
+    request = self.initialize_request(request, *args, **kwargs)
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\views.py", line 391, in initialize_request
+    return Request(
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\lib\site-packages\rest_framework\request.py", line 154, in __init__
+    assert isinstance(request, HttpRequest), (
+AssertionError: The `request` argument must be an instance of `django.http.HttpRequest`, not `rest_framework.request.Request`.
+ERROR 2025-08-22 23:18:12,259 basehttp 30064 30068 "POST /api/v2/auth/logout/ HTTP/1.1" 500 141954

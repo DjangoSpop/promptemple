@@ -2,7 +2,7 @@ import openai
 import anthropic
 from django.conf import settings
 from .models import AIInsight, AIInteraction
-from apps.analytics.services import AnalyticsService
+from .services_new import AnalyticsService
 import time
 import logging
 

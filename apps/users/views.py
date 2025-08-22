@@ -13,7 +13,62 @@ from apps.users.serializers import (
     UserProfileSerializer, UserUpdateSerializer, PasswordChangeSerializer
 )
 
+User = get_user_model()
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def check_username_availability(request):
+        """
+        Check if username is available for registration
+    
+        Query params:
+        - username: The username to check
+    
+        Returns:
+        - available: Boolean indicating if username is available
+        """
+        username = request.GET.get('username')
+    
+        if not username:
+            return Response({
+            'error': 'Username parameter is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if username already exists (case-insensitive)
+        is_available = not User.objects.filter(username__iexact=username).exists()
+    
+        return Response({
+        'available': is_available,
+        'username': username
+    }, status=status.HTTP_200_OK)
 # Create placeholder services to avoid import errors for now
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def check_email_availability(request):
+    """
+    Check if email is available for registration
+
+    Query params:
+    - email: The email to check
+
+    Returns:
+    - available: Boolean indicating if email is available
+    """
+    email = request.GET.get('email')
+
+    if not email:
+        return Response({
+            'error': 'Email parameter is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    User = get_user_model()
+    # Check if email already exists (case-insensitive)
+    is_available = not User.objects.filter(email__iexact=email).exists()
+
+    return Response({
+        'available': is_available,
+        'email': email
+    }, status=status.HTTP_200_OK)
 class GamificationService:
     @staticmethod
     def award_credits(user, amount, reason, transaction_type):
@@ -96,7 +151,7 @@ class UserRegistrationView(CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class UserLoginView(TokenObtainPairView):
+class UserLoginView(APIView):
     """
     Custom login view with additional features
     
@@ -105,6 +160,7 @@ class UserLoginView(TokenObtainPairView):
     - Daily streak tracking
     - Login analytics
     """
+    permission_classes = [permissions.AllowAny]
     
     def post(self, request, *args, **kwargs):
         """Handle user login"""
@@ -117,30 +173,33 @@ class UserLoginView(TokenObtainPairView):
         
         user = login_serializer.validated_data['user']
         
-        # Generate tokens using parent class
-        response = super().post(request, *args, **kwargs)
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
         
-        if response.status_code == 200:
-            # Update daily streak
-            streak = GamificationService.update_daily_streak(user)
-            
-            # Track login analytics
-            AnalyticsService.track_event(
-                user=user,
-                event_name='user_login',
-                category='authentication',
-                properties={
-                    'login_method': 'password',
-                    'daily_streak': streak,
-                    'user_id': str(user.id)
-                }
-            )
-            
-            # Add user data to response
-            response.data['user'] = UserProfileSerializer(user).data
-            response.data['daily_streak'] = streak
+        # Update daily streak
+        streak = GamificationService.update_daily_streak(user)
         
-        return response
+        # Track login analytics
+        AnalyticsService.track_event(
+            user=user,
+            event_name='user_login',
+            category='authentication',
+            properties={
+                'login_method': 'password',
+                'daily_streak': streak,
+                'user_id': str(user.id)
+            }
+        )
+        
+        return Response({
+            'message': 'Login successful',
+            'user': UserProfileSerializer(user).data,
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            },
+            'daily_streak': streak
+        }, status=status.HTTP_200_OK)
 
 
 class UserProfileView(RetrieveUpdateAPIView):
@@ -160,6 +219,8 @@ class UserProfileView(RetrieveUpdateAPIView):
         if self.request.method in ['PUT', 'PATCH']:
             return UserUpdateSerializer
         return UserProfileSerializer
+    
+   
 
     def update(self, request, *args, **kwargs):
         """Handle profile updates"""

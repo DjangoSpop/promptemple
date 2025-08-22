@@ -115,26 +115,25 @@ class UserLoginSerializer(serializers.Serializer):
                 "Username/email and password are required."
             )
         
-        # Try to find user by username or email
         user = None
-        if '@' in username_or_email:
-            # Email login
+        
+        # First try to authenticate with the input as-is (username)
+        user = authenticate(
+            username=username_or_email,
+            password=password
+        )
+        
+        # If authentication failed and input looks like email, try to find user by email
+        if not user and '@' in username_or_email:
             try:
                 user_obj = User.objects.get(email=username_or_email)
-                username = user_obj.username
+                # Try to authenticate with the found username
+                user = authenticate(
+                    username=user_obj.username,
+                    password=password
+                )
             except User.DoesNotExist:
                 pass
-        else:
-            # Username login
-            username = username_or_email
-        
-        if user is None:
-            # Authenticate with username
-            user = authenticate(
-                request=self.context.get('request'),
-                username=username,
-                password=password
-            )
         
         if not user:
             raise serializers.ValidationError(
