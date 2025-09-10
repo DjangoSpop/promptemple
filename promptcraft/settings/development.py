@@ -3,6 +3,20 @@ import sys
 import os
 from pathlib import Path
 
+# Import config function (should be available from base settings)
+try:
+    from decouple import config
+except ImportError:
+    # Fallback config function if decouple not available
+    def config(key, default=None, cast=None):
+        value = os.environ.get(key, default)
+        if cast and value is not None:
+            if cast == bool:
+                return value.lower() in ('true', '1', 'yes', 'on')
+            else:
+                return cast(value)
+        return value
+
 DEBUG = True  # Enable debug for development
 ALLOWED_HOSTS = [
     'localhost', 
@@ -13,8 +27,8 @@ ALLOWED_HOSTS = [
 ]
 
 # Database for development with fallback to SQLite
-# Try PostgreSQL first, fallback to SQLite if PostgreSQL is not available
-USE_POSTGRES = config('USE_POSTGRES', default=True, cast=bool)
+# Default to SQLite for easier development setup
+USE_POSTGRES = config('USE_POSTGRES', default=False, cast=bool)
 
 if USE_POSTGRES:
     DATABASES = {
@@ -94,17 +108,13 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # Development-friendly: allow any and disable mandatory authentication to
-    # make local frontend integration easier. Do NOT use in production.
-    # In development we still want to be able to test authenticated endpoints
-    # so enable JWT and session authentication. Keep AllowAny as the default
-    # permission class but individual views may set IsAuthenticated as needed.
+    # Development-friendly: JWT only for consistency and to avoid session issues
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',  # Re-enabled for WebSocket support
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.AllowAny',  # Easier development, views can override
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -210,5 +220,114 @@ if DEBUG:
         '127.0.0.1',
         '10.0.2.2',  # Android AVD
     ]
+
+# Override cache configuration for development (fallback to memory cache if Redis unavailable)
+try:
+    import redis
+    redis_url = config('REDIS_URL', default='redis://localhost:6379')
+    redis_client = redis.Redis.from_url(redis_url + '/0')
+    redis_client.ping()
+    # Redis is available, use it
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': redis_url + '/1',
+            'KEY_PREFIX': 'promptcraft',
+            'TIMEOUT': 300,
+        },
+        # Sessions cache for backward compatibility
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': redis_url + '/2',
+            'KEY_PREFIX': 'sessions',
+            'TIMEOUT': 86400,  # 24 hours
+        }
+    }
+    
+    # Override channel layers for development with Redis
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [redis_url + '/3'],
+                'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='secret-key')],
+            },
+        },
+    }
+    print("✅ Redis available for caching and WebSockets", file=sys.stderr)
+except (ImportError, redis.ConnectionError, Exception) as e:
+    print(f"⚠️ Redis not available ({e}), using in-memory cache and channels", file=sys.stderr)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'dev-cache',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 500,
+            }
+        },
+        # Session cache for development (backward compatibility)
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'dev-sessions',
+            'TIMEOUT': 86400,  # 24 hours
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
+    
+    # In-memory channel layer for development
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }
+
+# Override session configuration for development (use cache with proper fallback)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+SESSION_COOKIE_AGE = 86400  # 24 hours for development convenience
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False  # Allow HTTP in development
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Enable RAG feature for development since dependencies are compatible
+FEATURE_RAG = config('FEATURE_RAG', default=True, cast=bool)
+
+# ==================================================
+# CELERY CONFIGURATION
+# ==================================================
+
+# Use Redis as the Celery broker and result backend
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/4')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/5')
+
+# Celery task configuration
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+
+# Task execution configuration
+CELERY_TASK_ALWAYS_EAGER = config('CELERY_TASK_ALWAYS_EAGER', default=False, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = True
+
+# Worker configuration for Windows
+CELERY_WORKER_POOL = 'threads'  # Use threads instead of prefork on Windows
+CELERY_WORKER_CONCURRENCY = 2
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+
+# Task time limits
+CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes
+CELERY_TASK_TIME_LIMIT = 600       # 10 minutes
+
+# Result backend configuration
+CELERY_RESULT_EXPIRES = 3600  # 1 hour
+
+# Beat schedule configuration
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 print(f"Using settings: {__file__}", file=sys.stderr)

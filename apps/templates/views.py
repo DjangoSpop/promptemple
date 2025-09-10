@@ -1,12 +1,23 @@
 from rest_framework import viewsets, filters, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Avg, Count, F
 from django.utils import timezone
 from django.db import transaction
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+from django.core.cache import cache
+import time
+import logging
 
-from .models import Template, TemplateCategory
+from .models import (
+    Template, TemplateCategory, PromptLibrary, UserIntent, 
+    ChatMessage, PerformanceMetrics
+)
 from .serializers import (
     TemplateListSerializer, TemplateDetailSerializer, 
     TemplateCreateUpdateSerializer, TemplateCategorySerializer,
@@ -16,6 +27,22 @@ from .serializers import (
 from apps.analytics.services import AnalyticsService
 from apps.ai_services.services import AIService
 from apps.gamification.services import GamificationService
+
+# Set up logger first
+logger = logging.getLogger(__name__)
+
+# Import new high-performance services
+try:
+    from .search_services import search_service
+    from .cache_services import multi_cache, performance_monitor
+    from .langchain_services import langchain_service
+    logger.info("High-performance services loaded successfully")
+except ImportError as e:
+    logger.warning(f"High-performance services not available: {e}")
+    search_service = None
+    multi_cache = None
+    performance_monitor = None
+    langchain_service = None
 
 
 class TemplateCategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -619,5 +646,456 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 for cat in popular_categories
             ]
         })
+
+
+# New High-Performance Views for 100K Prompt Library and WebSocket Integration
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def search_prompts(request):
+    """
+    High-performance prompt search endpoint optimized for sub-50ms response times
+    """
+    start_time = time.time()
+    
+    # Check if services are available
+    if not search_service:
+        return Response(
+            {'error': 'Search service not available - please check configuration'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+    
+    try:
+        # Parse request data
+        data = request.data
+        query = data.get('query', '').strip()
+        category = data.get('category')
+        max_results = min(data.get('max_results', 20), 50)  # Limit for performance
+        session_id = data.get('session_id')
+        
+        if not query:
+            return Response(
+                {'error': 'Query parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get user intent if provided
+        user_intent = None
+        if data.get('intent_id'):
+            try:
+                user_intent = UserIntent.objects.get(id=data['intent_id'])
+            except UserIntent.DoesNotExist:
+                pass
+        
+        # Perform search
+        results, metrics = search_service.search_prompts(
+            query=query,
+            user_intent=user_intent,
+            category=category,
+            max_results=max_results,
+            session_id=session_id
+        )
+        
+        # Format results for API response
+        formatted_results = []
+        for result in results:
+            formatted_results.append({
+                'id': str(result.prompt.id),
+                'title': result.prompt.title,
+                'content': result.prompt.content,
+                'category': result.prompt.category,
+                'subcategory': result.prompt.subcategory,
+                'tags': result.prompt.tags,
+                'keywords': result.prompt.keywords,
+                'intent_category': result.prompt.intent_category,
+                'usage_count': result.prompt.usage_count,
+                'average_rating': result.prompt.average_rating,
+                'quality_score': result.prompt.quality_score,
+                'complexity_score': result.prompt.complexity_score,
+                'score': round(result.score, 3),
+                'relevance_reason': result.relevance_reason,
+                'category_match': result.category_match,
+                'intent_match': result.intent_match
+            })
+        
+        # Calculate response time
+        response_time_ms = int((time.time() - start_time) * 1000)
+        
+        # Log performance
+        performance_monitor.record_response_time('search_api', response_time_ms)
+        
+        # Prepare response
+        response_data = {
+            'results': formatted_results,
+            'total_results': len(formatted_results),
+            'query': query,
+            'category': category,
+            'search_time_ms': metrics.get('total_time_ms', 0),
+            'response_time_ms': response_time_ms,
+            'from_cache': metrics.get('from_cache', False),
+            'performance': {
+                'sub_50ms': response_time_ms < 50,
+                'cache_hit': metrics.get('from_cache', False),
+                'optimization_suggestions': _get_optimization_suggestions(response_time_ms)
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Search API error: {e}")
+        response_time_ms = int((time.time() - start_time) * 1000)
+        performance_monitor.record_response_time('search_api_error', response_time_ms)
+        
+        return Response(
+            {
+                'error': 'Search failed',
+                'details': str(e) if request.user.is_staff else 'Internal error',
+                'response_time_ms': response_time_ms
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def process_intent(request):
+    """
+    Process user intent for WebSocket chat optimization
+    """
+    start_time = time.time()
+    
+    try:
+        data = request.data
+        query = data.get('query', '').strip()
+        session_id = data.get('session_id')
+        
+        if not query:
+            return Response(
+                {'error': 'Query parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Simple intent classification for now (can be enhanced with LangChain later)
+        intent_category = _classify_intent_simple(query)
+        
+        # Save intent to database
+        user = request.user if request.user.is_authenticated else None
+        intent = UserIntent.objects.create(
+            session_id=session_id or 'anonymous',
+            user=user,
+            original_query=query,
+            processed_intent={'simple_classification': True},
+            intent_category=intent_category,
+            confidence_score=0.8,
+            processing_time_ms=int((time.time() - start_time) * 1000)
+        )
+        
+        response_time_ms = int((time.time() - start_time) * 1000)
+        
+        return Response({
+            'intent_id': str(intent.id),
+            'intent_category': intent.intent_category,
+            'confidence_score': intent.confidence_score,
+            'keywords': _extract_keywords_simple(query),
+            'context': f'Classified as {intent_category}',
+            'processing_time_ms': intent.processing_time_ms,
+            'response_time_ms': response_time_ms,
+            'suggestions': _get_intent_suggestions(intent.intent_category)
+        })
+        
+    except Exception as e:
+        logger.error(f"Intent processing error: {e}")
+        response_time_ms = int((time.time() - start_time) * 1000)
+        
+        return Response(
+            {
+                'error': 'Intent processing failed',
+                'details': str(e) if request.user.is_staff else 'Internal error',
+                'response_time_ms': response_time_ms
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@cache_page(300)  # Cache for 5 minutes
+def get_featured_prompts_library(request):
+    """
+    Get featured prompts from the 100K prompt library
+    """
+    start_time = time.time()
+    
+    try:
+        category = request.GET.get('category')
+        max_results = min(int(request.GET.get('max_results', 10)), 20)
+        
+        results = search_service.get_featured_prompts(
+            category=category,
+            max_results=max_results
+        )
+        
+        formatted_results = []
+        for result in results:
+            formatted_results.append({
+                'id': str(result.prompt.id),
+                'title': result.prompt.title,
+                'content': result.prompt.content[:300],  # Truncate for list view
+                'category': result.prompt.category,
+                'tags': result.prompt.tags[:5],  # Limit tags
+                'average_rating': result.prompt.average_rating,
+                'usage_count': result.prompt.usage_count,
+                'quality_score': result.prompt.quality_score
+            })
+        
+        response_time_ms = int((time.time() - start_time) * 1000)
+        
+        return Response({
+            'results': formatted_results,
+            'total_results': len(formatted_results),
+            'category': category,
+            'response_time_ms': response_time_ms,
+            'cached': True
+        })
+        
+    except Exception as e:
+        logger.error(f"Featured prompts error: {e}")
+        return Response(
+            {'error': 'Failed to fetch featured prompts'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+def get_similar_prompts(request, prompt_id):
+    """
+    Get similar prompts from the library
+    """
+    start_time = time.time()
+    
+    try:
+        max_results = min(int(request.GET.get('max_results', 5)), 10)
+        
+        results = search_service.similar_prompts(
+            prompt_id=prompt_id,
+            max_results=max_results
+        )
+        
+        formatted_results = []
+        for result in results:
+            formatted_results.append({
+                'id': str(result.prompt.id),
+                'title': result.prompt.title,
+                'content': result.prompt.content[:200],
+                'category': result.prompt.category,
+                'tags': result.prompt.tags[:3],
+                'score': round(result.score, 3),
+                'relevance_reason': result.relevance_reason
+            })
+        
+        response_time_ms = int((time.time() - start_time) * 1000)
+        
+        return Response({
+            'results': formatted_results,
+            'prompt_id': prompt_id,
+            'response_time_ms': response_time_ms
+        })
+        
+    except Exception as e:
+        logger.error(f"Similar prompts error: {e}")
+        return Response(
+            {'error': 'Failed to fetch similar prompts'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def get_performance_metrics(request):
+    """
+    Get system performance metrics for admin monitoring
+    """
+    try:
+        # Cache stats
+        cache_stats = multi_cache.get_stats()
+        
+        # Performance monitor stats
+        avg_search_time = performance_monitor.get_average_response_time('search_api')
+        avg_websocket_time = performance_monitor.get_average_response_time('websocket')
+        
+        # Database stats
+        total_prompts = PromptLibrary.objects.count()
+        total_intents = UserIntent.objects.count()
+        total_messages = ChatMessage.objects.count()
+        
+        # Recent performance metrics
+        recent_metrics = PerformanceMetrics.objects.filter(
+            operation_type__in=['search', 'websocket', 'optimization']
+        ).order_by('-timestamp')[:100]
+        
+        metrics_summary = {}
+        for metric in recent_metrics:
+            op_type = metric.operation_type
+            if op_type not in metrics_summary:
+                metrics_summary[op_type] = {
+                    'count': 0,
+                    'total_time': 0,
+                    'success_count': 0
+                }
+            
+            metrics_summary[op_type]['count'] += 1
+            metrics_summary[op_type]['total_time'] += metric.response_time_ms
+            if metric.success:
+                metrics_summary[op_type]['success_count'] += 1
+        
+        # Calculate averages
+        for op_type in metrics_summary:
+            data = metrics_summary[op_type]
+            data['avg_response_time'] = data['total_time'] / data['count'] if data['count'] > 0 else 0
+            data['success_rate'] = data['success_count'] / data['count'] if data['count'] > 0 else 0
+        
+        return Response({
+            'cache': cache_stats,
+            'performance': {
+                'avg_search_time_ms': round(avg_search_time, 2),
+                'avg_websocket_time_ms': round(avg_websocket_time, 2),
+                'sub_50ms_target': {
+                    'search_compliant': avg_search_time < 50,
+                    'websocket_compliant': avg_websocket_time < 50
+                }
+            },
+            'database': {
+                'total_prompts': total_prompts,
+                'total_intents': total_intents,
+                'total_messages': total_messages
+            },
+            'operations': metrics_summary,
+            'recommendations': performance_monitor.recommend_optimizations()
+        })
+        
+    except Exception as e:
+        logger.error(f"Performance metrics error: {e}")
+        return Response(
+            {'error': 'Failed to fetch performance metrics'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@method_decorator(csrf_exempt, name='dispatch')
+class WebSocketHealthCheck(View):
+    """
+    Health check endpoint for WebSocket functionality
+    """
+    
+    def get(self, request):
+        """Check WebSocket system health"""
+        try:
+            health_data = {
+                'websocket_available': True,
+                'redis_connected': self._check_redis(),
+                'cache_functional': self._check_cache(),
+                'timestamp': time.time()
+            }
+            
+            overall_health = all([
+                health_data['redis_connected'],
+                health_data['cache_functional']
+            ])
+            
+            health_data['status'] = 'healthy' if overall_health else 'degraded'
+            
+            return JsonResponse(health_data)
+            
+        except Exception as e:
+            logger.error(f"Health check error: {e}")
+            return JsonResponse({
+                'status': 'unhealthy',
+                'error': str(e),
+                'timestamp': time.time()
+            }, status=500)
+    
+    def _check_redis(self) -> bool:
+        """Check Redis connectivity"""
+        try:
+            cache.set('health_check', 'ok', 10)
+            return cache.get('health_check') == 'ok'
+        except Exception:
+            return False
+    
+    def _check_cache(self) -> bool:
+        """Check multi-level cache"""
+        try:
+            multi_cache.set('health_check', 'ok', 10)
+            return multi_cache.get('health_check') == 'ok'
+        except Exception:
+            return False
+
+# Utility functions
+
+def _classify_intent_simple(query: str) -> str:
+    """Simple intent classification based on keywords"""
+    query_lower = query.lower()
+    
+    if any(word in query_lower for word in ['write', 'create', 'draft', 'compose']):
+        return 'content_creation'
+    elif any(word in query_lower for word in ['technical', 'documentation', 'code', 'api']):
+        return 'technical_writing'
+    elif any(word in query_lower for word in ['email', 'message', 'letter', 'communication']):
+        return 'communication'
+    elif any(word in query_lower for word in ['analyze', 'analysis', 'research', 'study']):
+        return 'analysis'
+    elif any(word in query_lower for word in ['creative', 'story', 'brainstorm', 'idea']):
+        return 'creative'
+    elif any(word in query_lower for word in ['code', 'program', 'function', 'algorithm']):
+        return 'coding'
+    elif any(word in query_lower for word in ['business', 'proposal', 'report', 'presentation']):
+        return 'business'
+    elif any(word in query_lower for word in ['teach', 'learn', 'education', 'explain']):
+        return 'education'
+    else:
+        return 'general'
+
+def _extract_keywords_simple(query: str) -> list:
+    """Simple keyword extraction"""
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+    words = query.lower().split()
+    keywords = [word for word in words if word not in stop_words and len(word) > 2]
+    return keywords[:5]  # Return top 5 keywords
+
+def _get_optimization_suggestions(response_time_ms: int) -> list:
+    """Get optimization suggestions based on response time"""
+    suggestions = []
+    
+    if response_time_ms > 100:
+        suggestions.append("Consider increasing cache timeout")
+        suggestions.append("Review database query optimization")
+    elif response_time_ms > 50:
+        suggestions.append("Performance is above target - consider cache warming")
+    else:
+        suggestions.append("Performance is optimal")
+    
+    return suggestions
+
+def _get_intent_suggestions(intent_category: str) -> list:
+    """Get suggestions based on intent category"""
+    suggestions_map = {
+        'content_creation': [
+            'Try refining your content goals',
+            'Consider your target audience',
+            'Specify the content format you need'
+        ],
+        'technical_writing': [
+            'Define your technical level',
+            'Specify documentation type',
+            'Consider your audience expertise'
+        ],
+        'communication': [
+            'Clarify your communication style',
+            'Define your relationship with the recipient',
+            'Specify the desired outcome'
+        ],
+        'general': [
+            'Try being more specific about your needs',
+            'Consider adding context to your request',
+            'Think about your end goal'
+        ]
+    }
+    
+    return suggestions_map.get(intent_category, suggestions_map['general'])
 
 

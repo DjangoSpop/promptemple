@@ -4,6 +4,7 @@ Basic configuration for development.
 """
 
 import os
+import sys
 from pathlib import Path
 
 # Try to import decouple, fallback to os.environ if not available
@@ -82,6 +83,18 @@ except ImportError:
 try:
     import drf_spectacular
     THIRD_PARTY_APPS.append('drf_spectacular')
+except ImportError:
+    pass
+
+try:
+    import channels
+    THIRD_PARTY_APPS.append('channels')
+except ImportError:
+    pass
+
+try:
+    import django_celery_beat
+    THIRD_PARTY_APPS.append('django_celery_beat')
 except ImportError:
     pass
 
@@ -171,6 +184,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
+
+# Feature Flags
+FEATURE_RAG = config('FEATURE_RAG', default=False, cast=bool)
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
@@ -267,12 +283,21 @@ if 'rest_framework_simplejwt' in THIRD_PARTY_APPS:
 if 'rest_framework' in THIRD_PARTY_APPS:
     REST_FRAMEWORK = {
         'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.AllowAny',  # Allow views to control their own permissions
+            'rest_framework.permissions.IsAuthenticated',  # Secure by default
         ],
         'DEFAULT_AUTHENTICATION_CLASSES': [
             'rest_framework_simplejwt.authentication.JWTAuthentication',
-            'rest_framework.authentication.SessionAuthentication',
+            'rest_framework.authentication.SessionAuthentication',  # Re-enabled for WebSocket support
         ],
+        'DEFAULT_THROTTLE_CLASSES': [
+            'rest_framework.throttling.AnonRateThrottle',
+            'rest_framework.throttling.UserRateThrottle',
+        ],
+        'DEFAULT_THROTTLE_RATES': {
+            'anon': '100/hour',
+            'user': '1000/hour',
+            'chat_completions': '5/min',  # Conservative rate for SSE streaming
+        },
         'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
         'PAGE_SIZE': 20,
     }
@@ -280,3 +305,137 @@ if 'rest_framework' in THIRD_PARTY_APPS:
     # Add schema class if spectacular is available
     if 'drf_spectacular' in THIRD_PARTY_APPS:
         REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
+
+# Session Configuration (using cache backend with fallback support)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'sessions'
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG  # Only over HTTPS in production
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Caching Configuration for High Performance
+# Caching Configuration with Redis fallback handling
+try:
+    # Test Redis availability first
+    import redis
+    redis_url = config('REDIS_URL', default='redis://127.0.0.1:6379')
+    redis_client = redis.Redis.from_url(redis_url + '/0')
+    redis_client.ping()
+    
+    # Redis is available, use it
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': redis_url + '/1',
+            'TIMEOUT': 300,  # 5 minutes default
+            'VERSION': 1,
+            'KEY_PREFIX': 'promptcraft',
+        },
+        # Sessions cache - separate database for isolation
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': redis_url + '/2',
+            'TIMEOUT': 86400,  # 24 hours
+            'KEY_PREFIX': 'session',
+        }
+    }
+    print("✅ Redis available for caching and sessions", file=sys.stderr)
+    
+except (ImportError, Exception) as e:
+    # Redis not available, use local memory cache as fallback
+    print(f"⚠️ Redis not available ({e}), using in-memory cache", file=sys.stderr)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'default-cache',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 500,
+            }
+        },
+        # Sessions cache - essential for session backend
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'sessions-cache',
+            'TIMEOUT': 86400,  # 24 hours
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
+
+try:
+    import channels_redis
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [config('REDIS_URL', default='redis://127.0.0.1:6379/3')],
+                'capacity': 1500,  # Maximum messages to store
+                'expiry': 60,      # Message expiry in seconds
+                'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='secret-key')],
+            },
+        },
+    }
+except ImportError:
+    # Fallback to in-memory channel layer for development
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }
+
+# ASGI Application
+ASGI_APPLICATION = 'promptcraft.asgi.application'
+
+# WebSocket Configuration
+WEBSOCKET_SETTINGS = {
+    'WEBSOCKET_URL': config('WEBSOCKET_URL', default='ws://localhost:8000'),
+    'NEXT_PUBLIC_WS_URL': config('NEXT_PUBLIC_WS_URL', default='ws://localhost:8000'),
+    'WEBSOCKET_TIMEOUT': config('WEBSOCKET_TIMEOUT', default=86400, cast=int),
+    'WEBSOCKET_CONNECT_TIMEOUT': config('WEBSOCKET_CONNECT_TIMEOUT', default=10, cast=int),
+}
+
+# ==================================================
+# CHAT STREAMING & SSE CONFIGURATION
+# ==================================================
+
+# Chat Transport Mode (ws or sse)
+CHAT_TRANSPORT = config('CHAT_TRANSPORT', default='sse')  # values: "sse" | "ws"
+
+# External AI Provider Configuration (for SSE proxy)
+ZAI_API_TOKEN = config('ZAI_API_TOKEN', default='')
+ZAI_API_BASE = config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4')
+
+# Security Headers for Proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# SSE Response Headers
+SSE_HEADERS = {
+    'Cache-Control': 'no-cache',
+    'X-Accel-Buffering': 'no',  # Nginx: prevent proxy buffering
+    'X-Content-Type-Options': 'nosniff',
+}
+
+# Z.AI API Configuration
+ZAI_CONFIG = {
+    'API_TOKEN': config('ZAI_API_TOKEN', default=''),
+    'API_BASE': config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4'),
+    'DEFAULT_MODEL': config('ZAI_DEFAULT_MODEL', default='glm-4-32b-0414-128k'),
+    'MAX_TOKENS': int(config('ZAI_MAX_TOKENS', default='4096')),
+    'TEMPERATURE': float(config('ZAI_TEMPERATURE', default='0.7')),
+    'TIMEOUT': int(config('ZAI_TIMEOUT', default='30')),
+}
+
+# Legacy DeepSeek Configuration (for backward compatibility)
+DEEPSEEK_CONFIG = {
+    'API_KEY': config('DEEPSEEK_API_KEY', default=''),
+    'BASE_URL': config('DEEPSEEK_BASE_URL', default='https://api.deepseek.com/v1'),
+    'DEFAULT_MODEL': config('DEEPSEEK_DEFAULT_MODEL', default='deepseek-chat'),
+    'CODER_MODEL': config('DEEPSEEK_CODER_MODEL', default='deepseek-coder'),
+    'MATH_MODEL': config('DEEPSEEK_MATH_MODEL', default='deepseek-math'),
+    'MAX_TOKENS': int(config('DEEPSEEK_MAX_TOKENS', default='2048')),
+    'TEMPERATURE': float(config('DEEPSEEK_TEMPERATURE', default='0.7')),
+    'TIMEOUT': int(config('DEEPSEEK_TIMEOUT', default='30')),
+}

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db import transaction
+from django.db.models import Q
 from .models import Template, PromptField, TemplateCategory, TemplateUsage, TemplateRating, TemplateBookmark
 from apps.users.serializers import UserMinimalSerializer
 
@@ -629,4 +630,161 @@ class TemplateAnalyticsSerializer(serializers.ModelSerializer):
         for item in distribution:
             result[str(item['rating'])] = item['count']
         return result
-        return result
+
+
+class SuggestionSerializer(serializers.Serializer):
+    """
+    Serializer for AI-powered template suggestions
+    
+    Handles recommendation data with explanations and confidence scores
+    """
+    
+    template = TemplateListSerializer(read_only=True)
+    score = serializers.FloatField(read_only=True)
+    explanation = serializers.CharField(read_only=True)
+    confidence = serializers.FloatField(read_only=True)
+    recommendation_type = serializers.CharField(read_only=True)
+    
+    class Meta:
+        fields = ['template', 'score', 'explanation', 'confidence', 'recommendation_type']
+
+
+class AutocompleteSerializer(serializers.Serializer):
+    """
+    Serializer for search autocomplete suggestions
+    """
+    
+    query = serializers.CharField()
+    suggestions = serializers.ListField(
+        child=serializers.DictField()
+    )
+    
+    class Meta:
+        fields = ['query', 'suggestions']
+
+
+class SearchResultSerializer(serializers.Serializer):
+    """
+    Serializer for search results with metadata
+    """
+    
+    query = serializers.CharField()
+    results = TemplateListSerializer(many=True)
+    total_count = serializers.IntegerField()
+    page = serializers.IntegerField()
+    has_next = serializers.BooleanField()
+    search_time_ms = serializers.FloatField()
+    filters_applied = serializers.DictField()
+    
+    class Meta:
+        fields = [
+            'query', 'results', 'total_count', 'page', 'has_next',
+            'search_time_ms', 'filters_applied'
+        ]
+
+
+class UserStatsSerializer(serializers.Serializer):
+    """
+    Serializer for user usage statistics and limits
+    """
+    
+    templates_used_today = serializers.IntegerField()
+    copies_made_today = serializers.IntegerField()
+    daily_template_limit = serializers.IntegerField()
+    daily_copy_limit = serializers.IntegerField()
+    is_premium = serializers.BooleanField()
+    templates_remaining = serializers.IntegerField()
+    copies_remaining = serializers.IntegerField()
+    total_templates_used = serializers.IntegerField()
+    total_copies_made = serializers.IntegerField()
+    favorite_categories = serializers.ListField()
+    
+    class Meta:
+        fields = [
+            'templates_used_today', 'copies_made_today', 'daily_template_limit',
+            'daily_copy_limit', 'is_premium', 'templates_remaining',
+            'copies_remaining', 'total_templates_used', 'total_copies_made',
+            'favorite_categories'
+        ]
+
+
+class FreemiumInfoSerializer(serializers.Serializer):
+    """
+    Serializer for freemium feature information
+    """
+    
+    is_premium = serializers.BooleanField()
+    subscription_type = serializers.CharField()
+    daily_limits = serializers.DictField()
+    features_available = serializers.ListField()
+    features_locked = serializers.ListField()
+    upgrade_benefits = serializers.ListField()
+    usage_stats = UserStatsSerializer()
+    
+    class Meta:
+        fields = [
+            'is_premium', 'subscription_type', 'daily_limits',
+            'features_available', 'features_locked', 'upgrade_benefits',
+            'usage_stats'
+        ]
+
+
+class TemplateCopySerializer(serializers.Serializer):
+    """
+    Serializer for template copy requests
+    """
+    
+    template_id = serializers.UUIDField()
+    copy_count = serializers.IntegerField(default=1, min_value=1, max_value=10)
+    
+    class Meta:
+        fields = ['template_id', 'copy_count']
+
+    def validate_template_id(self, value):
+        """Validate template exists and is accessible"""
+        try:
+            template = Template.objects.get(id=value, is_active=True)
+            return value
+        except Template.DoesNotExist:
+            raise serializers.ValidationError("Template not found or inactive")
+
+
+class TemplateCopyResponseSerializer(serializers.Serializer):
+    """
+    Serializer for template copy response
+    """
+    
+    success = serializers.BooleanField()
+    template = TemplateListSerializer()
+    copies_made = serializers.IntegerField()
+    copies_remaining_today = serializers.IntegerField()
+    premium_required = serializers.BooleanField()
+    message = serializers.CharField()
+    upgrade_url = serializers.URLField(required=False)
+    
+    class Meta:
+        fields = [
+            'success', 'template', 'copies_made', 'copies_remaining_today',
+            'premium_required', 'message', 'upgrade_url'
+        ]
+
+
+class AdvertisementSerializer(serializers.Serializer):
+    """
+    Serializer for advertisement content in infinite scroll
+    """
+    
+    id = serializers.CharField()
+    type = serializers.CharField(default='advertisement')
+    title = serializers.CharField()
+    description = serializers.CharField()
+    image_url = serializers.URLField(required=False)
+    click_url = serializers.URLField()
+    placement_id = serializers.CharField()
+    ad_network = serializers.CharField()
+    
+    class Meta:
+        fields = [
+            'id', 'type', 'title', 'description', 'image_url',
+            'click_url', 'placement_id', 'ad_network'
+        ]

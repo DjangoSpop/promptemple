@@ -1,5 +1,7 @@
 import django_filters
 from django.db.models import Q
+from django import forms
+from django.core.exceptions import ValidationError
 from .models import Template, TemplateCategory
 
 class TemplateFilter(django_filters.FilterSet):
@@ -91,3 +93,19 @@ class TemplateFilter(django_filters.FilterSet):
             query |= Q(tags__icontains=tag)
         
         return queryset.filter(query).distinct()
+    
+    @classmethod
+    def filter_for_field(cls, field, field_name, lookup_expr):
+        """
+        Override to handle JSONField filtering
+        """
+        from django.contrib.postgres.fields import JSONField
+        
+        if isinstance(field, JSONField):
+            return django_filters.CharFilter(
+                field_name=field_name,
+                lookup_expr='icontains',
+                widget=forms.TextInput(attrs={'class': 'form-control'})
+            )
+        
+        return super().filter_for_field(field, field_name, lookup_expr)

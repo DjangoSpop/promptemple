@@ -1,7 +1,10 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 import uuid
+import json
 
 User = get_user_model()
 
@@ -248,6 +251,35 @@ class Template(models.Model):
         blank=True, 
         symmetrical=False,
         help_text="Related template recommendations"
+    )
+    
+    # Additional fields from migration 0004 (must match database schema)
+    external_id = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="External ID from source (e.g., BS001, MS002)"
+    )
+    performance_metrics = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Performance metrics like accuracy, time savings, etc."
+    )
+    prompt_framework = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Framework used (CO-STAR, RACE, CLEAR, APE, STAR)"
+    )
+    subcategory = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Subcategory within the main category"
+    )
+    use_cases = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of use cases for this template"
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -577,3 +609,250 @@ class TemplateBookmark(models.Model):
 
     def __str__(self):
         return f"{self.user.username} bookmarked {self.template.title}"
+
+
+class PromptLibrary(models.Model):
+    """Large-scale prompt storage for 100K+ prompts with advanced search"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=500, db_index=True)
+    content = models.TextField(help_text="Raw prompt content")
+    
+    # Categorization
+    category = models.CharField(max_length=200, db_index=True)
+    subcategory = models.CharField(max_length=200, blank=True, db_index=True)
+    
+    # Metadata for search and filtering
+    tags = models.JSONField(default=list, blank=True)
+    keywords = models.JSONField(default=list, blank=True, help_text="Extracted keywords for search")
+    intent_category = models.CharField(max_length=100, blank=True, db_index=True)
+    use_case = models.CharField(max_length=200, blank=True)
+    
+    # Performance metrics
+    usage_count = models.IntegerField(default=0, db_index=True)
+    success_rate = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    average_rating = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(5)])
+    
+    # AI enhancement fields
+    ai_enhanced = models.BooleanField(default=False)
+    complexity_score = models.IntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(10)])
+    estimated_tokens = models.IntegerField(default=0)
+    
+    # Full-text search
+    search_vector = SearchVectorField(null=True, blank=True)
+    
+    # Source information
+    source = models.CharField(max_length=200, blank=True, help_text="Original source of prompt")
+    author = models.CharField(max_length=200, blank=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True, db_index=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    quality_score = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'prompt_library'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['intent_category', 'usage_count']),
+            models.Index(fields=['quality_score', 'success_rate']),
+            models.Index(fields=['is_featured', 'average_rating']),
+            models.Index(fields=['complexity_score', 'estimated_tokens']),
+            GinIndex(fields=['search_vector']),
+            GinIndex(fields=['tags']),
+            GinIndex(fields=['keywords']),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def update_search_vector(self):
+        """Update search vector for full-text search"""
+        from django.contrib.postgres.search import SearchVector
+        
+        search_text = f"{self.title} {self.content} {self.category} {' '.join(self.tags)}"
+        self.search_vector = SearchVector('title', weight='A') + \
+                           SearchVector('content', weight='B') + \
+                           SearchVector('category', weight='C')
+        self.save(update_fields=['search_vector'])
+
+
+class UserIntent(models.Model):
+    """Track user intents for prompt optimization and chat context"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session_id = models.CharField(max_length=200, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='intents', null=True, blank=True)
+    
+    # Intent data
+    original_query = models.TextField(help_text="User's original query")
+    processed_intent = models.JSONField(default=dict, help_text="LangChain processed intent")
+    intent_category = models.CharField(max_length=100, db_index=True)
+    confidence_score = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    
+    # Context
+    context_data = models.JSONField(default=dict, blank=True)
+    conversation_history = models.JSONField(default=list, blank=True)
+    
+    # Status
+    status = models.CharField(max_length=50, default='processing', db_index=True)
+    is_resolved = models.BooleanField(default=False, db_index=True)
+    
+    # Performance tracking
+    processing_time_ms = models.IntegerField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_intents'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['session_id', 'created_at']),
+            models.Index(fields=['user', 'intent_category']),
+            models.Index(fields=['status', 'is_resolved']),
+            models.Index(fields=['confidence_score', 'intent_category']),
+        ]
+
+    def __str__(self):
+        return f"Intent: {self.intent_category} ({self.confidence_score:.2f})"
+
+
+class ChatMessage(models.Model):
+    """WebSocket chat messages with optimization tracking"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session_id = models.CharField(max_length=200, db_index=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages', null=True, blank=True)
+    intent = models.ForeignKey(UserIntent, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)
+    
+    # Message data
+    message_type = models.CharField(max_length=50, default='user', db_index=True)  # user, ai, system
+    content = models.TextField()
+    original_content = models.TextField(blank=True, help_text="Original before optimization")
+    
+    # Optimization data
+    optimized_by_ai = models.BooleanField(default=False)
+    optimization_score = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    suggested_prompts = models.JSONField(default=list, blank=True)
+    
+    # Performance metrics
+    response_time_ms = models.IntegerField(null=True, blank=True)
+    tokens_used = models.IntegerField(default=0)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'template_chat_messages'  # Changed from 'chat_messages' to avoid conflict with chat app
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['session_id', 'created_at']),
+            models.Index(fields=['user', 'message_type']),
+            models.Index(fields=['intent', 'optimized_by_ai']),
+            models.Index(fields=['response_time_ms', 'message_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.message_type}: {self.content[:50]}..."
+
+
+class PromptOptimization(models.Model):
+    """Track prompt optimization results and performance"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    original_prompt = models.ForeignKey(PromptLibrary, on_delete=models.CASCADE, related_name='optimizations')
+    user_intent = models.ForeignKey(UserIntent, on_delete=models.CASCADE, related_name='optimizations')
+    
+    # Optimization data
+    optimized_content = models.TextField()
+    optimization_type = models.CharField(max_length=100, db_index=True)  # refinement, enhancement, personalization
+    improvements = models.JSONField(default=list, help_text="List of improvements made")
+    
+    # Performance metrics
+    similarity_score = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    relevance_score = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    user_satisfaction = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
+    
+    # Usage tracking
+    times_used = models.IntegerField(default=0)
+    success_rate = models.FloatField(default=0.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    
+    # AI model info
+    model_used = models.CharField(max_length=100, blank=True)
+    processing_time_ms = models.IntegerField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'prompt_optimizations'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['original_prompt', 'optimization_type']),
+            models.Index(fields=['user_intent', 'relevance_score']),
+            models.Index(fields=['similarity_score', 'success_rate']),
+            models.Index(fields=['times_used', 'user_satisfaction']),
+        ]
+
+    def __str__(self):
+        return f"Optimization: {self.optimization_type} ({self.relevance_score:.2f})"
+
+
+class PerformanceMetrics(models.Model):
+    """Track system performance for WebSocket and search operations"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    operation_type = models.CharField(max_length=100, db_index=True)  # websocket, search, optimization
+    session_id = models.CharField(max_length=200, db_index=True, null=True, blank=True)
+    
+    # Performance data
+    response_time_ms = models.IntegerField()
+    memory_usage_mb = models.FloatField(null=True, blank=True)
+    cpu_usage_percent = models.FloatField(null=True, blank=True)
+    
+    # Request details
+    request_size_bytes = models.IntegerField(null=True, blank=True)
+    response_size_bytes = models.IntegerField(null=True, blank=True)
+    
+    # Success metrics
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True)
+    
+    # Context
+    endpoint = models.CharField(max_length=200, blank=True)
+    user_agent = models.CharField(max_length=500, blank=True)
+    
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'performance_metrics'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['operation_type', 'timestamp']),
+            models.Index(fields=['response_time_ms', 'success']),
+            models.Index(fields=['session_id', 'operation_type']),
+        ]
+
+    def __str__(self):
+        return f"{self.operation_type}: {self.response_time_ms}ms"
+
+    @classmethod
+    def get_average_response_time(cls, operation_type, hours=1):
+        """Get average response time for an operation type in the last N hours"""
+        from django.utils import timezone
+        from django.db.models import Avg
+        
+        cutoff = timezone.now() - timezone.timedelta(hours=hours)
+        return cls.objects.filter(
+            operation_type=operation_type,
+            timestamp__gte=cutoff,
+            success=True
+        ).aggregate(avg_time=Avg('response_time_ms'))['avg_time'] or 0

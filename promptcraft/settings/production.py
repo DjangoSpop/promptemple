@@ -9,9 +9,35 @@ Date: August 9, 2025
 """
 
 from .base import *
-import dj_database_url
 import os
 import sys
+
+# Import config function (should be available from base settings)
+try:
+    from decouple import config
+except ImportError:
+    # Fallback config function if decouple not available
+    def config(key, default=None, cast=None):
+        value = os.environ.get(key, default)
+        if cast and value is not None:
+            if cast == bool:
+                return value.lower() in ('true', '1', 'yes', 'on')
+            else:
+                return cast(value)
+        return value
+
+# Try to import dj_database_url, fallback if not available
+try:
+    import dj_database_url
+    HAS_DJ_DATABASE_URL = True
+except ImportError:
+    print("⚠️ dj_database_url not available, using direct database configuration", file=sys.stderr)
+    HAS_DJ_DATABASE_URL = False
+
+# Add JWT token blacklist app for production security
+INSTALLED_APPS = INSTALLED_APPS + [
+    'rest_framework_simplejwt.token_blacklist',
+]
 
 # Security Settings
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -26,7 +52,7 @@ ALLOWED_HOSTS = config(
 )
 
 # Database Configuration with PostgreSQL focus
-if config('DATABASE_URL', default=None):
+if config('DATABASE_URL', default=None) and HAS_DJ_DATABASE_URL:
     # Use DATABASE_URL from environment (Heroku, Railway, etc.)
     DATABASES = {
         'default': dj_database_url.parse(
@@ -36,6 +62,25 @@ if config('DATABASE_URL', default=None):
         )
     }
     print("📊 Using DATABASE_URL for database connection", file=sys.stderr)
+elif config('DATABASE_URL', default=None) and not HAS_DJ_DATABASE_URL:
+    # Handle DATABASE_URL without dj_database_url
+    print("⚠️ DATABASE_URL provided but dj_database_url not available, using direct PostgreSQL config", file=sys.stderr)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='promptcraft_db'),
+            'USER': config('DB_USER', default='promptcraft_user'),
+            'PASSWORD': config('DB_PASSWORD', default='fuckthat'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+            'OPTIONS': {
+                'connect_timeout': 60,
+                'sslmode': config('DB_SSLMODE', default='prefer'),
+            },
+            'CONN_MAX_AGE': 600,
+            'CONN_HEALTH_CHECKS': True,
+        }
+    }
 else:
     # Force PostgreSQL configuration
     DATABASES = {
@@ -81,8 +126,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.prompt-temple.com",
     "https://api.prompt-temple.com",
     "http://localhost:3000",  # Remove in production
-    "http://127.0.0.1:3000" ,
-    "http://10.0.2.2:8000", # Remove in production
+    "http://127.0.0.1:3000",
+    "http://10.0.2.2:8000",  # Android AVD emulator
+    "http://10.0.2.2:3000",  # Android AVD emulator frontend
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False  # Strict CORS in production
@@ -98,7 +144,15 @@ CORS_ALLOWED_HEADERS = [
     'x-requested-with',
     'x-client-version',  # Custom frontend header
     'x-request-id',      # Custom frontend header
+    'cache-control',
+    'pragma',
 ]
+CORS_EXPOSE_HEADERS = [
+    'content-type',
+    'x-request-id',
+    'x-client-version',
+]
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
 # Static files configuration
 STATIC_URL = '/static/'
@@ -121,6 +175,15 @@ CACHES = {
         'TIMEOUT': 300,
         'OPTIONS': {
             'MAX_ENTRIES': 1000,
+        }
+    },
+    # Session cache - use in-memory for production fallback
+    'sessions': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'sessions-cache',
+        'TIMEOUT': 86400,  # 24 hours
+        'OPTIONS': {
+            'MAX_ENTRIES': 5000,
         }
     }
 }
@@ -251,7 +314,26 @@ SIMPLE_JWT = {
     
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 10,  # 10 seconds leeway for clock skew
+    
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 print(f"🚀 Production settings loaded: {__file__}", file=sys.stderr)

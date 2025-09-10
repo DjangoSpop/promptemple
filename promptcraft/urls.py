@@ -12,6 +12,7 @@ from drf_spectacular.views import (
 )
 from django.views.generic import TemplateView
 from apps.core.views import HealthCheckView
+from apps.core.socketio_views import SocketIOCompatibilityView, WebSocketInfoView
 from django.http import JsonResponse
 
 def api_root(request):
@@ -71,6 +72,10 @@ urlpatterns = [
     # Health check endpoint
     path('health/', HealthCheckView.as_view(), name='health-check'),
     
+    # Socket.IO compatibility endpoints (to handle frontend Socket.IO requests gracefully)
+    path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
+    path('ws/info/', WebSocketInfoView.as_view(), name='websocket-info'),
+    
     # API root
     path('api/', api_root, name='api-root'),
     
@@ -80,24 +85,25 @@ urlpatterns = [
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # API v2 URLs (current version)
-    path('api/v2/', include('apps.templates.urls')),
-    path('api/v2/auth/', include('apps.users.urls')),
-    path('api/v2/ai/', include('apps.ai_services.urls')),
-    path('api/v2/gamification/', include('apps.gamification.urls')),
-    path('api/v2/analytics/', include('apps.analytics.urls')),
-    path('api/v2/core/', include('apps.core.urls')),
-    path('api/v2/billing/', include('apps.billing.urls')),
-    path('api/v2/orchestrator/', include('apps.orchestrator.urls')),
+    path('api/v2/', include(('apps.templates.urls', 'templates_api_v2'), namespace='templates_api_v2')),
+    path('api/v2/auth/', include(('apps.users.urls', 'users_v2'), namespace='users_v2')),
+    path('api/v2/ai/', include(('apps.ai_services.urls', 'ai_services_v2'), namespace='ai_services_v2')),
+    path('api/v2/chat/', include(('apps.chat.urls', 'chat_v2'), namespace='chat_v2')),
+    path('api/v2/gamification/', include(('apps.gamification.urls', 'gamification_v2'), namespace='gamification_v2')),
+    path('api/v2/analytics/', include(('apps.analytics.urls', 'analytics_v2'), namespace='analytics_v2')),
+    path('api/v2/core/', include(('apps.core.urls', 'core_v2'), namespace='core_v2')),
+    path('api/v2/billing/', include(('apps.billing.urls', 'billing_v2'), namespace='billing_v2')),
+    path('api/v2/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v2'), namespace='orchestrator_v2')),
     
     # API v1 URLs (legacy support)
-    path('api/v1/', include('apps.templates.urls')),
-    path('api/v1/auth/', include('apps.users.urls')),
-    path('api/v1/ai/', include('apps.ai_services.urls')),
-    path('api/v1/gamification/', include('apps.gamification.urls')),
-    path('api/v1/analytics/', include('apps.analytics.urls')),
-    path('api/v1/core/', include('apps.core.urls')),
-    path('api/v1/billing/', include('apps.billing.urls')),
-    path('api/v1/orchestrator/', include('apps.orchestrator.urls')),
+    path('api/v1/', include(('apps.templates.urls', 'templates_api_v1'), namespace='templates_api_v1')),
+    path('api/v1/auth/', include(('apps.users.urls', 'users_v1'), namespace='users_v1')),
+    path('api/v1/ai/', include(('apps.ai_services.urls', 'ai_services_v1'), namespace='ai_services_v1')),
+    path('api/v1/gamification/', include(('apps.gamification.urls', 'gamification_v1'), namespace='gamification_v1')),
+    path('api/v1/analytics/', include(('apps.analytics.urls', 'analytics_v1'), namespace='analytics_v1')),
+    path('api/v1/core/', include(('apps.core.urls', 'core_v1'), namespace='core_v1')),
+    path('api/v1/billing/', include(('apps.billing.urls', 'billing_v1'), namespace='billing_v1')),
+    path('api/v1/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v1'), namespace='orchestrator_v1')),
     
     # Coming Soon page
     path('', TemplateView.as_view(template_name='coming_soon.html'), name='coming_soon'),

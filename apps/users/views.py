@@ -7,6 +7,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 from apps.users.serializers import (
     UserRegistrationSerializer, UserLoginSerializer, 
@@ -113,42 +116,60 @@ class UserRegistrationView(CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         """Handle user registration"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # Create user
-        user = serializer.save()
-        
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        
-        # Track registration analytics
-        AnalyticsService.track_event(
-            user=user,
-            event_name='user_registered',
-            category='authentication',
-            properties={
-                'registration_method': 'email',
-                'user_id': str(user.id)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Create user
+            user = serializer.save()
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            
+            # Prepare response data
+            response_data = {
+                'message': 'User registered successfully',
+                'user': UserProfileSerializer(user).data,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(access_token),
+                }
             }
-        )
-        
-        # Award welcome bonus
-        GamificationService.award_credits(
-            user=user,
-            amount=50,
-            reason="Welcome bonus for new user!",
-            transaction_type='bonus'
-        )
-        
-        return Response({
-            'message': 'User registered successfully',
-            'user': UserProfileSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
-        }, status=status.HTTP_201_CREATED)
+            
+            # Track registration analytics (non-blocking)
+            try:
+                AnalyticsService.track_event(
+                    user=user,
+                    event_name='user_registered',
+                    category='authentication',
+                    properties={
+                        'registration_method': 'email',
+                        'user_id': str(user.id)
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Analytics tracking failed for user {user.id}: {e}")
+            
+            # Award welcome bonus (non-blocking)
+            try:
+                GamificationService.award_credits(
+                    user=user,
+                    amount=50,
+                    reason="Welcome bonus for new user!",
+                    transaction_type='bonus'
+                )
+            except Exception as e:
+                logger.warning(f"Welcome bonus failed for user {user.id}: {e}")
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Registration failed: {e}")
+            return Response({
+                'message': 'Registration failed',
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLoginView(APIView):
@@ -164,42 +185,61 @@ class UserLoginView(APIView):
     
     def post(self, request, *args, **kwargs):
         """Handle user login"""
-        # First validate credentials
-        login_serializer = UserLoginSerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        login_serializer.is_valid(raise_exception=True)
-        
-        user = login_serializer.validated_data['user']
-        
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        
-        # Update daily streak
-        streak = GamificationService.update_daily_streak(user)
-        
-        # Track login analytics
-        AnalyticsService.track_event(
-            user=user,
-            event_name='user_login',
-            category='authentication',
-            properties={
-                'login_method': 'password',
-                'daily_streak': streak,
-                'user_id': str(user.id)
+        try:
+            # First validate credentials
+            login_serializer = UserLoginSerializer(
+                data=request.data,
+                context={'request': request}
+            )
+            login_serializer.is_valid(raise_exception=True)
+            
+            user = login_serializer.validated_data['user']
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            
+            # Prepare response data
+            response_data = {
+                'message': 'Login successful',
+                'user': UserProfileSerializer(user).data,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(access_token),
+                }
             }
-        )
-        
-        return Response({
-            'message': 'Login successful',
-            'user': UserProfileSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            },
-            'daily_streak': streak
-        }, status=status.HTTP_200_OK)
+            
+            # Update daily streak (non-blocking)
+            try:
+                streak = GamificationService.update_daily_streak(user)
+                response_data['daily_streak'] = streak
+            except Exception as e:
+                logger.warning(f"Daily streak update failed for user {user.id}: {e}")
+                response_data['daily_streak'] = 0
+            
+            # Track login analytics (non-blocking)
+            try:
+                AnalyticsService.track_event(
+                    user=user,
+                    event_name='user_login',
+                    category='authentication',
+                    properties={
+                        'login_method': 'password',
+                        'daily_streak': response_data.get('daily_streak', 0),
+                        'user_id': str(user.id)
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Analytics tracking failed for user {user.id}: {e}")
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Login failed: {e}")
+            return Response({
+                'message': 'Login failed',
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserProfileView(RetrieveUpdateAPIView):

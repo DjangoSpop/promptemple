@@ -20,6 +20,7 @@ except ImportError:
 
 # Set the environment variable to specify which settings module to use
 # Valid options: development, production, testing
+# Default to development for easier local setup
 ENVIRONMENT = config('DJANGO_ENVIRONMENT', default='development')
 
 if ENVIRONMENT == 'production':

@@ -11,6 +11,200 @@ User = get_user_model()
 from apps.ai_services.models import AIProvider, AIModel
 
 
+class AnalyticsEvent(models.Model):
+    """Track user interactions and events for analytics"""
+    
+    EVENT_TYPES = [
+        ('template_view', 'Template View'),
+        ('template_usage_start', 'Template Usage Start'),
+        ('template_completion', 'Template Completion'),
+        ('template_copy', 'Template Copy'),
+        ('template_search', 'Template Search'),
+        ('category_browse', 'Category Browse'),
+        ('user_upgrade', 'User Upgrade'),
+        ('user_login', 'User Login'),
+        ('user_registration', 'User Registration'),
+        ('api_request', 'API Request'),
+        ('page_view', 'Page View'),
+        ('button_click', 'Button Click'),
+        ('form_submission', 'Form Submission'),
+        ('error', 'Error'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    # Core event data
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    event_name = models.CharField(max_length=100)
+    
+    # User context
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='analytics_events')
+    session_id = models.CharField(max_length=100, blank=True)
+    
+    # Event details
+    properties = models.JSONField(default=dict, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    # Technical context
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    referrer = models.URLField(max_length=500, blank=True)
+    page_url = models.URLField(max_length=500, blank=True)
+    
+    # Device/platform info
+    device_type = models.CharField(max_length=20, blank=True)  # 'desktop', 'mobile', 'tablet'
+    platform = models.CharField(max_length=20, blank=True)    # 'web', 'ios', 'android'
+    browser = models.CharField(max_length=50, blank=True)
+    
+    # Timing
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'analytics_events'
+        indexes = [
+            models.Index(fields=['event_type', 'timestamp']),
+            models.Index(fields=['user', 'timestamp']),
+            models.Index(fields=['event_name', 'timestamp']),
+            models.Index(fields=['session_id', 'timestamp']),
+        ]
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.event_type}: {self.event_name} ({self.timestamp})"
+
+
+class UserSessionAnalytics(models.Model):
+    """Track user session analytics"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='session_analytics')
+    session_id = models.CharField(max_length=100, unique=True)
+    
+    # Session timing
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+    duration_seconds = models.IntegerField(null=True, blank=True)
+    
+    # Activity metrics
+    page_views = models.IntegerField(default=0)
+    template_views = models.IntegerField(default=0)
+    templates_used = models.IntegerField(default=0)
+    searches_performed = models.IntegerField(default=0)
+    
+    # Engagement
+    bounce_rate = models.FloatField(null=True, blank=True)
+    conversion_events = models.JSONField(default=list, blank=True)
+    
+    # Technical details
+    entry_page = models.URLField(max_length=500, blank=True)
+    exit_page = models.URLField(max_length=500, blank=True)
+    device_info = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'user_session_analytics'
+        indexes = [
+            models.Index(fields=['user', 'started_at']),
+            models.Index(fields=['session_id']),
+        ]
+
+
+class TemplateAnalytics(models.Model):
+    """Analytics specific to template performance"""
+    
+    template = models.OneToOneField('templates.Template', on_delete=models.CASCADE, related_name='analytics')
+    
+    # View metrics
+    total_views = models.IntegerField(default=0)
+    unique_views = models.IntegerField(default=0)
+    views_this_week = models.IntegerField(default=0)
+    views_this_month = models.IntegerField(default=0)
+    
+    # Usage metrics
+    total_uses = models.IntegerField(default=0)
+    successful_completions = models.IntegerField(default=0)
+    average_completion_time = models.FloatField(default=0.0)
+    
+    # User engagement
+    bookmark_count = models.IntegerField(default=0)
+    share_count = models.IntegerField(default=0)
+    copy_count = models.IntegerField(default=0)
+    
+    # Quality metrics
+    average_rating = models.FloatField(default=0.0)
+    rating_count = models.IntegerField(default=0)
+    
+    # Performance trends
+    trending_score = models.FloatField(default=0.0)
+    growth_rate = models.FloatField(default=0.0)
+    
+    # Last calculated
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'template_analytics'
+
+
+class ConversionFunnel(models.Model):
+    """Track conversion funnels for user journey analysis"""
+    
+    FUNNEL_TYPES = [
+        ('registration', 'User Registration'),
+        ('first_template_use', 'First Template Use'),
+        ('premium_upgrade', 'Premium Upgrade'),
+        ('template_completion', 'Template Completion'),
+    ]
+    
+    name = models.CharField(max_length=100)
+    funnel_type = models.CharField(max_length=50, choices=FUNNEL_TYPES)
+    description = models.TextField(blank=True)
+    
+    # Funnel steps configuration
+    steps = models.JSONField(default=list)  # List of step definitions
+    
+    # Analytics
+    total_entries = models.IntegerField(default=0)
+    completion_rate = models.FloatField(default=0.0)
+    drop_off_points = models.JSONField(default=dict, blank=True)
+    
+    # Timing
+    date_range_start = models.DateTimeField()
+    date_range_end = models.DateTimeField()
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'conversion_funnels'
+
+
+class FunnelUserJourney(models.Model):
+    """Individual user journeys through conversion funnels"""
+    
+    funnel = models.ForeignKey(ConversionFunnel, on_delete=models.CASCADE, related_name='user_journeys')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='funnel_journeys')
+    session_id = models.CharField(max_length=100)
+    
+    # Journey tracking
+    current_step = models.IntegerField(default=0)
+    completed_steps = models.JSONField(default=list)
+    step_timestamps = models.JSONField(default=dict)
+    
+    # Outcome
+    is_completed = models.BooleanField(default=False)
+    dropped_off_at_step = models.IntegerField(null=True, blank=True)
+    
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'funnel_user_journeys'
+        unique_together = ['funnel', 'user', 'session_id']
+
+
 class ABTestExperiment(models.Model):
     """A/B testing experiments"""
     name = models.CharField(max_length=100, unique=True)

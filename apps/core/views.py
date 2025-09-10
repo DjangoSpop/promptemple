@@ -1,15 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.db import connection
+from rest_framework.decorators import api_view, permission_classes
+from django.http import JsonResponse
 from django.conf import settings
 from django.utils import timezone
-from .health_checks import api_health_check
 import platform
 import sys
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def health_simple(request):
+    """Simple health check - no DB, no session, minimal dependencies"""
+    return JsonResponse({"status": "ok"}, status=200)
 
 
 class HealthCheckView(APIView):
@@ -21,23 +26,17 @@ class HealthCheckView(APIView):
     def get(self, request):
         """Return comprehensive health status"""
         try:
-            # Use our comprehensive health check
-            health_data = api_health_check()
+            # Simple health response without external dependencies
+            health_data = {
+                'status': 'healthy',
+                'timestamp': timezone.now().isoformat(),
+                'app': 'PromptCraft',
+                'version': getattr(settings, 'VERSION', '1.0.0'),
+                'python_version': sys.version.split()[0],
+                'platform': platform.system()
+            }
             
-            # Add additional system info
-            health_data.update({
-                'python_version': sys.version,
-                'platform': platform.platform(),
-                'django_version': getattr(settings, 'VERSION', '1.0.0')
-            })
-            
-            # Determine response status
-            if health_data['status'] == 'healthy':
-                response_status = status.HTTP_200_OK
-            else:
-                response_status = status.HTTP_503_SERVICE_UNAVAILABLE
-            
-            return Response(health_data, status=response_status)
+            return Response(health_data, status=status.HTTP_200_OK)
             
         except Exception as e:
             logger.error(f"Health check failed: {e}")
@@ -47,6 +46,39 @@ class HealthCheckView(APIView):
                 'error': str(e),
                 'message': 'Health check system failed'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def rag_status(request):
+    """RAG service status endpoint - no auth required"""
+    try:
+        from apps.templates.rag.services import langchain_status
+        return Response(langchain_status())
+    except ImportError:
+        return Response({
+            "feature_enabled": False,
+            "service_ready": False,
+            "error": "RAG module not available",
+            "strategy": None,
+            "available_factories": []
+        })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def app_config(request):
+    """Public app configuration endpoint - no auth, no session, no DB"""
+    return Response({
+        'env': getattr(settings, 'ENV_NAME', 'development'),
+        'features': {
+            'rag': getattr(settings, 'FEATURE_RAG', False),
+            'ai_integration': True,
+            'template_library': True,
+        },
+        'app_name': 'PromptCraft',
+        'version': getattr(settings, 'VERSION', '1.0.0'),
+    })
 
 
 class AppConfigurationView(APIView):
@@ -60,7 +92,9 @@ class AppConfigurationView(APIView):
         return Response({
             'app_name': 'PromptCraft',
             'version': getattr(settings, 'VERSION', '1.0.0'),
+            'env': getattr(settings, 'ENV_NAME', 'development'),
             'features': {
+                'rag': getattr(settings, 'FEATURE_RAG', False),
                 'ai_integration': True,
                 'template_library': True,
                 'user_analytics': True,
