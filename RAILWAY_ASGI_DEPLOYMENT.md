@@ -78,10 +78,11 @@ numReplicas = 1
 startCommand = "daphne promptcraft.asgi:application --bind 0.0.0.0 --port $PORT"
 sleepApplication = false
 useLegacyStacker = false
-multiRegionConfig = {"europe-west4-drams3a":{"numReplicas":1}}
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 ```
+
+**Note:** The `multiRegionConfig` option was removed due to TOML parsing compatibility issues with Railway. You can configure multi-region deployment through the Railway dashboard if needed.
 
 ### 2. Dockerfile Changes
 **Before:**
