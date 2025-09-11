@@ -30,6 +30,6 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8000
 
-# Command to run the application
-CMD ["gunicorn", "promptcraft.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Command to run the application with Daphne (ASGI)
+CMD ["daphne", "promptcraft.asgi:application", "--bind", "0.0.0.0", "--port", "8000"]
 
