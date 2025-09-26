@@ -304,17 +304,6 @@
     ]
   }
 }
-              "title": "User Research Study Designer",
-              "framework": "RACE",
-              "prompt": "ROLE: You are a UX researcher with expertise in designing comprehensive user research studies that generate actionable insights for product development.\n\nACTION: Design comprehensive user research study for [RESEARCH_OBJECTIVE] to understand [TARGET_USERS] and inform [PRODUCT_DECISION] with reliable, actionable insights.\n\nCONTEXT: Research parameters:\n- Product: [PRODUCT_NAME]\n- Research question: [PRIMARY_QUESTION]\n- Target users: [USER_SEGMENTS]\n- Timeline: [RESEARCH_TIMELINE]\n- Budget: [AVAILABLE_BUDGET]\n- Current knowledge gaps: [UNKNOWN_AREAS]\n- Decision impact: [BUSINESS_IMPLICATIONS]\n- Stakeholder needs: [KEY_STAKEHOLDERS]\n\nEXPECTATION: Create complete research study design including:\n\nRESEARCH PLANNING:\n- Research objectives and hypotheses\n- Key research questions\n- Success criteria and metrics\n- Methodology selection and rationale\n- Participant recruitment strategy\n- Timeline and milestone planning\n- Resource allocation and budgeting\n- Risk assessment and mitigation\n\nMETHODOLOGY DESIGN:\n- Quantitative research methods\n- Qualitative research approaches\n- Mixed-method study design\n- Longitudinal vs cross-sectional considerations\n- Remote vs in-person research setup\n- Tool and platform selection\n- Data collection procedures\n- Quality assurance protocols\n\nPARTICIPANT STRATEGY:\n- Target audience definition\n- Inclusion and exclusion criteria\n- Sample size calculation\n- Recruitment channel strategy\n- Screening questionnaire design\n- Incentive and compensation plan\n- Participant communication templates\n- Consent and privacy procedures\n\nDATA COLLECTION INSTRUMENTS:\n- Interview guides and protocols\n- Survey design and validation\n- Usability testing scenarios\n- Observation frameworks\n- Diary study templates\n- Focus group discussion guides\n- Card sorting and tree testing setup\n- A/B testing protocols\n\nANALYSIS FRAMEWORK:\n- Data analysis methodology\n- Coding and categorization approach\n- Statistical analysis plan\n- Insight synthesis process\n- Pattern identification techniques\n- Bias mitigation strategies\n- Validation and triangulation methods\n- Confidence level assessment\n\nREPORTING AND COMMUNICATION:\n- Stakeholder presentation format\n- Executive summary structure\n- Detailed findings documentation\n- Actionable recommendation framework\n- Visual data presentation\n- Interactive dashboard creation\n- Follow-up study planning\n- Knowledge sharing protocols\n\nIMPLEMENTATION SUPPORT:\n- Design implication translation\n- Product requirement input\n- Prototype validation planning\n- Ongoing research integration\n- Metric tracking setup\n- Future research roadmap\n- Team training and capability building\n- Research repository management\n\nInclude research ethics considerations, data privacy compliance, and cross-functional collaboration framework.",
-              "use_cases": ["User research", "Product validation", "Customer insights"],
-              "performance_metrics": {
-                "insight_actionability": "91%",
-                "decision_confidence": "+78%",
-                "research_ROI": "340%"
-              }
-            },
-            {
               "id": "BS001",
               "title": "Comprehensive Market Analysis Framework",
               "framework": "CO-STAR",

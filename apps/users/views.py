@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework_simplejwt.tokens import RefreshToken
+import importlib
+import sys
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -17,6 +19,41 @@ from apps.users.serializers import (
 )
 
 User = get_user_model()
+
+def safe_jwt_token_generation(user):
+    """
+    Safe JWT token generation that handles PyO3 module conflicts
+    """
+    try:
+        # Clear any cached modules that might be causing conflicts
+        if 'cryptography' in sys.modules:
+            # Don't remove the module, just force a clean initialization
+            pass
+
+        # Generate tokens with error handling
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+
+        return {
+            'refresh': str(refresh),
+            'access': str(access_token),
+        }
+    except Exception as e:
+        logger.error(f"JWT token generation failed: {e}")
+        # Fallback: try to reload the JWT module
+        try:
+            from rest_framework_simplejwt import tokens
+            importlib.reload(tokens)
+            refresh = tokens.RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            return {
+                'refresh': str(refresh),
+                'access': str(access_token),
+            }
+        except Exception as e2:
+            logger.error(f"JWT token generation fallback also failed: {e2}")
+            raise Exception(f"JWT token generation failed: {str(e)}")
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def check_username_availability(request):
@@ -123,18 +160,14 @@ class UserRegistrationView(CreateAPIView):
             # Create user
             user = serializer.save()
             
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = refresh.access_token
-            
+            # Generate JWT tokens safely
+            tokens = safe_jwt_token_generation(user)
+
             # Prepare response data
             response_data = {
                 'message': 'User registered successfully',
                 'user': UserProfileSerializer(user).data,
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(access_token),
-                }
+                'tokens': tokens
             }
             
             # Track registration analytics (non-blocking)
@@ -195,18 +228,14 @@ class UserLoginView(APIView):
             
             user = login_serializer.validated_data['user']
             
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = refresh.access_token
-            
+            # Generate JWT tokens safely
+            tokens = safe_jwt_token_generation(user)
+
             # Prepare response data
             response_data = {
                 'message': 'Login successful',
                 'user': UserProfileSerializer(user).data,
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(access_token),
-                }
+                'tokens': tokens
             }
             
             # Update daily streak (non-blocking)

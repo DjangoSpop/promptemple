@@ -1,0 +1,947 @@
+# docker-compose.production.yml
+version: '3.8'
+
+services:
+  # Rust Optimization Microservice
+  rust-optimizer:
+    build:
+      context: ./rust-optimizer
+      dockerfile: Dockerfile.production
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/prompttemple
+      - SENTRY_DSN=${SENTRY_DSN}
+    depends_on:
+      - redis
+      - postgres
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Django API Backend
+  django-api:
+    build:
+      context: ./django-backend
+      dockerfile: Dockerfile.production
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/prompttemple
+      - REDIS_URL=redis://redis:6379
+      - RUST_OPTIMIZER_URL=http://rust-optimizer:8080
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - rust-optimizer
+    volumes:
+      - media_volume:/app/media
+      - static_volume:/app/static
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js Frontend
+  nextjs-frontend:
+    build:
+      context: ./nextjs-frontend
+      dockerfile: Dockerfile.production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.prompttemple.com
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - NEXT_PUBLIC_ANALYTICS_ID=${ANALYTICS_ID}
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    restart: unless-stopped
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=prompttemple
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Nginx Load Balancer & Reverse Proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - static_volume:/var/www/static
+      - media_volume:/var/www/media
+    depends_on:
+      - django-api
+      - nextjs-frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    restart: unless-stopped
+
+  # Celery Worker for Background Tasks
+  celery-worker:
+    build:
+      context: ./django-backend
+      dockerfile: Dockerfile.production
+    command: celery -A prompt_temple worker -l info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/prompttemple
+      - REDIS_URL=redis://redis:6379
+      - SENTRY_DSN=${SENTRY_DSN}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - media_volume:/app/media
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    restart: unless-stopped
+
+  # Celery Beat for Scheduled Tasks
+  celery-beat:
+    build:
+      context: ./django-backend
+      dockerfile: Dockerfile.production
+    command: celery -A prompt_temple beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/prompttemple
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - media_volume:/app/media
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    restart: unless-stopped
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # Grafana for Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Log Aggregation with Loki
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  # Vector for Log Collection
+  vector:
+    image: timberio/vector:latest
+    volumes:
+      - ./monitoring/vector.toml:/etc/vector/vector.toml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_volume:
+  static_volume:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  default:
+    driver: bridge
+
+---
+
+# nginx/nginx.conf
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+    use epoll;
+    multi_accept on;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                   '$status $body_bytes_sent "$http_referer" '
+                   '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log /var/log/nginx/access.log main;
+
+    # Performance
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+    client_max_body_size 100M;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/json
+        application/javascript
+        application/xml+rss
+        application/atom+xml
+        image/svg+xml;
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
+    limit_req_zone $binary_remote_addr zone=optimization:10m rate=10r/m;
+
+    # SSL Configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Security headers
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Upstream servers
+    upstream django_backend {
+        least_conn;
+        server django-api:8000 max_fails=3 fail_timeout=30s;
+    }
+
+    upstream rust_optimizer {
+        least_conn;
+        server rust-optimizer:8080 max_fails=3 fail_timeout=30s;
+    }
+
+    upstream nextjs_frontend {
+        least_conn;
+        server nextjs-frontend:3000 max_fails=3 fail_timeout=30s;
+    }
+
+    # HTTP to HTTPS redirect
+    server {
+        listen 80;
+        server_name prompttemple.com www.prompttemple.com api.prompttemple.com;
+        return 301 https://$server_name$request_uri;
+    }
+
+    # Main website (Next.js)
+    server {
+        listen 443 ssl http2;
+        server_name prompttemple.com www.prompttemple.com;
+
+        ssl_certificate /etc/nginx/ssl/prompttemple.com.crt;
+        ssl_certificate_key /etc/nginx/ssl/prompttemple.com.key;
+
+        # Security headers for main site
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: *.googleapis.com; connect-src 'self' *.prompttemple.com wss://*.prompttemple.com *.stripe.com;" always;
+
+        location / {
+            proxy_pass http://nextjs_frontend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        # Static assets caching
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            proxy_pass http://nextjs_frontend;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+
+    # API server (Django)
+    server {
+        listen 443 ssl http2;
+        server_name api.prompttemple.com;
+
+        ssl_certificate /etc/nginx/ssl/api.prompttemple.com.crt;
+        ssl_certificate_key /etc/nginx/ssl/api.prompttemple.com.key;
+
+        # API rate limiting
+        location /api/optimize/ {
+            limit_req zone=optimization burst=5 nodelay;
+            proxy_pass http://django_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 60s;
+            proxy_connect_timeout 10s;
+        }
+
+        location /api/ {
+            limit_req zone=api burst=20 nodelay;
+            proxy_pass http://django_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # WebSocket proxy for real-time features
+        location /ws/ {
+            proxy_pass http://django_backend;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 86400;
+        }
+
+        # Direct optimization WebSocket to Rust service
+        location /ws/optimize/ {
+            proxy_pass http://rust_optimizer;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_read_timeout 300;
+            proxy_connect_timeout 10;
+        }
+
+        # Static files
+        location /static/ {
+            alias /var/www/static/;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location /media/ {
+            alias /var/www/media/;
+            expires 30d;
+        }
+    }
+
+    # Health check endpoint
+    server {
+        listen 80;
+        server_name health.prompttemple.com;
+        
+        location /health {
+            access_log off;
+            return 200 "healthy\n";
+            add_header Content-Type text/plain;
+        }
+    }
+}
+
+---
+
+# monitoring/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Django application metrics
+  - job_name: 'django'
+    static_configs:
+      - targets: ['django-api:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Rust optimizer metrics
+  - job_name: 'rust-optimizer'
+    static_configs:
+      - targets: ['rust-optimizer:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # Next.js frontend metrics
+  - job_name: 'nextjs'
+    static_configs:
+      - targets: ['nextjs-frontend:3000']
+    metrics_path: '/api/metrics'
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # PostgreSQL metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+
+  # Node exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+---
+
+# rust-optimizer/Dockerfile.production
+FROM rust:1.75 as builder
+
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+
+# Build optimized release
+RUN cargo build --release
+
+FROM debian:bookworm-slim
+
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/prompt-optimizer /app/
+
+# Create non-root user
+RUN useradd -r -s /bin/false optimizer
+USER optimizer
+
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["./prompt-optimizer"]
+
+---
+
+# django-backend/Dockerfile.production
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+# Create non-root user
+RUN useradd -r -s /bin/false django
+USER django
+
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Start gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gevent", "--worker-connections", "1000", "--max-requests", "1000", "--preload", "prompt_temple.wsgi:application"]
+
+---
+
+# nextjs-frontend/Dockerfile.production
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Build application
+RUN npm run build
+
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built application
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+CMD ["node", "server.js"]
+
+---
+
+# monitoring/vector.toml
+[api]
+enabled = true
+address = "0.0.0.0:8686"
+
+# Docker container logs
+[sources.docker_logs]
+type = "docker_logs"
+
+# Application logs
+[sources.app_logs]
+type = "file"
+include = ["/var/log/app/*.log"]
+
+# Transform logs
+[transforms.parse_logs]
+type = "remap"
+inputs = ["docker_logs", "app_logs"]
+source = '''
+  .timestamp = parse_timestamp!(.timestamp, "%Y-%m-%dT%H:%M:%S%.3fZ")
+  .level = upcase(.level)
+  
+  # Parse JSON logs
+  if is_string(.message) && starts_with(.message, "{") {
+    .parsed = parse_json(.message) ?? {}
+    .message = .parsed.message ?? .message
+    .service = .parsed.service ?? .service
+    .user_id = .parsed.user_id ?? null
+  }
+  
+  # Add common labels
+  .environment = "production"
+  .cluster = "prompt-temple"
+'''
+
+# Send to Loki
+[sinks.loki]
+type = "loki"
+inputs = ["parse_logs"]
+endpoint = "http://loki:3100"
+labels = { service = "{{ service }}", level = "{{ level }}" }
+
+---
+
+# monitoring/loki.yml
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/boltdb-shipper-active
+    cache_location: /loki/boltdb-shipper-cache
+    shared_store: filesystem
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  ingestion_rate_mb: 64
+  ingestion_burst_size_mb: 128
+
+---
+
+# .env.production (template)
+# Database
+POSTGRES_PASSWORD=your_secure_postgres_password_here
+
+# Django
+DJANGO_SECRET_KEY=your_very_long_and_secure_django_secret_key_here
+DEBUG=False
+ALLOWED_HOSTS=prompttemple.com,api.prompttemple.com,www.prompttemple.com
+
+# Stripe
+STRIPE_PUBLISHABLE_KEY=pk_live_your_stripe_publishable_key
+STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+
+# OpenAI & Anthropic
+OPENAI_API_KEY=sk-your_openai_api_key
+ANTHROPIC_API_KEY=sk-ant-your_anthropic_api_key
+
+# Monitoring
+SENTRY_DSN=https://your_sentry_dsn_here
+GRAFANA_PASSWORD=your_secure_grafana_password
+
+# Analytics
+ANALYTICS_ID=your_google_analytics_id
+
+# Emails
+EMAIL_HOST_USER=your_smtp_username
+EMAIL_HOST_PASSWORD=your_smtp_password
+
+# Social Auth
+GOOGLE_OAUTH_CLIENT_ID=your_google_client_id
+GOOGLE_OAUTH_CLIENT_SECRET=your_google_client_secret
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+---
+
+# deploy.sh - Deployment Script
+#!/bin/bash
+
+set -e
+
+echo "🚀 Starting Prompt Temple Production Deployment"
+
+# Load environment variables
+source .env.production
+
+# Build and deploy
+echo "📦 Building containers..."
+docker-compose -f docker-compose.production.yml build --no-cache
+
+echo "🔄 Stopping existing services..."
+docker-compose -f docker-compose.production.yml down
+
+echo "📊 Running database migrations..."
+docker-compose -f docker-compose.production.yml run --rm django-api python manage.py migrate
+
+echo "📂 Collecting static files..."
+docker-compose -f docker-compose.production.yml run --rm django-api python manage.py collectstatic --noinput
+
+echo "🏗️ Starting services..."
+docker-compose -f docker-compose.production.yml up -d
+
+echo "⏳ Waiting for services to be healthy..."
+sleep 30
+
+# Health checks
+echo "🏥 Running health checks..."
+
+services=("django-api:8000" "rust-optimizer:8080" "nextjs-frontend:3000" "redis:6379" "postgres:5432")
+
+for service in "${services[@]}"; do
+    echo "Checking $service..."
+    if docker-compose -f docker-compose.production.yml exec ${service%:*} curl -f http://localhost:${service#*:}/health 2>/dev/null; then
+        echo "✅ $service is healthy"
+    else
+        echo "❌ $service health check failed"
+        exit 1
+    fi
+done
+
+# Setup monitoring dashboards
+echo "📊 Setting up monitoring dashboards..."
+docker-compose -f docker-compose.production.yml exec grafana curl -X POST \
+    -H "Content-Type: application/json" \
+    -d @monitoring/grafana/dashboards/prompt-temple-overview.json \
+    http://admin:${GRAFANA_PASSWORD}@localhost:3000/api/dashboards/db
+
+echo "🎉 Deployment completed successfully!"
+echo "🌐 Website: https://prompttemple.com"
+echo "📊 Monitoring: https://monitoring.prompttemple.com"
+echo "📈 Grafana: http://localhost:3001 (admin:${GRAFANA_PASSWORD})"
+
+# Cleanup
+echo "🧹 Cleaning up unused images..."
+docker image prune -f
+
+echo "✨ All done! Prompt Temple is live!"
+
+---
+
+# kubernetes/deployment.yaml (Alternative K8s deployment)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rust-optimizer
+  labels:
+    app: rust-optimizer
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rust-optimizer
+  template:
+    metadata:
+      labels:
+        app: rust-optimizer
+    spec:
+      containers:
+      - name: rust-optimizer
+        image: prompttemple/rust-optimizer:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REDIS_URL
+          value: "redis://redis-service:6379"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-secret
+              key: url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-optimizer-service
+spec:
+  selector:
+    app: rust-optimizer
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prompt-temple-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - prompttemple.com
+    - api.prompttemple.com
+    secretName: prompt-temple-tls
+  rules:
+  - host: prompttemple.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextjs-service
+            port:
+              number: 3000
+  - host: api.prompttemple.com
+    http:
+      paths:
+      - path: /api/
+        pathType: Prefix
+        backend:
+          service:
+            name: django-service
+            port:
+              number: 8000
+      - path: /ws/optimize/
+        pathType: Prefix
+        backend:
+          service:
+            name: rust-optimizer-service
+            port:
+              number: 8080

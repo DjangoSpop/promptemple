@@ -332,6 +332,23 @@ LANGCHAIN_SETTINGS = {
     'AI_RATE_LIMIT_PER_MINUTE': int(config('AI_RATE_LIMIT_PER_MINUTE', default='60')),
 }
 
+AI_ASSISTANT_SETTINGS = {
+    'DEFAULT_ASSISTANT': config('AI_ASSISTANT_DEFAULT', default='deepseek_chat'),
+    'ENABLED': (
+        'apps.ai_services.ai_assistants.DeepSeekChatAssistant',
+        'apps.ai_services.ai_assistants.DeepSeekCoderAssistant',
+        'apps.ai_services.ai_assistants.TavilyResearchAssistant',
+    ),
+    'LLM_KWARGS': {},
+    'TAVILY': {
+        'API_KEY': config('TAVILY_API_KEY', default=''),
+        'SEARCH_DEPTH': config('TAVILY_SEARCH_DEPTH', default='basic'),
+        'MAX_RESULTS': int(config('TAVILY_MAX_RESULTS', default='5')),
+    },
+}
+
+
+
 # Session Configuration (using signed cookies to avoid cache dependency)
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_AGE = 86400  # 24 hours

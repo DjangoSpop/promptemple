@@ -159,6 +159,12 @@ class Template(models.Model):
     extracted_keywords = models.JSONField(default=list, blank=True)
     smart_suggestions = models.JSONField(default=dict, blank=True)
 
+    # Advanced AI Framework fields
+    prompt_framework = models.CharField(max_length=100, blank=True)
+    subcategory = models.CharField(max_length=100, blank=True)
+    use_cases = models.JSONField(default=list, blank=True)
+    performance_metrics = models.JSONField(default=dict, blank=True)
+
     # Collaboration
     collaborators = models.ManyToManyField(
         User, blank=True, related_name="collaborated_templates"

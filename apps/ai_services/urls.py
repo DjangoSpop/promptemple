@@ -20,6 +20,12 @@ urlpatterns = [
     # Streaming proxy for DeepSeek (SSE-like single-event streaming fallback)
     path('deepseek/stream/', views.DeepSeekStreamView.as_view(), name='deepseek-stream'),
     
+    # AI Assistant endpoints
+    path('assistant/', views.AssistantListView.as_view(), name='assistant-list'),
+    path('assistant/run/', views.AssistantRunView.as_view(), name='assistant-run'),
+    path('assistant/threads/', views.AssistantThreadListView.as_view(), name='assistant-thread-list'),
+    path('assistant/threads/<uuid:thread_id>/', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail'),
+
     # RAG Agent endpoints
     path('agent/optimize/', agent_views.optimize_prompt, name='agent-optimize'),
     path('agent/stats/', agent_views.agent_stats, name='agent-stats'),

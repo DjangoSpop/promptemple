@@ -35,7 +35,7 @@ except ImportError:
     HAS_DJ_DATABASE_URL = False
 
 # Add JWT token blacklist app for production security
-INSTALLED_APPS = INSTALLED_APPS + [
+INSTALLED_APPS += [
     'rest_framework_simplejwt.token_blacklist',
 ]
 

@@ -1,0 +1,246 @@
+# Create the .gitignore file in the root directory
+@"
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*`$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments (ignore all venv folders)
+venv/
+ENV/
+env/
+.venv/
+env.bak/
+venv.bak/
+.conda/
+conda/
+env*/
+
+# If you intentionally want to keep site-packages from a venv, uncomment lines below:
+# !venv/lib/**/site-packages/
+# !.venv/lib/**/site-packages/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+
+# Django specific
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+mediafiles/
+staticfiles/
+static/
+
+# Environment variables and secrets
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.staging
+!.env.example
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.stackdump
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.tmp/
+
+# Logs
+logs/
+*.log
+celerybeat-schedule
+celerybeat-schedule.*
+
+# Database files
+*.sqlite3
+*.db
+
+# Node.js (if you have frontend assets)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Redis dumps
+dump.rdb
+
+# Docker
+.dockerignore
+
+# Testing
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django migrations (optional - uncomment if you want to ignore)
+# */migrations/
+# !*/migrations/__init__.py
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+
+# Sentry
+.sentryclirc
+
+# Pyre type checker
+.pyre/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Kivy
+.kivy/
+
+# Buildout
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Geany
+.geany/
+
+# Ninja
+.ninja_log
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Application specific
+# Add your specific files here
+rag_index/
+*.pkl
+*.h5
+*.model
+"@ | Out-File -FilePath ".gitignore" -Encoding UTF8

@@ -1,0 +1,175 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block title %}Bulk Upload Templates{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.bulk-upload-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.help-section {
+    background: #e7f3ff;
+    border-left: 4px solid #0066cc;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.examples {
+    background: #f0f0f0;
+    padding: 15px;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-line;
+    margin: 10px 0;
+}
+
+.form-row {
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-row textarea {
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.form-row select, .form-row input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.btn-primary {
+    background-color: #417690;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background-color: #205067;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-main">
+    <h1>{{ title }}</h1>
+    
+    <div class="help-section">
+        <h3>📝 Markdown Template Format</h3>
+        <p>Paste markdown content with template structures. The system will automatically extract:</p>
+        <ul>
+            <li><strong>Template Content:</strong> Code blocks or content with {{variable}} placeholders</li>
+            <li><strong>Variables:</strong> All {{variable_name}} placeholders will become form fields</li>
+            <li><strong>Categories:</strong> From <code>**Category**: Category Name</code> patterns</li>
+            <li><strong>Metadata:</strong> Target audience, revenue potential, etc.</li>
+        </ul>
+        
+        <div class="examples">
+<strong>Example Markdown Format:</strong>
+
+## SaaS Application Generator
+**Category**: Software Development
+**Target Audience**: Entrepreneurs, Developers
+
+```
+Create a complete {{saas_type}} SaaS application for {{target_audience}} who struggle with {{main_problem}}.
+
+**Core Features:**
+- User authentication ({{auth_method}})
+- {{primary_feature}} automation system
+- {{secondary_feature}} management dashboard
+
+**Technical Stack:**
+- Frontend: {{frontend_framework}}
+- Backend: {{backend_framework}}
+- Database: {{database_type}}
+```
+        </div>
+    </div>
+    
+    <div class="bulk-upload-form">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <label for="{{ form.markdown_content.id_for_label }}">{{ form.markdown_content.label }}</label>
+                {{ form.markdown_content }}
+                <small class="help">{{ form.markdown_content.help_text }}</small>
+            </div>
+            
+            <div class="form-row">
+                <label for="{{ form.default_category.id_for_label }}">{{ form.default_category.label }}</label>
+                {{ form.default_category }}
+                <small class="help">{{ form.default_category.help_text }}</small>
+            </div>
+            
+            <div class="form-row">
+                <label for="{{ form.author_username.id_for_label }}">{{ form.author_username.label }}</label>
+                {{ form.author_username }}
+                <small class="help">{{ form.author_username.help_text }}</small>
+            </div>
+            
+            <div class="form-row">
+                <label>
+                    {{ form.make_public }} {{ form.make_public.label }}
+                </label>
+                <small class="help">{{ form.make_public.help_text }}</small>
+            </div>
+            
+            <div class="form-row">
+                <label>
+                    {{ form.make_featured }} {{ form.make_featured.label }}
+                </label>
+                <small class="help">{{ form.make_featured.help_text }}</small>
+            </div>
+            
+            <div class="form-row">
+                <button type="submit" class="btn-primary">🚀 Process Markdown & Create Templates</button>
+                <a href="{% url 'admin:templates_template_changelist' %}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="help-section">
+        <h3>💡 Tips for Best Results</h3>
+        <ul>
+            <li><strong>Use Clear Headers:</strong> Each template should have a clear heading (# or ##)</li>
+            <li><strong>Consistent Variables:</strong> Use {{variable_name}} format consistently</li>
+            <li><strong>Add Metadata:</strong> Include **Category**, **Target Audience** for better organization</li>
+            <li><strong>Code Blocks:</strong> Wrap main template content in ``` code blocks</li>
+            <li><strong>Descriptive Names:</strong> Use descriptive variable names like {{business_type}} instead of {{type}}</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

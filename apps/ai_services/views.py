@@ -4,13 +4,17 @@ from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Q
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from dataclasses import asdict
 import logging
 import asyncio
 import json
 import time
 from typing import Dict, Any, Optional
 
+from .models import AssistantThread, AssistantMessage
+from .ai_assistants import AssistantRegistry
 # Import DeepSeek services
 try:
     from apps.templates.deepseek_service import get_deepseek_service, DeepSeekService
@@ -656,3 +660,121 @@ def deepseek_test(request):
             'available': False,
             'error_details': str(e)
         })
+
+class AssistantListView(APIView):
+    """Expose registered assistants to the frontend."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        descriptions = [asdict(desc) for desc in AssistantRegistry.list_descriptions()]
+        default_assistant = getattr(
+            settings,
+            "AI_ASSISTANT_SETTINGS",
+            {},
+        ).get("DEFAULT_ASSISTANT", "deepseek_chat")
+        return Response(
+            {
+                "assistants": descriptions,
+                "default_assistant": default_assistant,
+                "total": len(descriptions),
+            }
+        )
+
+
+class AssistantRunView(APIView):
+    """Run an assistant synchronously via standard Django view."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        payload = request.data or {}
+        assistant_id = payload.get("assistant_id") or getattr(
+            settings,
+            "AI_ASSISTANT_SETTINGS",
+            {},
+        ).get("DEFAULT_ASSISTANT", "deepseek_chat")
+        message = payload.get("message")
+        thread_id = payload.get("thread_id")
+        metadata = payload.get("metadata") or {}
+
+        if not message:
+            return Response(
+                {"detail": "Request must include a non-empty 'message'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            assistant = AssistantRegistry.create(
+                assistant_id,
+                user=request.user,
+                request=request,
+                view=self,
+            )
+        except KeyError:
+            return Response(
+                {"detail": f"Assistant '{assistant_id}' is not available."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        result = assistant.run(message, thread_id=thread_id, metadata=metadata)
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class AssistantThreadListView(APIView):
+    """Return threads created by the current user."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        threads = AssistantThread.objects.filter(user=request.user).order_by("-last_interaction_at")
+        serialized = [
+            {
+                "id": str(thread.id),
+                "assistant_id": thread.assistant_id,
+                "title": thread.title,
+                "metadata": thread.metadata,
+                "last_interaction_at": thread.last_interaction_at,
+                "created_at": thread.created_at,
+            }
+            for thread in threads
+        ]
+        return Response({"threads": serialized, "total": len(serialized)})
+
+
+class AssistantThreadDetailView(APIView):
+    """Return a thread with its messages."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, thread_id: str):
+        thread = get_object_or_404(AssistantThread, id=thread_id)
+        if thread.user and thread.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        messages = thread.messages.order_by("created_at")
+        serialized_messages = [
+            {
+                "id": str(message.id),
+                "role": message.role,
+                "content": message.content,
+                "created_at": message.created_at,
+                "tool_name": message.tool_name or None,
+                "tool_result": message.tool_result or None,
+            }
+            for message in messages
+        ]
+
+        return Response(
+            {
+                "thread": {
+                    "id": str(thread.id),
+                    "assistant_id": thread.assistant_id,
+                    "title": thread.title,
+                    "metadata": thread.metadata,
+                    "created_at": thread.created_at,
+                    "last_interaction_at": thread.last_interaction_at,
+                },
+                "messages": serialized_messages,
+            }
+        )

@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.utils import timezone
 from django.conf import settings
+from .ai_assistants import AssistantRegistry
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -673,3 +674,84 @@ class AIStreamingConsumer(AsyncWebsocketConsumer):
                 'is_final': i == len(response_parts) - 1,
                 'timestamp': timezone.now().isoformat()
             }))
+
+class AssistantConsumer(AsyncWebsocketConsumer):
+    """WebSocket interface for the custom assistant registry."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.assistant_id: str = "deepseek_chat"
+        self.session_id: Optional[str] = None
+        self.thread_id: Optional[str] = None
+        self.user = None
+
+    async def connect(self):
+        self.assistant_id = self.scope["url_route"]["kwargs"].get("assistant_id", "deepseek_chat")
+        self.session_id = self.scope["url_route"]["kwargs"].get("session_id")
+        self.thread_id = self.scope["url_route"]["kwargs"].get("thread_id")
+        self.user = self.scope.get("user")
+
+        await self.accept()
+        await self._send_json(
+            {
+                "type": "assistant.connection",
+                "assistant_id": self.assistant_id,
+                "thread_id": self.thread_id,
+                "session_id": self.session_id,
+            }
+        )
+
+    async def disconnect(self, code):
+        logger.debug("Assistant WebSocket disconnected: %s", code)
+
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
+
+        try:
+            payload = json.loads(text_data)
+        except json.JSONDecodeError:
+            await self._send_error("Invalid JSON payload")
+            return
+
+        message = payload.get("message")
+        assistant_id = payload.get("assistant_id") or self.assistant_id
+        thread_id = payload.get("thread_id") or self.thread_id
+        metadata = payload.get("metadata") or {}
+
+        if not message:
+            await self._send_error("Missing 'message' in payload")
+            return
+
+        try:
+            assistant = AssistantRegistry.create(
+                assistant_id,
+                user=self.user if getattr(self.user, "is_authenticated", False) else None,
+            )
+        except KeyError:
+            await self._send_error(f"Assistant '{assistant_id}' is not available")
+            return
+
+        try:
+            result = await assistant.arun(message, thread_id=thread_id, metadata=metadata)
+        except Exception as exc:
+            logger.exception("Assistant processing failure")
+            await self._send_error(str(exc))
+            return
+
+        self.assistant_id = assistant_id
+        self.thread_id = result.get("thread_id", thread_id)
+
+        await self._send_json(
+            {
+                "type": "assistant.message",
+                "data": result,
+            }
+        )
+
+    async def _send_error(self, detail: str):
+        await self._send_json({"type": "assistant.error", "detail": detail})
+
+    async def _send_json(self, payload: Dict[str, Any]):
+        await self.send(text_data=json.dumps(payload))
+

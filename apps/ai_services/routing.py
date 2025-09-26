@@ -15,6 +15,9 @@ websocket_urlpatterns = [
     # Real-time search with AI enhancement
     path('ws/search/<str:session_id>/', consumers.SearchConsumer.as_asgi()),
     
+    # AI Assistant interactive WebSocket
+    path('ws/assistant/<str:assistant_id>/<str:session_id>/', consumers.AssistantConsumer.as_asgi()),
+
     # AI analytics and insights WebSocket
     path('ws/analytics/<str:session_id>/', consumers.AnalyticsConsumer.as_asgi()),
 ]

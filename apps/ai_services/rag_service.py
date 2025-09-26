@@ -22,7 +22,10 @@ from django.contrib.auth import get_user_model
 # LangChain imports
 try:
     from langchain.text_splitter import RecursiveCharacterTextSplitter
-    from langchain.docstore.document import Document
+    try:
+        from langchain_core.documents import Document
+    except ImportError:  # fallback for older LangChain versions
+        from langchain.docstore.document import Document  # type: ignore
     from langchain_community.vectorstores import FAISS
     from langchain_huggingface import HuggingFaceEmbeddings
     from langchain.schema.runnable import RunnableSequence
@@ -35,7 +38,7 @@ try:
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
-
+    Document = None  # type: ignore
 # Local imports
 from apps.templates.models import PromptLibrary
 # Use centralized RAG service locator to avoid pydantic v2 conflicts
@@ -292,9 +295,12 @@ class DocumentIndexer:
         
         return documents
     
-    def chunk_documents(self, documents: List[RAGDocument]) -> List[Document]:
+    def chunk_documents(self, documents: List[RAGDocument]) -> List["Document"]:
         """Chunk documents for vector storage"""
         chunked_docs = []
+        if Document is None:
+            logger.error("LangChain Document class unavailable; cannot chunk documents")
+            return []
         
         for doc in documents:
             chunks = self.text_splitter.split_text(doc.content)
@@ -416,12 +422,15 @@ class RAGRetriever:
             except Exception as e:
                 logger.error(f"Failed to load index: {e}")
     
-    def retrieve_documents(self, query: str, top_k: int = 6) -> List[Document]:
+    def retrieve_documents(self, query: str, top_k: int = 6) -> List["Document"]:
         """Retrieve relevant documents"""
+        if Document is None:
+            logger.error("LangChain Document class unavailable; cannot retrieve documents")
+            return []
+
         if not self.retriever:
             logger.warning("No retriever available")
             return []
-        
         try:
             docs = self.retriever.get_relevant_documents(query)
             return docs[:top_k]
@@ -429,9 +438,11 @@ class RAGRetriever:
             logger.error(f"Retrieval failed: {e}")
             return []
     
-    def create_citations(self, docs: List[Document], scores: List[float] = None) -> List[Citation]:
+    def create_citations(self, docs: List["Document"], scores: List[float] = None) -> List[Citation]:
         """Create citation objects from retrieved documents"""
         citations = []
+        if Document is None:
+            return []
         
         for i, doc in enumerate(docs):
             score = scores[i] if scores and i < len(scores) else 0.0

@@ -31,6 +31,5 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # Command to run the application with Daphne (ASGI)
-# Use the python -m entrypoint and a shell wrapper so $PORT is respected
-CMD ["/bin/sh", "-c", "python -m daphne promptcraft.asgi:application --bind 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["daphne", "promptcraft.asgi:application", "--bind", "0.0.0.0", "--port", "8000"]
 

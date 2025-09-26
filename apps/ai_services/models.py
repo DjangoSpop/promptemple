@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 import json
@@ -363,3 +364,70 @@ class AIUsageQuota(models.Model):
         self.monthly_requests_used += 1
         self.monthly_tokens_used += tokens_used
         self.save()
+
+class AssistantThread(models.Model):
+    """Conversation thread that stores the history between a user and an AI assistant."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assistant_threads",
+    )
+    assistant_id = models.CharField(max_length=100)
+    title = models.CharField(max_length=255, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    last_interaction_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ai_assistant_threads"
+        ordering = ("-last_interaction_at", "-created_at")
+
+    def touch(self):
+        """Update the last interaction timestamp."""
+        self.last_interaction_at = timezone.now()
+        self.save(update_fields=["last_interaction_at", "updated_at"])
+
+
+class AssistantMessage(models.Model):
+    """Individual message within an AssistantThread."""
+
+    ROLE_CHOICES = (
+        ("system", "System"),
+        ("user", "User"),
+        ("assistant", "Assistant"),
+        ("tool", "Tool"),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    thread = models.ForeignKey(
+        AssistantThread,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    tool_name = models.CharField(max_length=100, blank=True)
+    tool_result = models.JSONField(default=dict, blank=True)
+    extra = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "ai_assistant_messages"
+        ordering = ("created_at",)
+
+    def as_openai_dict(self) -> dict:
+        """Return a dict compatible with OpenAI/DeepSeek chat format."""
+        message = {
+            "role": self.role,
+            "content": self.content,
+        }
+        if self.role == "tool" and self.tool_name:
+            message["name"] = self.tool_name
+            if self.tool_result:
+                message["content"] = json.dumps(self.tool_result)
+        return message
