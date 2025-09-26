@@ -5,7 +5,10 @@ Basic configuration for development.
 
 import os
 import sys
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Try to import decouple, fallback to os.environ if not available
 try:
@@ -340,11 +343,9 @@ try:
             'KEY_PREFIX': 'session',
         }
     }
-    print("✅ Redis available for caching and sessions", file=sys.stderr)
-    
+    logger.info("Redis available for caching and sessions")
 except (ImportError, Exception) as e:
-    # Redis not available, use local memory cache as fallback
-    print(f"⚠️ Redis not available ({e}), using in-memory cache", file=sys.stderr)
+    logger.warning("Redis not available (%s), using in-memory cache", e)
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -354,11 +355,10 @@ except (ImportError, Exception) as e:
                 'MAX_ENTRIES': 500,
             }
         },
-        # Sessions cache - essential for session backend
         'sessions': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'LOCATION': 'sessions-cache',
-            'TIMEOUT': 86400,  # 24 hours
+            'TIMEOUT': 86400,
             'OPTIONS': {
                 'MAX_ENTRIES': 1000,
             }

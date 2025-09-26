@@ -8421,3 +8421,23 @@ INFO 2025-09-21 02:31:13,040 enhanced_views 6588 30368 AuthDebug: POST /api/v2/c
 INFO 2025-09-21 02:31:13,040 enhanced_views 6588 30368 Enhanced SSE Proxy: Using DeepSeek API with base_url: https://api.deepseek.com/v1
 INFO 2025-09-21 02:31:13,040 enhanced_views 6588 30368 Enhanced SSE Proxy: Starting stream for request 0af85e52
 ERROR 2025-09-21 02:31:13,055 basehttp 6588 30368 "POST /api/v2/chat/completions/ HTTP/1.1" 500 59
+INFO 2025-09-26 22:46:16,451 langchain_services 32296 38512 DeepSeek integration loaded successfully
+WARNING 2025-09-26 22:46:17,236 langchain_services 32296 38512 LangChain not available - using fallback implementations
+INFO 2025-09-26 22:46:17,342 langchain_services 32296 38512 Using mock LangChain service
+INFO 2025-09-26 22:46:17,343 mock_langchain 32296 38512 Using mock LangChain service (dependencies not available)
+INFO 2025-09-26 22:46:17,343 views 32296 38512 High-performance services loaded successfully
+INFO 2025-09-26 22:49:02,674 langchain_services 38244 38776 DeepSeek integration loaded successfully
+WARNING 2025-09-26 22:49:03,272 langchain_services 38244 38776 LangChain not available - using fallback implementations
+INFO 2025-09-26 22:49:03,346 langchain_services 38244 38776 Using mock LangChain service
+INFO 2025-09-26 22:49:03,347 mock_langchain 38244 38776 Using mock LangChain service (dependencies not available)
+INFO 2025-09-26 22:49:03,347 views 38244 38776 High-performance services loaded successfully
+INFO 2025-09-26 23:02:23,817 autoreload 40256 41892 Watching for file changes with StatReloader
+INFO 2025-09-26 23:02:24,013 langchain_services 40256 41892 DeepSeek integration loaded successfully
+WARNING 2025-09-26 23:02:24,679 langchain_services 40256 41892 LangChain not available - using fallback implementations
+INFO 2025-09-26 23:02:24,759 langchain_services 40256 41892 Using mock LangChain service
+INFO 2025-09-26 23:02:24,759 mock_langchain 40256 41892 Using mock LangChain service (dependencies not available)
+INFO 2025-09-26 23:02:24,760 views 40256 41892 High-performance services loaded successfully
+INFO 2025-09-26 23:02:25,092 wsgi 40256 27576 Sentry DSN not provided - error monitoring disabled
+INFO 2025-09-26 23:02:25,095 wsgi 40256 27576 WSGI application initialized successfully
+INFO 2025-09-26 23:02:25,095 wsgi 40256 27576 Sentry enabled: False
+INFO 2025-09-26 23:02:25,095 wsgi 40256 27576 Performance monitoring enabled

@@ -7,7 +7,7 @@ from celery import Celery
 from django.conf import settings
 
 # Set default Django settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promptcraft.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'promptcraft.settings.production')
 
 # Create Celery app
 app = Celery('promptcraft')

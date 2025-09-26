@@ -101,6 +101,18 @@ else:
     }
     print(f"🐘 Using PostgreSQL: {config('DB_HOST', default='localhost')}:{config('DB_PORT', default='5432')}/{config('DB_NAME', default='promptcraft_db')}", file=sys.stderr)
 
+# Fallback to SQLite for Railway deployment if no DATABASE_URL is provided
+if not DATABASES['default'].get('NAME') or DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+    # Check if we actually have PostgreSQL credentials
+    if not config('DATABASE_URL', default=None) and not config('DB_PASSWORD', default=None):
+        print("⚠️  No PostgreSQL credentials found, falling back to SQLite", file=sys.stderr)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+
 # Security Headers and HTTPS (relaxed for local development)
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -167,26 +179,87 @@ if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
-# Cache Configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
-        }
-    },
-    # Session cache - use in-memory for production fallback
-    'sessions': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'sessions-cache',
-        'TIMEOUT': 86400,  # 24 hours
-        'OPTIONS': {
-            'MAX_ENTRIES': 5000,
+# Cache Configuration - Redis first, fallback to in-memory
+REDIS_URL = config('REDIS_URL', default='redis://localhost:6379')
+
+try:
+    # Test both django_redis import and Redis connectivity
+    import django_redis
+    import redis
+    redis_client = redis.Redis.from_url(REDIS_URL + '/0')
+    redis_client.ping()
+
+    # Redis is available, use it
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL + '/1',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'promptcraft',
+            'TIMEOUT': 300,  # 5 minutes default
+        },
+        # Session cache - separate database for isolation
+        'sessions': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL + '/2',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'session',
+            'TIMEOUT': 86400,  # 24 hours
         }
     }
-}
+    print("🟢 Redis cache enabled", file=sys.stderr)
+except (ImportError, Exception) as e:
+    print(f"⚠️ Redis not available ({e}), using fallback cache", file=sys.stderr)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        },
+        # Session cache - use in-memory for production fallback
+        'sessions': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'sessions-cache',
+            'TIMEOUT': 86400,  # 24 hours
+            'OPTIONS': {
+                'MAX_ENTRIES': 5000,
+            }
+        }
+    }
+
+# Channels Configuration - Redis first, fallback to in-memory
+try:
+    import channels_redis
+    # Test Redis availability again for channels
+    redis_client = redis.Redis.from_url(REDIS_URL + '/3')
+    redis_client.ping()
+
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [REDIS_URL + '/3'],
+                'capacity': 1500,
+                'expiry': 60,
+                'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='change-me-in-production')],
+            },
+        },
+    }
+    print("🟢 Redis channel layer enabled", file=sys.stderr)
+except (ImportError, Exception) as e:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }
+    print(f"⚠️ Using in-memory channel layer ({e})", file=sys.stderr)
 
 # Logging Configuration
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)

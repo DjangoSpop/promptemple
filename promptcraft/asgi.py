@@ -12,7 +12,7 @@ import logging
 from django.core.asgi import get_asgi_application
 
 # Set Django settings before importing channels
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "promptcraft.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "promptcraft.settings.production")
 
 # Initialize Django ASGI application early to ensure settings are loaded
 django_asgi_app = get_asgi_application()
