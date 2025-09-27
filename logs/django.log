@@ -8446,3 +8446,17 @@ WARNING 2025-09-27 10:26:32,657 langchain_services 35580 29940 LangChain not ava
 INFO 2025-09-27 10:26:32,785 langchain_services 35580 29940 Using mock LangChain service
 INFO 2025-09-27 10:26:32,785 mock_langchain 35580 29940 Using mock LangChain service (dependencies not available)
 INFO 2025-09-27 10:26:32,785 views 35580 29940 High-performance services loaded successfully
+INFO 2025-09-27 11:47:42,734 asgi 42900 42904 Loaded core WebSocket patterns
+INFO 2025-09-27 11:47:42,740 langchain_services 42900 42904 DeepSeek integration loaded successfully
+WARNING 2025-09-27 11:47:43,649 langchain_services 42900 42904 LangChain not available - using fallback implementations
+INFO 2025-09-27 11:47:43,774 langchain_services 42900 42904 Using mock LangChain service
+INFO 2025-09-27 11:47:43,774 mock_langchain 42900 42904 Using mock LangChain service (dependencies not available)
+INFO 2025-09-27 11:47:44,016 asgi 42900 42904 Loaded template WebSocket patterns
+INFO 2025-09-27 11:47:44,018 asgi 42900 42904 Loaded AI services WebSocket patterns
+INFO 2025-09-27 11:47:44,019 asgi 42900 42904 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-27 11:47:44,019 cli 42900 42904 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-27 11:47:44,020 server 42900 42904 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-27 11:47:44,020 server 42900 42904 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-27 11:47:44,021 server 42900 42904 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-27 11:55:58,562 views 42900 11600 High-performance services loaded successfully
+INFO 2025-09-27 11:55:58,602 middleware 42900 11600 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None

@@ -11,7 +11,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView
 )
 from django.views.generic import TemplateView
-from apps.core.views import HealthCheckView
+from apps.core.views import HealthCheckView, health_simple
 from apps.core.socketio_views import SocketIOCompatibilityView, WebSocketInfoView
 from django.http import JsonResponse
 
@@ -69,8 +69,8 @@ def api_root(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Health check endpoint
-    path('health/', HealthCheckView.as_view(), name='health-check'),
+    # Health check endpoint (simple, no DB dependencies for Railway)
+    path('health/', health_simple, name='health-check'),
     
     # Socket.IO compatibility endpoints (to handle frontend Socket.IO requests gracefully)
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
