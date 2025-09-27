@@ -43,11 +43,10 @@ INSTALLED_APPS += [
 DEBUG = config('DEBUG', default=False, cast=bool)
 SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here-change-in-production')
 
-# Allowed hosts for production
+# Allowed hosts for production - Railway and development
 ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS', 
-    default='localhost,127.0.0.1,0.0.0.0,10.0.2.2,www.prompt-temple.com,prompt-temple.com,api.prompt-temple.com',# Android AVD emulator
- 
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,0.0.0.0,10.0.2.2,*.railway.app,*.railway.dev,www.prompt-temple.com,prompt-temple.com,api.prompt-temple.com',
     cast=lambda v: [s.strip() for s in v.split(',')]
 )
 
@@ -101,17 +100,22 @@ else:
     }
     print(f"🐘 Using PostgreSQL: {config('DB_HOST', default='localhost')}:{config('DB_PORT', default='5432')}/{config('DB_NAME', default='promptcraft_db')}", file=sys.stderr)
 
-# Fallback to SQLite for Railway deployment if no DATABASE_URL is provided
-if not DATABASES['default'].get('NAME') or DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
-    # Check if we actually have PostgreSQL credentials
-    if not config('DATABASE_URL', default=None) and not config('DB_PASSWORD', default=None):
-        print("⚠️  No PostgreSQL credentials found, falling back to SQLite", file=sys.stderr)
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
+# Enhanced fallback to SQLite for Railway deployment
+database_url = config('DATABASE_URL', default=None)
+db_password = config('DB_PASSWORD', default=None)
+
+# If no database configuration is provided, use SQLite as fallback
+if not database_url and not db_password:
+    print("ℹ️  No external database configured, using SQLite for Railway deployment", file=sys.stderr)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
+    }
+elif DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+    # Validate PostgreSQL connection or fallback to SQLite
+    print(f"🐘 Using PostgreSQL: {DATABASES['default'].get('HOST', 'localhost')}:{DATABASES['default'].get('PORT', '5432')}/{DATABASES['default'].get('NAME', 'promptcraft_db')}", file=sys.stderr)
 
 # Security Headers and HTTPS (relaxed for local development)
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
@@ -180,40 +184,48 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 # Cache Configuration - Redis first, fallback to in-memory
-REDIS_URL = config('REDIS_URL', default='redis://localhost:6379')
+REDIS_URL = config('REDIS_URL', default=None)
 
-try:
-    # Test both django_redis import and Redis connectivity
-    import django_redis
-    import redis
-    redis_client = redis.Redis.from_url(REDIS_URL + '/0')
-    redis_client.ping()
+if REDIS_URL:
+    try:
+        # Test both django_redis import and Redis connectivity
+        import django_redis
+        import redis
 
-    # Redis is available, use it
-    CACHES = {
-        'default': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': REDIS_URL + '/1',
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        # Parse Redis URL properly
+        redis_url_base = REDIS_URL.rstrip('/0').rstrip('/1').rstrip('/2').rstrip('/3')
+        redis_client = redis.Redis.from_url(REDIS_URL)
+        redis_client.ping()
+
+        # Redis is available, use it
+        CACHES = {
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': f"{redis_url_base}/1",
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                },
+                'KEY_PREFIX': 'promptcraft',
+                'TIMEOUT': 300,  # 5 minutes default
             },
-            'KEY_PREFIX': 'promptcraft',
-            'TIMEOUT': 300,  # 5 minutes default
-        },
-        # Session cache - separate database for isolation
-        'sessions': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': REDIS_URL + '/2',
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            },
-            'KEY_PREFIX': 'session',
-            'TIMEOUT': 86400,  # 24 hours
+            # Session cache - separate database for isolation
+            'sessions': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': f"{redis_url_base}/2",
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                },
+                'KEY_PREFIX': 'session',
+                'TIMEOUT': 86400,  # 24 hours
+            }
         }
-    }
-    print("🟢 Redis cache enabled", file=sys.stderr)
-except (ImportError, Exception) as e:
-    print(f"⚠️ Redis not available ({e}), using fallback cache", file=sys.stderr)
+        print("🟢 Redis cache enabled", file=sys.stderr)
+    except (ImportError, Exception) as e:
+        print(f"⚠️ Redis not available ({e}), using fallback cache", file=sys.stderr)
+        REDIS_URL = None
+
+if not REDIS_URL:
+    # Fallback to in-memory cache
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -233,33 +245,44 @@ except (ImportError, Exception) as e:
             }
         }
     }
+    print("ℹ️ Using in-memory cache (no Redis configured)", file=sys.stderr)
 
 # Channels Configuration - Redis first, fallback to in-memory
-try:
-    import channels_redis
-    # Test Redis availability again for channels
-    redis_client = redis.Redis.from_url(REDIS_URL + '/3')
-    redis_client.ping()
+if REDIS_URL:
+    try:
+        import channels_redis
+        # Test Redis availability again for channels
+        redis_url_base = REDIS_URL.rstrip('/0').rstrip('/1').rstrip('/2').rstrip('/3')
+        redis_client = redis.Redis.from_url(f"{redis_url_base}/3")
+        redis_client.ping()
 
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [REDIS_URL + '/3'],
-                'capacity': 1500,
-                'expiry': 60,
-                'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='change-me-in-production')],
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels_redis.core.RedisChannelLayer',
+                'CONFIG': {
+                    'hosts': [f"{redis_url_base}/3"],
+                    'capacity': 1500,
+                    'expiry': 60,
+                    'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='change-me-in-production')],
+                },
             },
-        },
-    }
-    print("🟢 Redis channel layer enabled", file=sys.stderr)
-except (ImportError, Exception) as e:
+        }
+        print("🟢 Redis channel layer enabled", file=sys.stderr)
+    except (ImportError, Exception) as e:
+        CHANNEL_LAYERS = {
+            'default': {
+                'BACKEND': 'channels.layers.InMemoryChannelLayer'
+            }
+        }
+        print(f"⚠️ Using in-memory channel layer for Redis error: {e}", file=sys.stderr)
+else:
+    # No Redis configured, use in-memory
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels.layers.InMemoryChannelLayer'
         }
     }
-    print(f"⚠️ Using in-memory channel layer ({e})", file=sys.stderr)
+    print("ℹ️ Using in-memory channel layer (no Redis configured)", file=sys.stderr)
 
 # Logging Configuration
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)

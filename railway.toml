@@ -1,16 +1,16 @@
 [build]
 builder = "DOCKERFILE"
-# Use prod Dockerfile initially, switch to rag when ready
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "python manage.py migrate && python manage.py collectstatic --noinput && daphne promptcraft.asgi:application --bind 0.0.0.0 --port $PORT"
-healthcheckPath = "/api/health/"
+startCommand = "python manage.py migrate --noinput && daphne promptcraft.asgi:application --bind 0.0.0.0 --port $PORT"
+healthcheckPath = "/health/"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
+restartPolicyMaxRetries = 3
 
 [env]
 DJANGO_SETTINGS_MODULE = "promptcraft.settings.production"
 PYTHONDONTWRITEBYTECODE = "1"
 PYTHONUNBUFFERED = "1"
+DEBUG = "false"

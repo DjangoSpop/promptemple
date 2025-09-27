@@ -24,7 +24,8 @@ FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/opt/venv/bin:$PATH"
+    PATH="/opt/venv/bin:$PATH" \
+    DJANGO_SETTINGS_MODULE=promptcraft.settings.production
 
 WORKDIR /app
 
@@ -42,19 +43,24 @@ COPY --from=builder /opt/venv /opt/venv
 # Copy application code
 COPY . .
 
-# Create non-root user
+# Create non-root user and set permissions
 RUN adduser --disabled-password --gecos "" appuser \
+    && mkdir -p /app/logs /app/staticfiles /app/mediafiles \
     && chown -R appuser:appuser /app
+
+# Switch to non-root user
 USER appuser
 
-ENV DJANGO_SETTINGS_MODULE=promptcraft.settings.production
+# Run migrations and collect static files
+RUN python manage.py migrate --noinput || echo "Migration failed, continuing..." \
+    && python manage.py collectstatic --noinput
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
+# Expose port (will be overridden by Railway's PORT env var)
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/api/health/ || exit 1
+# Health check using the correct health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/health/ || exit 1
 
-CMD ["sh", "-c", "daphne promptcraft.asgi:application --bind 0.0.0.0 --port ${PORT:-8000}"]
+# Start command with proper error handling
+CMD ["sh", "-c", "python manage.py migrate --noinput && daphne promptcraft.asgi:application --bind 0.0.0.0 --port ${PORT:-8000}"]

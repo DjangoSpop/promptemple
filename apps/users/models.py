@@ -41,6 +41,29 @@ class User(AbstractUser):
     # Profile information
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     bio = models.TextField(max_length=500, blank=True)
+
+    # Social authentication fields
+    social_avatar_url = models.URLField(
+        null=True,
+        blank=True,
+        help_text="Avatar URL from social provider"
+    )
+    provider_id = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="User ID from social provider"
+    )
+    provider_name = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        choices=[
+            ('google', 'Google'),
+            ('github', 'GitHub'),
+        ],
+        help_text="Social authentication provider"
+    )
     
     # Gamification fields
     credits = models.IntegerField(

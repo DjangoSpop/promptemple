@@ -13,14 +13,17 @@ urlpatterns = [
     path('logout/', views.UserLogoutView.as_view(), name='user-logout'),
     path('refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('check-username/', views.check_username_availability, name='check-username'),
-        path( 'auth/check-email/', views.check_email_availability, name='check-email'),
+    path('check-email/', views.check_email_availability, name='check-email'),
+
+    # Social authentication endpoints
+    path('', include('apps.social_auth.urls')),
+
     # User profile endpoints
-    
     path('profile/', views.UserProfileView.as_view(), name='user-profile'),
     path('profile/update/', views.UserProfileUpdateView.as_view(), name='user-profile-update'),
     path('change-password/', views.PasswordChangeView.as_view(), name='password-change'),
     path('stats/', views.user_stats_view, name='user-stats'),
-    
+
     # Include router URLs
     path('', include(router.urls)),
 ]
