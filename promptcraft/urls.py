@@ -15,6 +15,11 @@ from apps.core.views import HealthCheckView, health_simple
 from apps.core.socketio_views import SocketIOCompatibilityView, WebSocketInfoView
 from django.http import JsonResponse
 
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+
 def api_root(request):
     """API root endpoint"""
     return JsonResponse({
@@ -68,7 +73,7 @@ def api_root(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
+     path('sentry-debug/', trigger_error),
     # Health check endpoint (simple, no DB dependencies for Railway)
     path('health/', health_simple, name='health-check'),
     
@@ -126,3 +131,4 @@ if 'rest_framework' in settings.INSTALLED_APPS:
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

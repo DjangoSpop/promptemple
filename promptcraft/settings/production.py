@@ -26,6 +26,33 @@ except ImportError:
                 return cast(value)
         return value
 
+# Sentry Configuration for Production
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+
+    SENTRY_DSN = config('SENTRY_DSN', default=None)
+    if SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[
+                DjangoIntegration(transaction_style='url'),
+                CeleryIntegration(),
+                RedisIntegration(),
+            ],
+            traces_sample_rate=0.1,
+            send_default_pii=False,
+            environment=config('SENTRY_ENVIRONMENT', default='production'),
+            release=config('SENTRY_RELEASE', default=None),
+        )
+        print("🔍 Sentry monitoring enabled", file=sys.stderr)
+    else:
+        print("⚠️ Sentry DSN not configured, monitoring disabled", file=sys.stderr)
+except ImportError:
+    print("⚠️ Sentry SDK not available, monitoring disabled", file=sys.stderr)
+
 # Try to import dj_database_url, fallback if not available
 try:
     import dj_database_url
@@ -34,10 +61,15 @@ except ImportError:
     print("⚠️ dj_database_url not available, using direct database configuration", file=sys.stderr)
     HAS_DJ_DATABASE_URL = False
 
-# Add JWT token blacklist app for production security
-INSTALLED_APPS += [
-    'rest_framework_simplejwt.token_blacklist',
-]
+# Add JWT token blacklist app for production security (if available)
+try:
+    import rest_framework_simplejwt.token_blacklist
+    INSTALLED_APPS += [
+        'rest_framework_simplejwt.token_blacklist',
+    ]
+    print("🔐 JWT token blacklist enabled", file=sys.stderr)
+except ImportError:
+    print("⚠️ JWT token blacklist not available", file=sys.stderr)
 
 # Security Settings
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -69,7 +101,7 @@ elif config('DATABASE_URL', default=None) and not HAS_DJ_DATABASE_URL:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': config('DB_NAME', default='promptcraft_db'),
             'USER': config('DB_USER', default='promptcraft_user'),
-            'PASSWORD': config('DB_PASSWORD', default='fuckthat'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
             'OPTIONS': {
@@ -87,7 +119,7 @@ else:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': config('DB_NAME', default='promptcraft_db'),
             'USER': config('DB_USER', default='promptcraft_user'),
-            'PASSWORD': config('DB_PASSWORD', default='fuckthat'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
             'OPTIONS': {

@@ -293,6 +293,12 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Commented out - not installed
 }
 
+sentry_sdk.init(
+    dsn="https://ac543084397afe34f6a554abd90177c2@o4510098758631424.ingest.de.sentry.io/4510098769707088",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+)
 # DRF Spectacular settings
 SPECTACULAR_SETTINGS = {
     'TITLE': 'PromptCraft API',

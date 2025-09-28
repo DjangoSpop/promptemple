@@ -15,9 +15,9 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy and install Python dependencies
-COPY requirements_production.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements_production.txt
+    && pip install --no-cache-dir -r requirements.txt
 
 # Production stage
 FROM python:3.12-slim AS runtime
@@ -51,16 +51,12 @@ RUN adduser --disabled-password --gecos "" appuser \
 # Switch to non-root user
 USER appuser
 
-# Run migrations and collect static files
-RUN python manage.py migrate --noinput || echo "Migration failed, continuing..." \
-    && python manage.py collectstatic --noinput
-
 # Expose port (will be overridden by Railway's PORT env var)
 EXPOSE 8000
 
-# Health check using the correct health endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/health/ || exit 1
+# Health check using the API health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/api/v1/core/health/ || exit 1
 
-# Start command with proper error handling
-CMD ["sh", "-c", "python manage.py migrate --noinput && daphne promptcraft.asgi:application --bind 0.0.0.0 --port ${PORT:-8000}"]
+# Start command with proper Railway deployment sequence
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && daphne promptcraft.asgi:application --bind 0.0.0.0 --port ${PORT:-8000}"]

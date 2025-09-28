@@ -8520,3 +8520,24 @@ INFO 2025-09-28 17:20:58,865 views 10980 28504 High-performance services loaded 
 INFO 2025-09-28 17:20:58,909 middleware 10980 28504 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 17:20:59,621 middleware 10980 15444 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 17:21:04,799 middleware 10980 15500 AuthDebug: GET /api/v2/status/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 17:49:37,379 middleware 10980 13300 AuthDebug: GET /api/v2/billing/plans/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 17:49:37,379 middleware 10980 28476 AuthDebug: GET /api/v2/core/health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 17:49:38,823 middleware 10980 37400 AuthDebug: GET /api/v2/status/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 21:19:45,866 asgi 28236 21736 Loaded core WebSocket patterns
+INFO 2025-09-28 21:19:45,871 langchain_services 28236 21736 DeepSeek integration loaded successfully
+WARNING 2025-09-28 21:19:46,788 langchain_services 28236 21736 LangChain not available - using fallback implementations
+INFO 2025-09-28 21:19:46,900 langchain_services 28236 21736 Using mock LangChain service
+INFO 2025-09-28 21:19:46,901 mock_langchain 28236 21736 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 21:19:47,180 asgi 28236 21736 Loaded template WebSocket patterns
+INFO 2025-09-28 21:19:47,183 asgi 28236 21736 Loaded AI services WebSocket patterns
+INFO 2025-09-28 21:19:47,183 asgi 28236 21736 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-28 21:19:47,183 cli 28236 21736 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 21:19:47,184 server 28236 21736 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-28 21:19:47,184 server 28236 21736 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 21:19:47,185 server 28236 21736 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-28 21:35:30,197 server 28236 21736 Killed 0 pending application instances
+INFO 2025-09-28 21:35:36,169 langchain_services 24408 35376 DeepSeek integration loaded successfully
+WARNING 2025-09-28 21:35:36,309 langchain_services 24408 35376 LangChain not available - using fallback implementations
+INFO 2025-09-28 21:35:36,402 langchain_services 24408 35376 Using mock LangChain service
+INFO 2025-09-28 21:35:36,402 mock_langchain 24408 35376 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 21:35:36,402 views 24408 35376 High-performance services loaded successfully
