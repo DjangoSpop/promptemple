@@ -8492,3 +8492,27 @@ INFO 2025-09-28 11:19:02,183 middleware 3992 9208 AuthDebug: GET /api/ from 127.
 INFO 2025-09-28 11:19:39,136 middleware 3992 32076 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 11:19:43,234 middleware 3992 31948 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 12:06:48,903 server 3992 18756 Killed 0 pending application instances
+INFO 2025-09-28 17:01:54,884 asgi 28572 9900 Loaded core WebSocket patterns
+INFO 2025-09-28 17:01:54,884 langchain_services 28572 9900 DeepSeek integration loaded successfully
+WARNING 2025-09-28 17:01:55,779 langchain_services 28572 9900 LangChain not available - using fallback implementations
+INFO 2025-09-28 17:01:55,896 langchain_services 28572 9900 Using mock LangChain service
+INFO 2025-09-28 17:01:55,896 mock_langchain 28572 9900 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 17:01:56,139 asgi 28572 9900 Loaded template WebSocket patterns
+INFO 2025-09-28 17:01:56,143 asgi 28572 9900 Loaded AI services WebSocket patterns
+INFO 2025-09-28 17:01:56,143 asgi 28572 9900 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-28 17:01:56,143 cli 28572 9900 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 17:01:56,143 server 28572 9900 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-28 17:01:56,143 server 28572 9900 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 17:01:56,143 server 28572 9900 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-28 17:11:24,592 asgi 10980 27956 Loaded core WebSocket patterns
+INFO 2025-09-28 17:11:24,596 langchain_services 10980 27956 DeepSeek integration loaded successfully
+WARNING 2025-09-28 17:11:25,298 langchain_services 10980 27956 LangChain not available - using fallback implementations
+INFO 2025-09-28 17:11:25,393 langchain_services 10980 27956 Using mock LangChain service
+INFO 2025-09-28 17:11:25,394 mock_langchain 10980 27956 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 17:11:25,559 asgi 10980 27956 Loaded template WebSocket patterns
+INFO 2025-09-28 17:11:25,559 asgi 10980 27956 Loaded AI services WebSocket patterns
+INFO 2025-09-28 17:11:25,559 asgi 10980 27956 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-28 17:11:25,559 cli 10980 27956 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 17:11:25,559 server 10980 27956 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-28 17:11:25,559 server 10980 27956 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 17:11:25,559 server 10980 27956 Listening on TCP address 0.0.0.0:8000
