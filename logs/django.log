@@ -8541,3 +8541,21 @@ WARNING 2025-09-28 21:35:36,309 langchain_services 24408 35376 LangChain not ava
 INFO 2025-09-28 21:35:36,402 langchain_services 24408 35376 Using mock LangChain service
 INFO 2025-09-28 21:35:36,402 mock_langchain 24408 35376 Using mock LangChain service (dependencies not available)
 INFO 2025-09-28 21:35:36,402 views 24408 35376 High-performance services loaded successfully
+INFO 2025-09-28 21:42:59,494 asgi 24876 9744 Loaded core WebSocket patterns
+INFO 2025-09-28 21:42:59,494 langchain_services 24876 9744 DeepSeek integration loaded successfully
+WARNING 2025-09-28 21:43:00,095 langchain_services 24876 9744 LangChain not available - using fallback implementations
+INFO 2025-09-28 21:43:00,175 langchain_services 24876 9744 Using mock LangChain service
+INFO 2025-09-28 21:43:00,176 mock_langchain 24876 9744 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 21:43:00,304 asgi 24876 9744 Loaded template WebSocket patterns
+INFO 2025-09-28 21:43:00,304 asgi 24876 9744 Loaded AI services WebSocket patterns
+INFO 2025-09-28 21:43:00,304 asgi 24876 9744 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-28 21:43:00,304 cli 24876 9744 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 21:43:00,304 server 24876 9744 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-28 21:43:00,304 server 24876 9744 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 21:43:00,304 server 24876 9744 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-28 21:46:09,934 views 24876 32436 High-performance services loaded successfully
+INFO 2025-09-28 21:46:09,991 middleware 24876 32436 AuthDebug: GET /api/sentry-debug/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 21:46:10,482 middleware 24876 6464 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-09-28 21:46:16,599 middleware 24876 35648 AuthDebug: GET /sentry-debug/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 21:52:10,574 middleware 24876 36124 AuthDebug: GET /sentry-debug/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 21:52:10,947 middleware 24876 34896 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None

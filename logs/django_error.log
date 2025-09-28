@@ -4297,3 +4297,53 @@ Traceback (most recent call last):
     val = getattr(_wrapped, name)
           ^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'Settings' object has no attribute 'SOCIALACCOUNT_PROVIDERS'
+ERROR 2025-09-28 21:46:16,629 log 24876 32832 Internal Server Error: /sentry-debug/
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\promptcraft\urls.py", line 20, in trigger_error
+    division_by_zero = 1 / 0
+                       ~~^~~
+ZeroDivisionError: division by zero
+ERROR 2025-09-28 21:52:10,599 log 24876 32832 Internal Server Error: /sentry-debug/
+Traceback (most recent call last):
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\django\core\handlers\exception.py", line 42, in inner
+    response = await get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 489, in thread_handler
+    raise exc_info[1]
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\django\core\handlers\base.py", line 253, in _get_response_async
+    response = await wrapped_callback(
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 439, in __call__
+    ret = await asyncio.shield(exec_coro)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\current_thread_executor.py", line 40, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\venv\Lib\site-packages\asgiref\sync.py", line 493, in thread_handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ahmed el bahi\MyPromptApp\my_prmpt_bakend\promptcraft\urls.py", line 20, in trigger_error
+    division_by_zero = 1 / 0
+                       ~~^~~
+ZeroDivisionError: division by zero
