@@ -8516,3 +8516,7 @@ INFO 2025-09-28 17:11:25,559 cli 10980 27956 Starting server at tcp:port=8000:in
 INFO 2025-09-28 17:11:25,559 server 10980 27956 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
 INFO 2025-09-28 17:11:25,559 server 10980 27956 Configuring endpoint tcp:port=8000:interface=0.0.0.0
 INFO 2025-09-28 17:11:25,559 server 10980 27956 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-28 17:20:58,865 views 10980 28504 High-performance services loaded successfully
+INFO 2025-09-28 17:20:58,909 middleware 10980 28504 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 17:20:59,621 middleware 10980 15444 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 17:21:04,799 middleware 10980 15500 AuthDebug: GET /api/v2/status/ from 127.0.0.1 Authorization=None
