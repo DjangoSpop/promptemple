@@ -8460,3 +8460,34 @@ INFO 2025-09-27 11:47:44,020 server 42900 42904 Configuring endpoint tcp:port=80
 INFO 2025-09-27 11:47:44,021 server 42900 42904 Listening on TCP address 0.0.0.0:8000
 INFO 2025-09-27 11:55:58,562 views 42900 11600 High-performance services loaded successfully
 INFO 2025-09-27 11:55:58,602 middleware 42900 11600 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:04:13,621 middleware 42900 30156 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:04:15,885 middleware 42900 20136 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:04:18,776 middleware 42900 39528 AuthDebug: GET /api/v2/status/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:04:21,214 middleware 42900 39720 AuthDebug: GET /api/v2/billing/plans/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:04:21,222 middleware 42900 42716 AuthDebug: GET /api/v2/core/health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:12:11,401 middleware 42900 37304 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:12:39,965 middleware 42900 36604 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:12:52,159 middleware 42900 37908 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:13:13,650 middleware 42900 42952 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:14:21,271 middleware 42900 28412 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-27 12:14:36,140 middleware 42900 33612 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:14:43,071 asgi 3992 18756 Loaded core WebSocket patterns
+INFO 2025-09-28 11:14:43,076 langchain_services 3992 18756 DeepSeek integration loaded successfully
+WARNING 2025-09-28 11:14:44,021 langchain_services 3992 18756 LangChain not available - using fallback implementations
+INFO 2025-09-28 11:14:44,143 langchain_services 3992 18756 Using mock LangChain service
+INFO 2025-09-28 11:14:44,143 mock_langchain 3992 18756 Using mock LangChain service (dependencies not available)
+INFO 2025-09-28 11:14:44,435 asgi 3992 18756 Loaded template WebSocket patterns
+INFO 2025-09-28 11:14:44,441 asgi 3992 18756 Loaded AI services WebSocket patterns
+INFO 2025-09-28 11:14:44,441 asgi 3992 18756 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-09-28 11:14:44,442 cli 3992 18756 Starting server at tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 11:14:44,442 server 3992 18756 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-09-28 11:14:44,442 server 3992 18756 Configuring endpoint tcp:port=8000:interface=0.0.0.0
+INFO 2025-09-28 11:14:44,442 server 3992 18756 Listening on TCP address 0.0.0.0:8000
+INFO 2025-09-28 11:15:12,487 views 3992 6872 High-performance services loaded successfully
+INFO 2025-09-28 11:15:12,545 middleware 3992 6872 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:15:13,382 middleware 3992 10228 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:15:59,295 middleware 3992 23136 AuthDebug: GET /api/v2/auth/social/providers/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:15:59,684 middleware 3992 31172 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:19:02,183 middleware 3992 9208 AuthDebug: GET /api/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:19:39,136 middleware 3992 32076 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-09-28 11:19:43,234 middleware 3992 31948 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
