@@ -228,7 +228,9 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
         'http://127.0.0.1',
         'http://10.0.2.2:8000',  # Android AVD emulator
         'http://10.0.2.2',  
-        "http://127.0.0.1:3000",     # Android AVD emulator
+        "http://127.0.0.1:3000", 
+        "http://www.prompt-temple.com",
+        "http://api.prompt-temple.com"    # Android AVD emulator
     ]
     CORS_ALLOW_CREDENTIALS = True
     CORS_ALLOWED_HEADERS = [
@@ -246,8 +248,8 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
 ]
     # Ensure both modern and legacy setting names are present so every
     # environment and any code referencing the older name works.
-    CORS_ALLOW_ALL_ORIGINS = True  # Only for development
-    CORS_ALLOW_HEADERS = ['*'] 
+    # CORS_ALLOW_ALL_ORIGINS = True  # Only for development
+    # CORS_ALLOW_HEADERS = ['*'] 
 
     # Backwards-compatible alias for older code that expects CORS_ALLOWED_HEADERS
 
@@ -405,8 +407,8 @@ WEBSOCKET_SETTINGS = {
 CHAT_TRANSPORT = config('CHAT_TRANSPORT', default='sse')  # values: "sse" | "ws"
 
 # External AI Provider Configuration (for SSE proxy)
-ZAI_API_TOKEN = config('ZAI_API_TOKEN', default='')
-ZAI_API_BASE = config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4')
+# ZAI_API_TOKEN = config('ZAI_API_TOKEN', default='')
+# ZAI_API_BASE = config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4')
 
 # Security Headers for Proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -419,14 +421,14 @@ SSE_HEADERS = {
 }
 
 # Z.AI API Configuration
-ZAI_CONFIG = {
-    'API_TOKEN': config('ZAI_API_TOKEN', default=''),
-    'API_BASE': config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4'),
-    'DEFAULT_MODEL': config('ZAI_DEFAULT_MODEL', default='glm-4-32b-0414-128k'),
-    'MAX_TOKENS': int(config('ZAI_MAX_TOKENS', default='4096')),
-    'TEMPERATURE': float(config('ZAI_TEMPERATURE', default='0.7')),
-    'TIMEOUT': int(config('ZAI_TIMEOUT', default='30')),
-}
+# ZAI_CONFIG = {
+#     'API_TOKEN': config('ZAI_API_TOKEN', default=''),
+#     'API_BASE': config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4'),
+#     'DEFAULT_MODEL': config('ZAI_DEFAULT_MODEL', default='glm-4-32b-0414-128k'),
+#     'MAX_TOKENS': int(config('ZAI_MAX_TOKENS', default='4096')),
+#     'TEMPERATURE': float(config('ZAI_TEMPERATURE', default='0.7')),
+#     'TIMEOUT': int(config('ZAI_TIMEOUT', default='30')),
+# }
 
 # Legacy DeepSeek Configuration (for backward compatibility)
 DEEPSEEK_CONFIG = {

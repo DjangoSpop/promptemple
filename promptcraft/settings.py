@@ -45,7 +45,6 @@ if DEBUG:
 else:
     # Production - specific domains only
     ALLOWED_HOSTS = [
-        'floating-chamber-26624-41879340871a.herokuapp.com',
         'www.prompt-temple.com',
         'prompt-temple.com',
     ]
@@ -240,7 +239,9 @@ if 'corsheaders' in THIRD_PARTY_APPS:
         "http://127.0.0.1:8000",
         "http://10.0.2.2:8000",  # Android emulator
         "http://10.0.3.2:8000",  # Alternative Android emulator
-        "https://YOUR-FRONTEND-DOMAIN",  # Production frontend domain
+        "https://www.prompt-temple.com",
+        "https://prompt-temple.com",
+        "api.prompt-temple.com"  # Production frontend domain
     ]
     CORS_ALLOW_CREDENTIALS = True
     # Allow all origins in development for mobile testing
@@ -289,7 +290,7 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Commented out - not installed
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Commented out - not installed
 }
 
 # DRF Spectacular settings
@@ -426,8 +427,8 @@ SEARCH_SETTINGS = {
 CHAT_TRANSPORT = config('CHAT_TRANSPORT', default='sse')  # values: "sse" | "ws"
 
 # External AI Provider Configuration (for SSE proxy)
-ZAI_API_TOKEN = config('ZAI_API_TOKEN', default='')
-ZAI_API_BASE = config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4')
+# ZAI_API_TOKEN = config('ZAI_API_TOKEN', default='')
+# ZAI_API_BASE = config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4')
 
 # Security Headers for Proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -440,14 +441,14 @@ SSE_HEADERS = {
 }
 
 # Z.AI API Configuration
-ZAI_CONFIG = {
-    'API_TOKEN': config('ZAI_API_TOKEN', default=''),
-    'BASE_URL': config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4'),
-    'DEFAULT_MODEL': config('ZAI_DEFAULT_MODEL', default='glm-4-32b-0414-128k'),
-    'MAX_TOKENS': int(config('ZAI_MAX_TOKENS', default='4096')),
-    'TEMPERATURE': float(config('ZAI_TEMPERATURE', default='0.7')),
-    'TIMEOUT': int(config('ZAI_TIMEOUT', default='30')),
-}
+# ZAI_CONFIG = {
+#     'API_TOKEN': config('ZAI_API_TOKEN', default=''),
+#     'BASE_URL': config('ZAI_API_BASE', default='https://api.z.ai/api/paas/v4'),
+#     'DEFAULT_MODEL': config('ZAI_DEFAULT_MODEL', default='glm-4-32b-0414-128k'),
+#     'MAX_TOKENS': int(config('ZAI_MAX_TOKENS', default='4096')),
+#     'TEMPERATURE': float(config('ZAI_TEMPERATURE', default='0.7')),
+#     'TIMEOUT': int(config('ZAI_TIMEOUT', default='30')),
+# }
 
 # DeepSeek API Configuration (V3.1 compatible)
 DEEPSEEK_CONFIG = {
