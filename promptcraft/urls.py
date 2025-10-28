@@ -39,6 +39,7 @@ def api_root(request):
             'orchestrator': '/api/v2/orchestrator/',
             'analytics': '/api/v2/analytics/',
             'core': '/api/v2/core/',
+            'research': '/api/v2/research/',
         },
         'template_endpoints': {
             'list': '/api/v2/templates/',
@@ -68,6 +69,13 @@ def api_root(request):
         'core_endpoints': {
             'config': '/api/v2/core/config/',
             'health': '/api/v2/core/health/',
+        },
+        'research_endpoints': {
+            'jobs': '/api/v2/research/jobs/',
+            'quick': '/api/v2/research/quick/',
+            'batch': '/api/v2/research/batch/',
+            'health': '/api/v2/research/health/',
+            'stats': '/api/v2/research/stats/',
         }
     })
 
@@ -99,6 +107,7 @@ urlpatterns = [
     path('api/v2/core/', include(('apps.core.urls', 'core_v2'), namespace='core_v2')),
     path('api/v2/billing/', include(('apps.billing.urls', 'billing_v2'), namespace='billing_v2')),
     path('api/v2/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v2'), namespace='orchestrator_v2')),
+    path('', include(('research_agent.urls', 'research_agent'), namespace='research_agent')),
     
     # API v1 URLs (legacy support)
     path('api/v1/', include(('apps.templates.urls', 'templates_api_v1'), namespace='templates_api_v1')),

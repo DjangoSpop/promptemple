@@ -103,6 +103,7 @@ except ImportError:
 
 LOCAL_APPS = [
     # Only add apps that actually exist
+    'research_agent',  # Add research agent app
 ]
 
 # Check which local apps exist and add them
@@ -441,3 +442,19 @@ DEEPSEEK_CONFIG = {
     'TEMPERATURE': float(config('DEEPSEEK_TEMPERATURE', default='0.7')),
     'TIMEOUT': int(config('DEEPSEEK_TIMEOUT', default='30')),
 }
+
+# Research Agent Configuration
+RESEARCH = {
+    'EMBED_MODEL': config('RESEARCH_EMBED_MODEL', default='sentence-transformers/all-MiniLM-L6-v2'),
+    'SEARCH_PROVIDER': config('RESEARCH_SEARCH_PROVIDER', default='tavily'),  # tavily, serpapi, etc.
+    'SEARCH_TOP_K': config('RESEARCH_SEARCH_TOP_K', default=6, cast=int),
+    'FETCH_TIMEOUT_S': config('RESEARCH_FETCH_TIMEOUT_S', default=15, cast=int),
+    'MAX_PAGES': config('RESEARCH_MAX_PAGES', default=10, cast=int),  # cap per job
+    'MAX_TOKENS_PER_CHUNK': config('RESEARCH_MAX_TOKENS_PER_CHUNK', default=800, cast=int),
+    'CHUNK_OVERLAP_TOKENS': config('RESEARCH_CHUNK_OVERLAP_TOKENS', default=120, cast=int),
+    'ANSWER_MODEL': config('RESEARCH_ANSWER_MODEL', default='deepseek-chat'),  # Use existing DeepSeek config
+    'RATE_LIMIT_DEMO': config('RESEARCH_RATE_LIMIT_DEMO', default='10/5m'),
+}
+
+# Tavily API Configuration
+TAVILY_API_KEY = config('TAVILY_API_KEY', default='')

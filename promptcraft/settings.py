@@ -233,15 +233,16 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
 # CORS settings for mobile development
 if 'corsheaders' in THIRD_PARTY_APPS:
     CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",  # React dev server
+        "http://localhost:3000",
+        "http://localhost:3001",   # React dev server
         "http://localhost:8000",
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         "http://10.0.2.2:8000",  # Android emulator
         "http://10.0.3.2:8000",  # Alternative Android emulator
-        "https://www.prompt-temple.com",
-        "https://prompt-temple.com",
-        "api.prompt-temple.com"  # Production frontend domain
+        # Production frontend domain
     ]
     CORS_ALLOW_CREDENTIALS = True
     # Allow all origins in development for mobile testing
@@ -250,7 +251,7 @@ if 'corsheaders' in THIRD_PARTY_APPS:
     
     # Allow custom headers from frontend
     CORS_ALLOWED_HEADERS = [
-        'accept',
+'accept',
         'accept-encoding',
         'accept-language',
         'authorization',
@@ -262,9 +263,17 @@ if 'corsheaders' in THIRD_PARTY_APPS:
         'user-agent',
         'x-csrftoken',
         'x-requested-with',
-        'x-client-version',  # Custom frontend header
-        'x-client-name',     # Custom frontend header
-        'x-request-id',      # Custom frontend header
+        'x-client-version',
+        'x-client-name',
+        'x-request-id',   # Custom frontend header
+    ]
+    CORS_ALLOWED_METHODS = [
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS',
     ]
 
 # REST Framework settings (JWT-only authentication to avoid session dependency)

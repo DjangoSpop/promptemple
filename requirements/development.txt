@@ -1,0 +1,22 @@
+# requirements/development.txt - Development-specific packages
+-r base.txt
+
+# Development Tools
+pytest==8.3.3
+pytest-django==4.9.0
+pytest-asyncio==0.24.0
+black==24.10.0
+flake8==7.1.1
+isort==5.13.2
+
+# Testing
+factory-boy==3.3.1
+faker==30.8.2
+
+# Debug
+django-debug-toolbar==4.4.6
+ipython==8.28.0
+
+# Type checking
+mypy==1.13.0
+django-stubs==5.1.0

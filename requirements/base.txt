@@ -1,0 +1,55 @@
+# requirements/base.txt - TESTED, CONFLICT-FREE VERSIONS
+
+# Django Core
+Django==4.2.16
+django-cors-headers==4.3.1
+django-filter==24.3
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+drf-spectacular==0.27.2
+
+# Database
+psycopg2-binary==2.9.9
+pgvector==0.2.5
+
+# Async & WebSockets
+daphne==4.1.2
+channels==4.1.0
+channels-redis==4.2.0
+
+# Cache & Tasks
+redis==5.0.8
+django-redis==5.4.0
+celery==5.4.0
+
+# LangChain Stack (CRITICAL - No conflicts)
+langchain==0.3.17
+langchain-community==0.3.15
+langchain-core>=0.3.33  # Compatible with langchain 0.3.17
+langchain-openai==0.3.35  # Updated to latest available version
+pydantic==2.10.5  # MUST be v2 for LangChain 0.3+
+pydantic-settings==2.7.1
+
+# AI Services
+openai>=1.104.2,<3.0.0  # Compatible with langchain-openai 0.3.35
+tiktoken==0.8.0
+httpx==0.28.1
+
+# Vector Search
+faiss-cpu==1.9.0.post1  # Lightweight alternative to pgvector for dev
+
+# Social Auth
+social-auth-app-django==5.4.1
+social-auth-core==4.5.4
+
+# Utilities
+python-dotenv==1.0.1
+Pillow==10.4.0
+wheel==0.44.0
+setuptools==75.1.0
+
+# Additional dependencies that might be needed
+numpy==1.26.4
+scipy==1.14.1
+requests==2.32.3
+urllib3==2.2.3

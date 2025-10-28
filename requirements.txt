@@ -1,72 +1,35 @@
-# Production Requirements for PromptCraft Railway Deployment
-# Optimized for Railway's 4GB runtime environment
+# Production Requirements - Use development.txt for local dev
+-r requirements/base.txt
 
-# Django Core Framework
-Django==4.2.11
-asgiref==3.7.2
+# Production Server & Monitoring
+gunicorn==23.0.0
+sentry-sdk==2.17.0
 
-# ASGI Server & WebSocket Support
-daphne==4.1.2
-channels==4.0.0
-channels-redis==4.1.0
-
-# REST API Framework
-djangorestframework==3.14.0
-djangorestframework-simplejwt==5.3.1
-drf-spectacular==0.28.0
-
-# Database & Caching
+# Configuration & Environment  
+python-decouple==3.8
+django-environ==0.11.2
 dj-database-url==2.1.0
-psycopg2-binary==2.9.9
-redis==5.0.1
-django-redis==5.4.0
-
-# HTTP & CORS
-django-cors-headers==4.3.1
-django-filter==23.5
-httpx==0.28.1
-httpx-sse==0.4.1
-requests==2.32.5
-
-# Static Files & Storage
-whitenoise==6.6.0
-Pillow==10.2.0
 
 # Background Tasks
-celery==5.3.6
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
 
-# Configuration & Environment
-python-decouple==3.8
-django-environ==0.11.2
-
-# AI Services
-openai==1.60.1
+# Additional AI Services
 anthropic==0.64.0
 
-# LangChain Core (minimal for production)
-langchain==0.3.27
-langchain-core==0.3.75
-langchain-openai==0.2.6
-langchain-anthropic==0.3.19
-
-# Vector Database (lightweight)
+# Vector Database (lightweight for production)
 chromadb==0.5.5
 sentence-transformers==2.2.2
 
-# Scientific Computing (essential only)
-numpy==1.26.4
-pydantic==2.11.7
+# Payment Processing
+stripe==12.5.0
+
+# Static Files & Storage
+whitenoise==6.8.1
+
+# HTTP extras
+httpx-sse==0.4.1
 
 # Utilities
 pytz==2024.1
 python-dateutil==2.9.0.post0
-PyJWT==2.10.1
-
-# Production Server & Monitoring
-gunicorn==21.2.0
-sentry-sdk==1.45.0
-
-# Payment Processing
-stripe==12.5.0

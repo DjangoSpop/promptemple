@@ -8559,3 +8559,221 @@ INFO 2025-09-28 21:46:10,482 middleware 24876 6464 AuthDebug: GET /favicon.ico f
 INFO 2025-09-28 21:46:16,599 middleware 24876 35648 AuthDebug: GET /sentry-debug/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 21:52:10,574 middleware 24876 36124 AuthDebug: GET /sentry-debug/ from 127.0.0.1 Authorization=None
 INFO 2025-09-28 21:52:10,947 middleware 24876 34896 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-11 18:29:05,224 asgi 13528 2568 Loaded core WebSocket patterns
+INFO 2025-10-11 18:29:05,229 langchain_services 13528 2568 DeepSeek integration loaded successfully
+WARNING 2025-10-11 18:29:06,018 langchain_services 13528 2568 LangChain not available - using fallback implementations
+INFO 2025-10-11 18:29:06,114 langchain_services 13528 2568 Using mock LangChain service
+INFO 2025-10-11 18:29:06,115 mock_langchain 13528 2568 Using mock LangChain service (dependencies not available)
+INFO 2025-10-11 18:29:06,282 asgi 13528 2568 Loaded template WebSocket patterns
+INFO 2025-10-11 18:29:06,285 asgi 13528 2568 Loaded AI services WebSocket patterns
+INFO 2025-10-11 18:29:06,286 asgi 13528 2568 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-10-11 18:29:06,286 cli 13528 2568 Starting server at tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-11 18:29:06,287 server 13528 2568 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-10-11 18:29:06,287 server 13528 2568 Configuring endpoint tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-11 18:29:06,288 server 13528 2568 Listening on TCP address 127.0.0.1:8000
+INFO 2025-10-11 18:29:40,437 views 13528 12544 High-performance services loaded successfully
+INFO 2025-10-11 18:29:40,467 middleware 13528 12544 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-11 18:29:42,907 middleware 13528 29220 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-11 18:29:50,587 middleware 13528 30516 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-11 18:37:36,439 server 13528 2568 Killed 0 pending application instances
+INFO 2025-10-18 16:11:38,527 asgi 16084 28488 Loaded core WebSocket patterns
+INFO 2025-10-18 16:11:38,532 langchain_services 16084 28488 DeepSeek integration loaded successfully
+INFO 2025-10-18 16:11:40,991 langchain_services 16084 28488 LangChain new version loaded (langchain-openai)
+INFO 2025-10-18 16:11:41,114 deepseek_service 16084 28488 DeepSeek service initialized successfully
+INFO 2025-10-18 16:11:41,114 langchain_services 16084 28488 DeepSeek service initialized successfully - using as primary AI provider
+INFO 2025-10-18 16:11:41,115 langchain_services 16084 28488 Using real LangChain service
+INFO 2025-10-18 16:11:41,258 asgi 16084 28488 Loaded template WebSocket patterns
+INFO 2025-10-18 16:11:41,261 asgi 16084 28488 Loaded AI services WebSocket patterns
+INFO 2025-10-18 16:11:41,261 asgi 16084 28488 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-10-18 16:11:41,261 cli 16084 28488 Starting server at tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-18 16:11:41,262 server 16084 28488 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-10-18 16:11:41,262 server 16084 28488 Configuring endpoint tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-18 16:11:41,263 server 16084 28488 Listening on TCP address 127.0.0.1:8000
+INFO 2025-10-18 16:22:30,142 views 16084 37552 High-performance services loaded successfully
+INFO 2025-10-18 16:22:30,203 middleware 16084 37552 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:22:31,351 middleware 16084 27888 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:22:41,490 middleware 16084 30244 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:22:45,057 middleware 16084 38840 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:23:06,679 middleware 16084 24072 AuthDebug: GET /schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:23:24,384 middleware 16084 35636 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:23:56,542 middleware 16084 9320 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:24:08,355 middleware 16084 11036 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:24:08,659 middleware 16084 29792 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-18 16:24:23,616 server 16084 28488 Killed 0 pending application instances
+INFO 2025-10-26 10:57:13,955 asgi 17052 30076 Loaded core WebSocket patterns
+INFO 2025-10-26 10:57:13,963 langchain_services 17052 30076 DeepSeek integration loaded successfully
+INFO 2025-10-26 10:57:17,470 langchain_services 17052 30076 LangChain new version loaded (langchain-openai)
+INFO 2025-10-26 10:57:17,627 deepseek_service 17052 30076 DeepSeek service initialized successfully
+INFO 2025-10-26 10:57:17,628 langchain_services 17052 30076 DeepSeek service initialized successfully - using as primary AI provider
+INFO 2025-10-26 10:57:17,628 langchain_services 17052 30076 Using real LangChain service
+INFO 2025-10-26 10:57:17,795 asgi 17052 30076 Loaded template WebSocket patterns
+INFO 2025-10-26 10:57:17,799 asgi 17052 30076 Loaded AI services WebSocket patterns
+INFO 2025-10-26 10:57:17,799 asgi 17052 30076 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-10-26 10:57:17,799 cli 17052 30076 Starting server at tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-26 10:57:17,801 server 17052 30076 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-10-26 10:57:17,801 server 17052 30076 Configuring endpoint tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-26 10:57:17,802 server 17052 30076 Listening on TCP address 127.0.0.1:8000
+INFO 2025-10-26 10:57:55,987 views 17052 34920 High-performance services loaded successfully
+INFO 2025-10-26 10:57:56,049 middleware 17052 34920 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-26 10:57:56,567 middleware 17052 31920 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:20,822 middleware 17052 40124 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:20,831 middleware 17052 34448 AuthDebug: GET /api/placeholder/800/400 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:30,130 middleware 17052 40444 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:34,804 middleware 17052 38384 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:36,075 middleware 17052 40280 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:35:36,794 middleware 17052 26320 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:36:37,493 middleware 17052 34752 AuthDebug: GET /api/placeholder/400/300 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:36:37,522 middleware 17052 38516 AuthDebug: GET /api/placeholder/800/400 from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:36:53,429 middleware 17052 36784 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 14:37:08,018 middleware 17052 36216 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 15:04:28,371 middleware 17052 21196 AuthDebug: GET / from 127.0.0.1 Authorization=None
+INFO 2025-10-26 15:04:29,800 middleware 17052 36588 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-26 15:04:53,277 middleware 17052 6656 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 15:04:58,048 middleware 17052 41724 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 15:05:02,520 middleware 17052 33296 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 18:12:27,096 asgi 39496 38924 Loaded core WebSocket patterns
+INFO 2025-10-26 18:12:27,106 langchain_services 39496 38924 DeepSeek integration loaded successfully
+INFO 2025-10-26 18:12:30,742 langchain_services 39496 38924 LangChain new version loaded (langchain-openai)
+INFO 2025-10-26 18:12:30,907 deepseek_service 39496 38924 DeepSeek service initialized successfully
+INFO 2025-10-26 18:12:30,907 langchain_services 39496 38924 DeepSeek service initialized successfully - using as primary AI provider
+INFO 2025-10-26 18:12:30,908 langchain_services 39496 38924 Using real LangChain service
+INFO 2025-10-26 18:12:31,096 asgi 39496 38924 Loaded template WebSocket patterns
+INFO 2025-10-26 18:12:31,100 asgi 39496 38924 Loaded AI services WebSocket patterns
+INFO 2025-10-26 18:12:31,101 asgi 39496 38924 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-10-26 18:12:31,101 cli 39496 38924 Starting server at tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-26 18:12:31,102 server 39496 38924 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-10-26 18:12:31,102 server 39496 38924 Configuring endpoint tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-26 18:12:31,103 server 39496 38924 Listening on TCP address 127.0.0.1:8000
+INFO 2025-10-26 18:37:04,247 views 39496 35188 High-performance services loaded successfully
+INFO 2025-10-26 18:37:04,285 middleware 39496 35188 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 18:37:05,393 middleware 39496 34932 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 18:37:09,066 middleware 39496 35976 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 18:44:09,066 middleware 39496 36112 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-10-26 19:47:49,983 middleware 39496 32732 AuthDebug: GET /api/v2/core/config from 127.0.0.1 Authorization=None
+INFO 2025-10-26 20:12:36,735 middleware 39496 39268 AuthDebug: GET /api/v2/template-categories from 127.0.0.1 Authorization=None
+INFO 2025-10-26 20:12:36,739 middleware 39496 40932 AuthDebug: GET /api/v2/templates from 127.0.0.1 Authorization=None
+INFO 2025-10-26 20:12:36,741 middleware 39496 44412 AuthDebug: GET /api/v2/templates/trending from 127.0.0.1 Authorization=None
+INFO 2025-10-26 20:12:36,744 middleware 39496 44420 AuthDebug: GET /api/v2/templates/featured from 127.0.0.1 Authorization=None
+INFO 2025-10-27 19:53:13,879 asgi 41264 29972 Loaded core WebSocket patterns
+INFO 2025-10-27 19:53:13,889 langchain_services 41264 29972 DeepSeek integration loaded successfully
+INFO 2025-10-27 19:53:16,831 langchain_services 41264 29972 LangChain new version loaded (langchain-openai)
+INFO 2025-10-27 19:53:16,960 deepseek_service 41264 29972 DeepSeek service initialized successfully
+INFO 2025-10-27 19:53:16,961 langchain_services 41264 29972 DeepSeek service initialized successfully - using as primary AI provider
+INFO 2025-10-27 19:53:16,961 langchain_services 41264 29972 Using real LangChain service
+INFO 2025-10-27 19:53:17,108 asgi 41264 29972 Loaded template WebSocket patterns
+INFO 2025-10-27 19:53:17,111 asgi 41264 29972 Loaded AI services WebSocket patterns
+INFO 2025-10-27 19:53:17,111 asgi 41264 29972 ASGI application initialized with 17 WebSocket patterns
+INFO 2025-10-27 19:53:17,111 cli 41264 29972 Starting server at tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-27 19:53:17,113 server 41264 29972 HTTP/2 support not enabled (install the http2 and tls Twisted extras)
+INFO 2025-10-27 19:53:17,113 server 41264 29972 Configuring endpoint tcp:port=8000:interface=127.0.0.1
+INFO 2025-10-27 19:53:17,114 server 41264 29972 Listening on TCP address 127.0.0.1:8000
+INFO 2025-10-27 20:02:33,577 views 41264 5652 High-performance services loaded successfully
+INFO 2025-10-27 20:02:33,720 middleware 41264 5652 AuthDebug: GET /api/schema/swagger-ui/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:02:35,325 middleware 41264 45028 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:02:59,605 middleware 41264 26408 AuthDebug: GET /api/schema/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:31:15,787 middleware 41264 38484 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:31:17,119 middleware 41264 51996 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:31:19,254 middleware 41264 22264 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:31:23,380 middleware 41264 47952 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:30,060 middleware 41264 49640 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:30,899 middleware 41264 42460 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:31,291 middleware 41264 33544 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:33,279 middleware 41264 30844 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:34,277 middleware 41264 51536 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:36,282 middleware 41264 5836 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:39,278 middleware 41264 46212 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:36:41,280 middleware 41264 50904 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,063 middleware 41264 51344 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,122 middleware 41264 39844 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,161 middleware 41264 51168 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,176 middleware 41264 50636 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,208 middleware 41264 47036 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:16,212 middleware 41264 37540 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:18,009 middleware 41264 39708 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:18,660 middleware 41264 13868 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:37:19,401 middleware 41264 40764 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:11,716 middleware 41264 2012 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:13,056 middleware 41264 46740 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:15,129 middleware 41264 11864 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:19,191 middleware 41264 46420 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,345 middleware 41264 46652 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,348 middleware 41264 37068 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,350 middleware 41264 41940 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,353 middleware 41264 37624 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,812 middleware 41264 41292 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:25,971 middleware 41264 42428 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:27,099 middleware 41264 51584 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:27,586 middleware 41264 49824 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:27,682 middleware 41264 50784 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:27,766 middleware 41264 19476 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:28,056 middleware 41264 6036 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:41:29,045 middleware 41264 41316 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:33,998 middleware 41264 38260 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:34,002 middleware 41264 27380 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:34,020 middleware 41264 45900 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:34,022 middleware 41264 22048 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:34,026 middleware 41264 45508 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:36,285 middleware 41264 9900 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:39,283 middleware 41264 43516 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:44,284 middleware 41264 31428 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:48,016 middleware 41264 3828 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:48,022 middleware 41264 48792 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:48,026 middleware 41264 45160 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:48,043 middleware 41264 45700 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:48,049 middleware 41264 3768 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:50,280 middleware 41264 40532 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:42:53,274 middleware 41264 34548 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:24,571 middleware 41264 46156 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:24,586 middleware 41264 51732 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:24,590 middleware 41264 28164 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:24,592 middleware 41264 31436 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:24,596 middleware 41264 45908 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:26,279 middleware 41264 12096 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:29,276 middleware 41264 46276 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:44:34,287 middleware 41264 7700 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:20,774 middleware 41264 50568 AuthDebug: GET /health/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:21,142 middleware 41264 42464 AuthDebug: GET /favicon.ico from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:55,566 middleware 41264 36212 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:55,569 middleware 41264 51760 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:55,575 middleware 41264 12388 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:55,577 middleware 41264 51296 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:55,583 middleware 41264 27300 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:45:57,277 middleware 41264 43724 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:00,274 middleware 41264 36524 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:05,277 middleware 41264 46888 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:35,122 middleware 41264 44744 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:35,125 middleware 41264 6660 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:35,127 middleware 41264 50272 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:35,130 middleware 41264 48656 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:35,134 middleware 41264 49484 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:37,288 middleware 41264 38352 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:40,279 middleware 41264 13696 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:45,142 middleware 41264 50468 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:45,149 middleware 41264 38920 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:45,150 middleware 41264 49948 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:45,153 middleware 41264 51808 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:45,154 middleware 41264 46640 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:46,630 middleware 41264 13228 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:48,727 middleware 41264 36520 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:46:52,809 middleware 41264 46620 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:04,776 middleware 41264 49024 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:04,813 middleware 41264 46724 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:04,822 middleware 41264 17396 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:04,825 middleware 41264 52136 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:05,267 middleware 41264 43424 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:05,521 middleware 41264 47536 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:05,891 middleware 41264 14688 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:06,091 middleware 41264 34512 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:06,334 middleware 41264 47884 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:06,448 middleware 41264 29172 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:06,878 middleware 41264 23740 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 20:57:07,439 middleware 41264 47076 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:06,799 middleware 41264 38236 AuthDebug: GET /api/v2/template-categories/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:06,811 middleware 41264 47308 AuthDebug: GET /api/v2/templates/trending/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:06,813 middleware 41264 51856 AuthDebug: GET /api/v2/templates/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:06,815 middleware 41264 42416 AuthDebug: GET /api/v2/templates/featured/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:06,820 middleware 41264 10616 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:08,217 middleware 41264 50408 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:10,311 middleware 41264 40212 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:01:14,373 middleware 41264 28168 AuthDebug: GET /api/v2/core/config/ from 127.0.0.1 Authorization=None
+INFO 2025-10-27 21:06:10,855 server 41264 29972 Killed 0 pending application instances
