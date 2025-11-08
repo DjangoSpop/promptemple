@@ -1,0 +1,5593 @@
+openapi: 3.0.3
+info:
+  title: PromptCraft API
+  version: 1.0.0
+  description: Production API for PromptCraft - AI Prompt Management Platform
+paths:
+  /api/v2/templates/:
+    get:
+      operationId: v2_templates_list
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: query
+        name: author
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - in: query
+        name: is_featured
+        schema:
+          type: boolean
+      - in: query
+        name: is_public
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTemplateListList'
+          description: ''
+    post:
+      operationId: v2_templates_create
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+  /api/v2/templates/featured/:
+    get:
+      operationId: v2_templates_featured_retrieve
+      description: Get featured templates
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/my_templates/:
+    get:
+      operationId: v2_templates_my_templates_retrieve
+      description: Get current user's templates
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/search_suggestions/:
+    get:
+      operationId: v2_templates_search_suggestions_retrieve
+      description: Get search suggestions based on popular templates and tags
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/trending/:
+    get:
+      operationId: v2_templates_trending_retrieve
+      description: Get trending templates based on recent activity
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/:
+    get:
+      operationId: v2_templates_retrieve
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+    patch:
+      operationId: v2_templates_partial_update
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+    put:
+      operationId: v2_templates_update
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+    delete:
+      operationId: v2_templates_destroy
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v2/templates/{id}/analytics/:
+    get:
+      operationId: v2_templates_analytics_retrieve
+      description: Get detailed analytics for a template (author only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/analyze_with_ai/:
+    post:
+      operationId: v2_templates_analyze_with_ai_create
+      description: Analyze template with AI for optimization suggestions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/complete_usage/:
+    post:
+      operationId: v2_templates_complete_usage_create
+      description: Complete template usage and award rewards
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/duplicate/:
+    post:
+      operationId: v2_templates_duplicate_create
+      description: Create a copy of an existing template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/rate_template/:
+    post:
+      operationId: v2_templates_rate_template_create
+      description: Rate and review a template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/templates/{id}/start_usage/:
+    post:
+      operationId: v2_templates_start_usage_create
+      description: Start using a template - creates usage tracking record
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v2/template-categories/:
+    get:
+      operationId: v2_template_categories_list
+      description: |-
+        ViewSet for template categories
+
+        Provides:
+        - List all categories
+        - Retrieve single category
+        - Category statistics
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTemplateCategoryList'
+          description: ''
+  /api/v2/template-categories/{id}/:
+    get:
+      operationId: v2_template_categories_retrieve
+      description: |-
+        ViewSet for template categories
+
+        Provides:
+        - List all categories
+        - Retrieve single category
+        - Category statistics
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this template category.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCategory'
+          description: ''
+  /api/v2/template-categories/{id}/templates/:
+    get:
+      operationId: v2_template_categories_templates_retrieve
+      description: Get templates in this category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this template category.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCategory'
+          description: ''
+  /api/v2/search/prompts/:
+    post:
+      operationId: v2_search_prompts_create
+      description: High-performance prompt search endpoint optimized for sub-50ms
+        response times
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/intent/process/:
+    post:
+      operationId: v2_intent_process_create
+      description: Process user intent for WebSocket chat optimization
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/prompts/featured/:
+    get:
+      operationId: v2_prompts_featured_retrieve
+      description: Get featured prompts from the 100K prompt library
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/prompts/{prompt_id}/similar/:
+    get:
+      operationId: v2_prompts_similar_retrieve
+      description: Get similar prompts from the library
+      parameters:
+      - in: path
+        name: prompt_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/metrics/performance/:
+    get:
+      operationId: v2_metrics_performance_retrieve
+      description: Get system performance metrics for admin monitoring
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/status/:
+    get:
+      operationId: v2_status_retrieve
+      description: Show current system status and available features
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/register/:
+    post:
+      operationId: v2_auth_register_create
+      description: |-
+        User registration endpoint
+
+        Creates new user account and returns JWT tokens
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v2/auth/login/:
+    post:
+      operationId: v2_auth_login_create
+      description: Handle user login
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/logout/:
+    post:
+      operationId: v2_auth_logout_create
+      description: Logout user endpoint
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/refresh/:
+    post:
+      operationId: v2_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v2/auth/check-username/:
+    get:
+      operationId: v2_auth_check_username_retrieve
+      description: |-
+        Check if username is available for registration
+
+        Query params:
+        - username: The username to check
+
+        Returns:
+        - available: Boolean indicating if username is available
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/check-email/:
+    get:
+      operationId: v2_auth_check_email_retrieve
+      description: |-
+        Check if email is available for registration
+
+        Query params:
+        - email: The email to check
+
+        Returns:
+        - available: Boolean indicating if email is available
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/social/providers/:
+    get:
+      operationId: v2_auth_social_providers_retrieve
+      description: Get provider information
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/social/{provider}/initiate/:
+    get:
+      operationId: v2_auth_social_initiate_retrieve
+      description: Get OAuth authorization URL
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/social/callback/:
+    post:
+      operationId: v2_auth_social_callback_create
+      description: Handle OAuth callback
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/social/unlink/:
+    post:
+      operationId: v2_auth_social_unlink_create
+      description: Unlink social account from user
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/social/link/:
+    post:
+      operationId: v2_auth_social_link_create
+      description: |-
+        Link social account to existing user
+
+        This endpoint allows users to link additional social providers to their account
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/profile/:
+    get:
+      operationId: v2_auth_profile_retrieve
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: v2_auth_profile_update
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: v2_auth_profile_partial_update
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/v2/auth/profile/update/:
+    get:
+      operationId: v2_auth_profile_update_retrieve
+      description: Update user profile endpoint
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    put:
+      operationId: v2_auth_profile_update_update
+      description: Update user profile endpoint
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: v2_auth_profile_update_partial_update
+      description: Update user profile endpoint
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/v2/auth/change-password/:
+    post:
+      operationId: v2_auth_change_password_create
+      description: Handle password change
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/auth/stats/:
+    get:
+      operationId: v2_auth_stats_retrieve
+      description: Get user statistics and gamification data
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/providers/:
+    get:
+      operationId: v2_ai_providers_retrieve
+      description: List available AI providers including DeepSeek
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/models/:
+    get:
+      operationId: v2_ai_models_retrieve
+      description: List available AI models including DeepSeek models
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/generate/:
+    post:
+      operationId: v2_ai_generate_create
+      description: AI generation endpoint with DeepSeek integration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/usage/:
+    get:
+      operationId: v2_ai_usage_retrieve
+      description: Placeholder AI usage view
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/quotas/:
+    get:
+      operationId: v2_ai_quotas_retrieve
+      description: Placeholder AI quota view
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/suggestions/:
+    get:
+      operationId: v2_ai_suggestions_retrieve
+      description: AI-powered suggestions endpoint for autocomplete functionality
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/deepseek/chat/:
+    post:
+      operationId: v2_ai_deepseek_chat_create
+      description: DeepSeek-specific chat endpoint for real-time AI conversations
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/deepseek/test/:
+    get:
+      operationId: v2_ai_deepseek_test_retrieve
+      description: Test DeepSeek connectivity and configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/deepseek/stream/:
+    post:
+      operationId: v2_ai_deepseek_stream_create
+      description: |-
+        Server-side streaming proxy for DeepSeek (SSE-like StreamingHttpResponse)
+
+        This view re-uses the SSE proxy pattern from apps.chat.views.ChatCompletionsProxyView
+        but keeps the implementation local to ai_services so frontend can call `/api/.../deepseek/stream/`.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/assistant/:
+    get:
+      operationId: v2_ai_assistant_retrieve
+      description: Expose registered assistants to the frontend.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/assistant/run/:
+    post:
+      operationId: v2_ai_assistant_run_create
+      description: Run an assistant synchronously via standard Django view.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/assistant/threads/:
+    get:
+      operationId: v2_ai_assistant_threads_retrieve
+      description: Return threads created by the current user.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/assistant/threads/{thread_id}/:
+    get:
+      operationId: v2_ai_assistant_threads_retrieve_2
+      description: Return a thread with its messages.
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/agent/optimize/:
+    post:
+      operationId: v2_ai_agent_optimize_create
+      description: "\n    Optimize a prompt using Retrieval-Augmented Generation with\
+        \ internal knowledge base.\n    \n    Features:\n    - Retrieves relevant\
+        \ context from templates, docs, and usage history\n    - Budget-aware optimization\
+        \ with token/credit limits\n    - Idempotent requests based on session_id\
+        \ + content hash\n    - Trial user limitations and subscription enforcement\n\
+        \    "
+      summary: Optimize prompt using RAG agent
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                  description: Unique session identifier
+                original:
+                  type: string
+                  description: Original prompt to optimize
+                mode:
+                  type: string
+                  enum:
+                  - fast
+                  - deep
+                  default: fast
+                  description: Optimization mode
+                context:
+                  type: object
+                  properties:
+                    intent:
+                      type: string
+                      description: Intended use case
+                    domain:
+                      type: string
+                      description: Domain context
+                budget:
+                  type: object
+                  properties:
+                    tokens_in:
+                      type: integer
+                      default: 2000
+                    tokens_out:
+                      type: integer
+                      default: 800
+                    max_credits:
+                      type: integer
+                      default: 5
+              required:
+              - session_id
+              - original
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Optimization successful
+                content:
+                  application/json:
+                    type: object
+                    properties:
+                      optimized:
+                        type: string
+                      citations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            title:
+                              type: string
+                            score:
+                              type: number
+                      diff_summary:
+                        type: string
+                      usage:
+                        type: object
+                        properties:
+                          tokens_in:
+                            type: integer
+                          tokens_out:
+                            type: integer
+                          credits:
+                            type: integer
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid request
+          description: ''
+        '402':
+          content:
+            application/json:
+              schema:
+                description: Insufficient credits
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                description: Rate limit exceeded
+          description: ''
+  /api/v2/ai/agent/stats/:
+    get:
+      operationId: v2_ai_agent_stats_retrieve
+      description: Get usage statistics and performance metrics for the RAG agent
+      summary: Get RAG agent statistics
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Statistics retrieved
+                content:
+                  application/json:
+                    type: object
+                    properties:
+                      index_status:
+                        type: object
+                      user_usage:
+                        type: object
+                      system_metrics:
+                        type: object
+          description: ''
+  /api/v2/ai/rag/retrieve/:
+    post:
+      operationId: v2_ai_rag_retrieve_create
+      description: Return top-k retrieved documents from the RAG index
+      summary: Retrieve documents for a query
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v2/ai/rag/answer/:
+    post:
+      operationId: v2_ai_rag_answer_create
+      description: Run retrieval and generate an answer (non-streaming).
+      summary: RAG answer endpoint
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v2/chat/completions/:
+    post:
+      operationId: v2_chat_completions_create
+      description: |-
+        Enhanced proxy streaming chat completions with template extraction
+
+        Expected payload:
+        {
+            "messages": [{"role": "user", "content": "Hello"}],
+            "model": "deepseek-chat",
+            "stream": true,
+            "temperature": 0.7,
+            "max_tokens": 2048,
+            "session_id": "optional-session-id"  // New: for chat history tracking
+        }
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/completions/basic/:
+    post:
+      operationId: v2_chat_completions_basic_create
+      description: |-
+        Proxy streaming chat completions to DeepSeek API
+
+        Expected payload:
+        {
+            "messages": [{"role": "user", "content": "Hello"}],
+            "model": "deepseek-chat",
+            "stream": true,
+            "temperature": 0.7,
+            "max_tokens": 2048
+        }
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/templates/status/:
+    get:
+      operationId: v2_chat_templates_status_retrieve
+      description: Get user's template extraction statistics
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/templates/extracted/:
+    get:
+      operationId: v2_chat_templates_extracted_retrieve
+      description: Get user's extracted templates
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: v2_chat_templates_extracted_partial_update
+      description: Update extracted template status
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/templates/extracted/{template_id}/:
+    get:
+      operationId: v2_chat_templates_extracted_retrieve_2
+      description: Get user's extracted templates
+      parameters:
+      - in: path
+        name: template_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: v2_chat_templates_extracted_partial_update_2
+      description: Update extracted template status
+      parameters:
+      - in: path
+        name: template_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/sessions/:
+    get:
+      operationId: v2_chat_sessions_retrieve
+      description: Get user's chat sessions
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/health/:
+    get:
+      operationId: v2_chat_health_retrieve
+      description: Check chat service health and configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/chat/auth-test/:
+    get:
+      operationId: v2_chat_auth_test_retrieve
+      description: Test authentication
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v2_chat_auth_test_create
+      description: Test authentication with POST
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/achievements/:
+    get:
+      operationId: v2_gamification_achievements_retrieve
+      description: Get all achievements with user progress
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/badges/:
+    get:
+      operationId: v2_gamification_badges_retrieve
+      description: Get user's badges
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/leaderboard/:
+    get:
+      operationId: v2_gamification_leaderboard_retrieve
+      description: Get leaderboard data
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/daily-challenges/:
+    get:
+      operationId: v2_gamification_daily_challenges_retrieve
+      description: Get today's challenges
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/user-level/:
+    get:
+      operationId: v2_gamification_user_level_retrieve
+      description: Get user level information
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/gamification/streak/:
+    get:
+      operationId: v2_gamification_streak_retrieve
+      description: Get user streak data
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/dashboard/:
+    get:
+      operationId: v2_analytics_dashboard_retrieve
+      description: Return dashboard analytics
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/user-insights/:
+    get:
+      operationId: v2_analytics_user_insights_retrieve
+      description: Return user insights
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/template-analytics/:
+    get:
+      operationId: v2_analytics_template_analytics_retrieve
+      description: Return template analytics
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/ab-tests/:
+    get:
+      operationId: v2_analytics_ab_tests_retrieve
+      description: Return A/B test results
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/recommendations/:
+    get:
+      operationId: v2_analytics_recommendations_retrieve
+      description: Return personalized recommendations
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/analytics/track/:
+    post:
+      operationId: v2_analytics_track_create
+      description: Track an analytics event
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/health/detailed/:
+    get:
+      operationId: v2_core_health_detailed_retrieve
+      description: Return comprehensive health status
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/config/:
+    get:
+      operationId: v2_core_config_retrieve
+      description: Public app configuration endpoint - no auth, no session, no DB
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/configuration/:
+    get:
+      operationId: v2_core_configuration_retrieve
+      description: Return app configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/rag/status/:
+    get:
+      operationId: v2_core_rag_status_retrieve
+      description: RAG service status endpoint - no auth required
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/notifications/:
+    get:
+      operationId: v2_core_notifications_retrieve
+      description: Get user notifications
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v2_core_notifications_create
+      description: Mark notification as read
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/api/v2/status/:
+    get:
+      operationId: v2_core_api_v2_status_retrieve
+      description: System status endpoint for health checks
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/core/api/v2/cors-test/:
+    get:
+      operationId: v2_core_api_v2_cors_test_retrieve
+      description: Test CORS configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v2_core_api_v2_cors_test_create
+      description: Test CORS configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/plans/:
+    get:
+      operationId: v2_billing_plans_retrieve
+      description: List all available billing plans
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/plans/{id}/:
+    get:
+      operationId: v2_billing_plans_retrieve_2
+      description: Get details of a specific billing plan
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/me/subscription/:
+    get:
+      operationId: v2_billing_me_subscription_retrieve
+      description: Get user's current subscription
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/me/entitlements/:
+    get:
+      operationId: v2_billing_me_entitlements_retrieve
+      description: Get user's entitlements based on their subscription
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/me/usage/:
+    get:
+      operationId: v2_billing_me_usage_retrieve
+      description: Get user's usage statistics
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/checkout/:
+    post:
+      operationId: v2_billing_checkout_create
+      description: Create a Stripe checkout session
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/portal/:
+    post:
+      operationId: v2_billing_portal_create
+      description: Create a Stripe customer portal session
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/billing/webhooks/stripe/:
+    post:
+      operationId: v2_billing_webhooks_stripe_create
+      description: Handle Stripe webhooks
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/intent/:
+    post:
+      operationId: v2_orchestrator_intent_create
+      description: Detect user intent from prompt
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/assess/:
+    post:
+      operationId: v2_orchestrator_assess_create
+      description: Assess prompt quality and provide suggestions
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/render/:
+    post:
+      operationId: v2_orchestrator_render_create
+      description: Render a template with provided variables
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/search/:
+    get:
+      operationId: v2_orchestrator_search_retrieve
+      description: Search for templates in the library
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/template/{template_id}/:
+    get:
+      operationId: v2_orchestrator_template_retrieve_2
+      description: Get a specific template by ID or name
+      parameters:
+      - in: path
+        name: template_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/orchestrator/template/:
+    get:
+      operationId: v2_orchestrator_template_retrieve
+      description: Get a specific template by ID or name
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/research/jobs/:
+    get:
+      operationId: v2_research_jobs_list
+      description: ViewSet for research job management.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobSummaryList'
+          description: ''
+    post:
+      operationId: v2_research_jobs_create
+      description: Create a new research job.
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateJob'
+          description: ''
+  /api/v2/research/jobs/{id}/:
+    get:
+      operationId: v2_research_jobs_retrieve
+      description: ViewSet for research job management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWithAnswer'
+          description: ''
+    patch:
+      operationId: v2_research_jobs_partial_update
+      description: ViewSet for research job management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWithAnswer'
+          description: ''
+    put:
+      operationId: v2_research_jobs_update
+      description: ViewSet for research job management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobWithAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobWithAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobWithAnswerRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobWithAnswer'
+          description: ''
+    delete:
+      operationId: v2_research_jobs_destroy
+      description: ViewSet for research job management.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v2/research/jobs/{id}/chunks/:
+    get:
+      operationId: v2_research_jobs_chunks_retrieve
+      description: Get chunks associated with a job.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJob'
+          description: ''
+  /api/v2/research/jobs/{id}/docs/:
+    get:
+      operationId: v2_research_jobs_docs_retrieve
+      description: Get source documents for a job.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJob'
+          description: ''
+  /api/v2/research/jobs/{id}/progress/:
+    get:
+      operationId: v2_research_jobs_progress_retrieve
+      description: Get detailed progress for a specific job.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this research job.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchJob'
+          description: ''
+  /api/v2/research/quick/:
+    post:
+      operationId: v2_research_quick_create
+      description: |-
+        Quick research endpoint for simple queries.
+        Returns job ID immediately and processes in background.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/research/batch/:
+    post:
+      operationId: v2_research_batch_create
+      description: Create multiple research jobs in batch.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/research/health/:
+    get:
+      operationId: v2_research_health_retrieve
+      description: Get system health status.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/research/stats/:
+    get:
+      operationId: v2_research_stats_retrieve
+      description: Get system statistics.
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/research/jobs/{job_id}/:
+    get:
+      operationId: v2_research_jobs_retrieve_2
+      description: Legacy endpoint for job status.
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/templates/:
+    get:
+      operationId: v1_templates_list
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: query
+        name: author
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: category
+        schema:
+          type: integer
+      - in: query
+        name: is_featured
+        schema:
+          type: boolean
+      - in: query
+        name: is_public
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTemplateListList'
+          description: ''
+    post:
+      operationId: v1_templates_create
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+  /api/v1/templates/featured/:
+    get:
+      operationId: v1_templates_featured_retrieve
+      description: Get featured templates
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/my_templates/:
+    get:
+      operationId: v1_templates_my_templates_retrieve
+      description: Get current user's templates
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/search_suggestions/:
+    get:
+      operationId: v1_templates_search_suggestions_retrieve
+      description: Get search suggestions based on popular templates and tags
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/trending/:
+    get:
+      operationId: v1_templates_trending_retrieve
+      description: Get trending templates based on recent activity
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/:
+    get:
+      operationId: v1_templates_retrieve
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+    patch:
+      operationId: v1_templates_partial_update
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+    put:
+      operationId: v1_templates_update
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+    delete:
+      operationId: v1_templates_destroy
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/templates/{id}/analytics/:
+    get:
+      operationId: v1_templates_analytics_retrieve
+      description: Get detailed analytics for a template (author only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/analyze_with_ai/:
+    post:
+      operationId: v1_templates_analyze_with_ai_create
+      description: Analyze template with AI for optimization suggestions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/complete_usage/:
+    post:
+      operationId: v1_templates_complete_usage_create
+      description: Complete template usage and award rewards
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/duplicate/:
+    post:
+      operationId: v1_templates_duplicate_create
+      description: Create a copy of an existing template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/rate_template/:
+    post:
+      operationId: v1_templates_rate_template_create
+      description: Rate and review a template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/templates/{id}/start_usage/:
+    post:
+      operationId: v1_templates_start_usage_create
+      description: Start using a template - creates usage tracking record
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateDetail'
+          description: ''
+  /api/v1/template-categories/:
+    get:
+      operationId: v1_template_categories_list
+      description: |-
+        ViewSet for template categories
+
+        Provides:
+        - List all categories
+        - Retrieve single category
+        - Category statistics
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTemplateCategoryList'
+          description: ''
+  /api/v1/template-categories/{id}/:
+    get:
+      operationId: v1_template_categories_retrieve
+      description: |-
+        ViewSet for template categories
+
+        Provides:
+        - List all categories
+        - Retrieve single category
+        - Category statistics
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this template category.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCategory'
+          description: ''
+  /api/v1/template-categories/{id}/templates/:
+    get:
+      operationId: v1_template_categories_templates_retrieve
+      description: Get templates in this category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this template category.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCategory'
+          description: ''
+  /api/v1/search/prompts/:
+    post:
+      operationId: v1_search_prompts_create
+      description: High-performance prompt search endpoint optimized for sub-50ms
+        response times
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/intent/process/:
+    post:
+      operationId: v1_intent_process_create
+      description: Process user intent for WebSocket chat optimization
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/prompts/featured/:
+    get:
+      operationId: v1_prompts_featured_retrieve
+      description: Get featured prompts from the 100K prompt library
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/prompts/{prompt_id}/similar/:
+    get:
+      operationId: v1_prompts_similar_retrieve
+      description: Get similar prompts from the library
+      parameters:
+      - in: path
+        name: prompt_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/metrics/performance/:
+    get:
+      operationId: v1_metrics_performance_retrieve
+      description: Get system performance metrics for admin monitoring
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/status/:
+    get:
+      operationId: v1_status_retrieve
+      description: Show current system status and available features
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/register/:
+    post:
+      operationId: v1_auth_register_create
+      description: |-
+        User registration endpoint
+
+        Creates new user account and returns JWT tokens
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      description: Handle user login
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      description: Logout user endpoint
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/refresh/:
+    post:
+      operationId: v1_auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/check-username/:
+    get:
+      operationId: v1_auth_check_username_retrieve
+      description: |-
+        Check if username is available for registration
+
+        Query params:
+        - username: The username to check
+
+        Returns:
+        - available: Boolean indicating if username is available
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/check-email/:
+    get:
+      operationId: v1_auth_check_email_retrieve
+      description: |-
+        Check if email is available for registration
+
+        Query params:
+        - email: The email to check
+
+        Returns:
+        - available: Boolean indicating if email is available
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/social/providers/:
+    get:
+      operationId: v1_auth_social_providers_retrieve
+      description: Get provider information
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/social/{provider}/initiate/:
+    get:
+      operationId: v1_auth_social_initiate_retrieve
+      description: Get OAuth authorization URL
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/social/callback/:
+    post:
+      operationId: v1_auth_social_callback_create
+      description: Handle OAuth callback
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/social/unlink/:
+    post:
+      operationId: v1_auth_social_unlink_create
+      description: Unlink social account from user
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/social/link/:
+    post:
+      operationId: v1_auth_social_link_create
+      description: |-
+        Link social account to existing user
+
+        This endpoint allows users to link additional social providers to their account
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/profile/:
+    get:
+      operationId: v1_auth_profile_retrieve
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: v1_auth_profile_update
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: v1_auth_profile_partial_update
+      description: User profile view for retrieving and updating profile
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/v1/auth/profile/update/:
+    get:
+      operationId: v1_auth_profile_update_retrieve
+      description: Update user profile endpoint
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    put:
+      operationId: v1_auth_profile_update_update
+      description: Update user profile endpoint
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: v1_auth_profile_update_partial_update
+      description: Update user profile endpoint
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/v1/auth/change-password/:
+    post:
+      operationId: v1_auth_change_password_create
+      description: Handle password change
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/stats/:
+    get:
+      operationId: v1_auth_stats_retrieve
+      description: Get user statistics and gamification data
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/providers/:
+    get:
+      operationId: v1_ai_providers_retrieve
+      description: List available AI providers including DeepSeek
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/models/:
+    get:
+      operationId: v1_ai_models_retrieve
+      description: List available AI models including DeepSeek models
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/generate/:
+    post:
+      operationId: v1_ai_generate_create
+      description: AI generation endpoint with DeepSeek integration
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/usage/:
+    get:
+      operationId: v1_ai_usage_retrieve
+      description: Placeholder AI usage view
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/quotas/:
+    get:
+      operationId: v1_ai_quotas_retrieve
+      description: Placeholder AI quota view
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/suggestions/:
+    get:
+      operationId: v1_ai_suggestions_retrieve
+      description: AI-powered suggestions endpoint for autocomplete functionality
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/deepseek/chat/:
+    post:
+      operationId: v1_ai_deepseek_chat_create
+      description: DeepSeek-specific chat endpoint for real-time AI conversations
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/deepseek/test/:
+    get:
+      operationId: v1_ai_deepseek_test_retrieve
+      description: Test DeepSeek connectivity and configuration
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/deepseek/stream/:
+    post:
+      operationId: v1_ai_deepseek_stream_create
+      description: |-
+        Server-side streaming proxy for DeepSeek (SSE-like StreamingHttpResponse)
+
+        This view re-uses the SSE proxy pattern from apps.chat.views.ChatCompletionsProxyView
+        but keeps the implementation local to ai_services so frontend can call `/api/.../deepseek/stream/`.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/assistant/:
+    get:
+      operationId: v1_ai_assistant_retrieve
+      description: Expose registered assistants to the frontend.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/assistant/run/:
+    post:
+      operationId: v1_ai_assistant_run_create
+      description: Run an assistant synchronously via standard Django view.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/assistant/threads/:
+    get:
+      operationId: v1_ai_assistant_threads_retrieve
+      description: Return threads created by the current user.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/assistant/threads/{thread_id}/:
+    get:
+      operationId: v1_ai_assistant_threads_retrieve_2
+      description: Return a thread with its messages.
+      parameters:
+      - in: path
+        name: thread_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/ai/agent/optimize/:
+    post:
+      operationId: v1_ai_agent_optimize_create
+      description: "\n    Optimize a prompt using Retrieval-Augmented Generation with\
+        \ internal knowledge base.\n    \n    Features:\n    - Retrieves relevant\
+        \ context from templates, docs, and usage history\n    - Budget-aware optimization\
+        \ with token/credit limits\n    - Idempotent requests based on session_id\
+        \ + content hash\n    - Trial user limitations and subscription enforcement\n\
+        \    "
+      summary: Optimize prompt using RAG agent
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                  description: Unique session identifier
+                original:
+                  type: string
+                  description: Original prompt to optimize
+                mode:
+                  type: string
+                  enum:
+                  - fast
+                  - deep
+                  default: fast
+                  description: Optimization mode
+                context:
+                  type: object
+                  properties:
+                    intent:
+                      type: string
+                      description: Intended use case
+                    domain:
+                      type: string
+                      description: Domain context
+                budget:
+                  type: object
+                  properties:
+                    tokens_in:
+                      type: integer
+                      default: 2000
+                    tokens_out:
+                      type: integer
+                      default: 800
+                    max_credits:
+                      type: integer
+                      default: 5
+              required:
+              - session_id
+              - original
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Optimization successful
+                content:
+                  application/json:
+                    type: object
+                    properties:
+                      optimized:
+                        type: string
+                      citations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            title:
+                              type: string
+                            score:
+                              type: number
+                      diff_summary:
+                        type: string
+                      usage:
+                        type: object
+                        properties:
+                          tokens_in:
+                            type: integer
+                          tokens_out:
+                            type: integer
+                          credits:
+                            type: integer
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Invalid request
+          description: ''
+        '402':
+          content:
+            application/json:
+              schema:
+                description: Insufficient credits
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                description: Rate limit exceeded
+          description: ''
+  /api/v1/ai/agent/stats/:
+    get:
+      operationId: v1_ai_agent_stats_retrieve
+      description: Get usage statistics and performance metrics for the RAG agent
+      summary: Get RAG agent statistics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Statistics retrieved
+                content:
+                  application/json:
+                    type: object
+                    properties:
+                      index_status:
+                        type: object
+                      user_usage:
+                        type: object
+                      system_metrics:
+                        type: object
+          description: ''
+  /api/v1/ai/rag/retrieve/:
+    post:
+      operationId: v1_ai_rag_retrieve_create
+      description: Return top-k retrieved documents from the RAG index
+      summary: Retrieve documents for a query
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/ai/rag/answer/:
+    post:
+      operationId: v1_ai_rag_answer_create
+      description: Run retrieval and generate an answer (non-streaming).
+      summary: RAG answer endpoint
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/gamification/achievements/:
+    get:
+      operationId: v1_gamification_achievements_retrieve
+      description: Get all achievements with user progress
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/gamification/badges/:
+    get:
+      operationId: v1_gamification_badges_retrieve
+      description: Get user's badges
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/gamification/leaderboard/:
+    get:
+      operationId: v1_gamification_leaderboard_retrieve
+      description: Get leaderboard data
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/gamification/daily-challenges/:
+    get:
+      operationId: v1_gamification_daily_challenges_retrieve
+      description: Get today's challenges
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/gamification/user-level/:
+    get:
+      operationId: v1_gamification_user_level_retrieve
+      description: Get user level information
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/gamification/streak/:
+    get:
+      operationId: v1_gamification_streak_retrieve
+      description: Get user streak data
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/dashboard/:
+    get:
+      operationId: v1_analytics_dashboard_retrieve
+      description: Return dashboard analytics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/user-insights/:
+    get:
+      operationId: v1_analytics_user_insights_retrieve
+      description: Return user insights
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/template-analytics/:
+    get:
+      operationId: v1_analytics_template_analytics_retrieve
+      description: Return template analytics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/ab-tests/:
+    get:
+      operationId: v1_analytics_ab_tests_retrieve
+      description: Return A/B test results
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/recommendations/:
+    get:
+      operationId: v1_analytics_recommendations_retrieve
+      description: Return personalized recommendations
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/analytics/track/:
+    post:
+      operationId: v1_analytics_track_create
+      description: Track an analytics event
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/health/detailed/:
+    get:
+      operationId: v1_core_health_detailed_retrieve
+      description: Return comprehensive health status
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/config/:
+    get:
+      operationId: v1_core_config_retrieve
+      description: Public app configuration endpoint - no auth, no session, no DB
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/configuration/:
+    get:
+      operationId: v1_core_configuration_retrieve
+      description: Return app configuration
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/rag/status/:
+    get:
+      operationId: v1_core_rag_status_retrieve
+      description: RAG service status endpoint - no auth required
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/notifications/:
+    get:
+      operationId: v1_core_notifications_retrieve
+      description: Get user notifications
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_core_notifications_create
+      description: Mark notification as read
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/api/v2/status/:
+    get:
+      operationId: v1_core_api_v2_status_retrieve
+      description: System status endpoint for health checks
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/core/api/v2/cors-test/:
+    get:
+      operationId: v1_core_api_v2_cors_test_retrieve
+      description: Test CORS configuration
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_core_api_v2_cors_test_create
+      description: Test CORS configuration
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/plans/:
+    get:
+      operationId: v1_billing_plans_retrieve
+      description: List all available billing plans
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/plans/{id}/:
+    get:
+      operationId: v1_billing_plans_retrieve_2
+      description: Get details of a specific billing plan
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/me/subscription/:
+    get:
+      operationId: v1_billing_me_subscription_retrieve
+      description: Get user's current subscription
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/me/entitlements/:
+    get:
+      operationId: v1_billing_me_entitlements_retrieve
+      description: Get user's entitlements based on their subscription
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/me/usage/:
+    get:
+      operationId: v1_billing_me_usage_retrieve
+      description: Get user's usage statistics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/checkout/:
+    post:
+      operationId: v1_billing_checkout_create
+      description: Create a Stripe checkout session
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/portal/:
+    post:
+      operationId: v1_billing_portal_create
+      description: Create a Stripe customer portal session
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/webhooks/stripe/:
+    post:
+      operationId: v1_billing_webhooks_stripe_create
+      description: Handle Stripe webhooks
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/intent/:
+    post:
+      operationId: v1_orchestrator_intent_create
+      description: Detect user intent from prompt
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/assess/:
+    post:
+      operationId: v1_orchestrator_assess_create
+      description: Assess prompt quality and provide suggestions
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/render/:
+    post:
+      operationId: v1_orchestrator_render_create
+      description: Render a template with provided variables
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/search/:
+    get:
+      operationId: v1_orchestrator_search_retrieve
+      description: Search for templates in the library
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/template/{template_id}/:
+    get:
+      operationId: v1_orchestrator_template_retrieve_2
+      description: Get a specific template by ID or name
+      parameters:
+      - in: path
+        name: template_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/orchestrator/template/:
+    get:
+      operationId: v1_orchestrator_template_retrieve
+      description: Get a specific template by ID or name
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /health/detailed/:
+    get:
+      operationId: health_detailed_retrieve
+      description: Return comprehensive health status
+      tags:
+      - health
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /config/:
+    get:
+      operationId: config_retrieve
+      description: Public app configuration endpoint - no auth, no session, no DB
+      tags:
+      - config
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /configuration/:
+    get:
+      operationId: configuration_retrieve
+      description: Return app configuration
+      tags:
+      - configuration
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /rag/status/:
+    get:
+      operationId: rag_status_retrieve
+      description: RAG service status endpoint - no auth required
+      tags:
+      - rag
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /notifications/:
+    get:
+      operationId: notifications_retrieve
+      description: Get user notifications
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: notifications_create
+      description: Mark notification as read
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v2/cors-test/:
+    get:
+      operationId: v2_cors_test_retrieve
+      description: Test CORS configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v2_cors_test_create
+      description: Test CORS configuration
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Citation:
+      type: object
+      description: Serializer for answer citations.
+      properties:
+        n:
+          type: integer
+          description: Citation number
+        url:
+          type: string
+          format: uri
+          description: Source URL
+        title:
+          type: string
+          description: Source title
+        score:
+          type: number
+          format: double
+          description: Relevance score
+      required:
+      - n
+      - title
+      - url
+    CitationRequest:
+      type: object
+      description: Serializer for answer citations.
+      properties:
+        n:
+          type: integer
+          description: Citation number
+        url:
+          type: string
+          format: uri
+          minLength: 1
+          description: Source URL
+        title:
+          type: string
+          minLength: 1
+          description: Source title
+        score:
+          type: number
+          format: double
+          description: Relevance score
+      required:
+      - n
+      - title
+      - url
+    CreateJob:
+      type: object
+      description: Serializer for creating new research jobs.
+      properties:
+        query:
+          type: string
+          description: Research query to investigate
+          maxLength: 1000
+        top_k:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 6
+          description: Number of search results to process
+      required:
+      - query
+    CreateJobRequest:
+      type: object
+      description: Serializer for creating new research jobs.
+      properties:
+        query:
+          type: string
+          minLength: 1
+          description: Research query to investigate
+          maxLength: 1000
+        top_k:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 6
+          description: Number of search results to process
+      required:
+      - query
+    FieldTypeEnum:
+      enum:
+      - text
+      - textarea
+      - dropdown
+      - checkbox
+      - radio
+      - number
+      type: string
+      description: |-
+        * `text` - Text Input
+        * `textarea` - Text Area
+        * `dropdown` - Dropdown Select
+        * `checkbox` - Checkbox List
+        * `radio` - Radio Buttons
+        * `number` - Number Input
+    JobSummary:
+      type: object
+      description: Lightweight serializer for job lists.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        query:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - created_at
+      - id
+      - query
+    JobWithAnswer:
+      type: object
+      description: Extended job serializer that includes the answer when available.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        query:
+          type: string
+        top_k:
+          type: integer
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        error:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        finished_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        answer:
+          allOf:
+          - $ref: '#/components/schemas/ResearchAnswer'
+          readOnly: true
+        docs_count:
+          type: integer
+          readOnly: true
+        chunks_count:
+          type: integer
+          readOnly: true
+      required:
+      - answer
+      - chunks_count
+      - created_at
+      - docs_count
+      - error
+      - finished_at
+      - id
+      - query
+      - status
+    JobWithAnswerRequest:
+      type: object
+      description: Extended job serializer that includes the answer when available.
+      properties:
+        query:
+          type: string
+          minLength: 1
+        top_k:
+          type: integer
+      required:
+      - query
+    PaginatedJobSummaryList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobSummary'
+    PaginatedTemplateCategoryList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateCategory'
+    PaginatedTemplateListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateList'
+    PatchedJobWithAnswerRequest:
+      type: object
+      description: Extended job serializer that includes the answer when available.
+      properties:
+        query:
+          type: string
+          minLength: 1
+        top_k:
+          type: integer
+    PatchedTemplateCreateUpdateRequest:
+      type: object
+      description: |-
+        Serializer for creating and updating templates
+
+        Handles:
+        - Template creation with fields
+        - Field validation
+        - Author assignment
+        - Transaction safety
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          description: Description of what this template does
+        category:
+          type: integer
+          description: Template category
+        template_content:
+          type: string
+          minLength: 1
+          description: Template content with {{placeholders}}
+        version:
+          type: string
+          minLength: 1
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        is_public:
+          type: boolean
+          description: Whether template is publicly visible
+        fields_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromptFieldRequest'
+          writeOnly: true
+    PatchedUserUpdateRequest:
+      type: object
+      description: |-
+        Serializer for updating user profile
+
+        Allows users to update their profile information
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          maxLength: 500
+        avatar:
+          type: string
+          format: binary
+          nullable: true
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          minLength: 1
+          description: User's preferred language code
+          maxLength: 10
+        ai_assistance_enabled:
+          type: boolean
+          description: Whether AI assistance is enabled
+        analytics_enabled:
+          type: boolean
+          description: Whether analytics tracking is enabled
+    PromptField:
+      type: object
+      description: |-
+        Serializer for individual prompt fields
+
+        Handles validation of field configuration
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        label:
+          type: string
+          description: Display label for the field
+          maxLength: 200
+        placeholder:
+          type: string
+          description: Placeholder text shown in input
+          maxLength: 500
+        field_type:
+          allOf:
+          - $ref: '#/components/schemas/FieldTypeEnum'
+          description: |-
+            Type of input field to display
+
+            * `text` - Text Input
+            * `textarea` - Text Area
+            * `dropdown` - Dropdown Select
+            * `checkbox` - Checkbox List
+            * `radio` - Radio Buttons
+            * `number` - Number Input
+        is_required:
+          type: boolean
+          description: Whether this field is mandatory
+        default_value:
+          type: string
+          description: Default value for the field
+        validation_pattern:
+          type: string
+          description: Regex pattern for validation
+          maxLength: 500
+        help_text:
+          type: string
+          description: Additional help text for users
+        options:
+          description: List of options for choice fields
+        order:
+          type: integer
+          description: Display order within template
+      required:
+      - id
+      - label
+    PromptFieldRequest:
+      type: object
+      description: |-
+        Serializer for individual prompt fields
+
+        Handles validation of field configuration
+      properties:
+        label:
+          type: string
+          minLength: 1
+          description: Display label for the field
+          maxLength: 200
+        placeholder:
+          type: string
+          description: Placeholder text shown in input
+          maxLength: 500
+        field_type:
+          allOf:
+          - $ref: '#/components/schemas/FieldTypeEnum'
+          description: |-
+            Type of input field to display
+
+            * `text` - Text Input
+            * `textarea` - Text Area
+            * `dropdown` - Dropdown Select
+            * `checkbox` - Checkbox List
+            * `radio` - Radio Buttons
+            * `number` - Number Input
+        is_required:
+          type: boolean
+          description: Whether this field is mandatory
+        default_value:
+          type: string
+          description: Default value for the field
+        validation_pattern:
+          type: string
+          description: Regex pattern for validation
+          maxLength: 500
+        help_text:
+          type: string
+          description: Additional help text for users
+        options:
+          description: List of options for choice fields
+        order:
+          type: integer
+          description: Display order within template
+      required:
+      - label
+    ResearchAnswer:
+      type: object
+      description: Serializer for research answers.
+      properties:
+        answer_md:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - answer_md
+      - citations
+      - created_at
+    ResearchAnswerRequest:
+      type: object
+      description: Serializer for research answers.
+      properties:
+        answer_md:
+          type: string
+          minLength: 1
+      required:
+      - answer_md
+    ResearchJob:
+      type: object
+      description: Serializer for research job details.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        query:
+          type: string
+        top_k:
+          type: integer
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        error:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        finished_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - error
+      - finished_at
+      - id
+      - query
+      - status
+    StatusEnum:
+      enum:
+      - queued
+      - running
+      - done
+      - error
+      type: string
+      description: |-
+        * `queued` - Queued
+        * `running` - Running
+        * `done` - Done
+        * `error` - Error
+    TemplateCategory:
+      type: object
+      description: Serializer for template categories
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        icon:
+          type: string
+          description: Icon name for UI display
+          maxLength: 50
+        color:
+          type: string
+          description: Hex color code for category
+          maxLength: 7
+        is_active:
+          type: boolean
+        order:
+          type: integer
+          description: Display order in lists
+        template_count:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
+      - slug
+      - template_count
+    TemplateCategoryRequest:
+      type: object
+      description: Serializer for template categories
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        icon:
+          type: string
+          description: Icon name for UI display
+          maxLength: 50
+        color:
+          type: string
+          minLength: 1
+          description: Hex color code for category
+          maxLength: 7
+        is_active:
+          type: boolean
+        order:
+          type: integer
+          description: Display order in lists
+      required:
+      - name
+      - slug
+    TemplateCreateUpdate:
+      type: object
+      description: |-
+        Serializer for creating and updating templates
+
+        Handles:
+        - Template creation with fields
+        - Field validation
+        - Author assignment
+        - Transaction safety
+      properties:
+        title:
+          type: string
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          description: Description of what this template does
+        category:
+          type: integer
+          description: Template category
+        template_content:
+          type: string
+          description: Template content with {{placeholders}}
+        version:
+          type: string
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        is_public:
+          type: boolean
+          description: Whether template is publicly visible
+      required:
+      - category
+      - description
+      - template_content
+      - title
+    TemplateCreateUpdateRequest:
+      type: object
+      description: |-
+        Serializer for creating and updating templates
+
+        Handles:
+        - Template creation with fields
+        - Field validation
+        - Author assignment
+        - Transaction safety
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          description: Description of what this template does
+        category:
+          type: integer
+          description: Template category
+        template_content:
+          type: string
+          minLength: 1
+          description: Template content with {{placeholders}}
+        version:
+          type: string
+          minLength: 1
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        is_public:
+          type: boolean
+          description: Whether template is publicly visible
+        fields_data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromptFieldRequest'
+          writeOnly: true
+      required:
+      - category
+      - description
+      - template_content
+      - title
+    TemplateDetail:
+      type: object
+      description: |-
+        Complete template serializer with all details
+
+        Includes:
+        - All template data
+        - Associated fields
+        - Author information
+        - Category details
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          description: Description of what this template does
+        category:
+          allOf:
+          - $ref: '#/components/schemas/TemplateCategory'
+          readOnly: true
+        template_content:
+          type: string
+          description: Template content with {{placeholders}}
+        author:
+          allOf:
+          - $ref: '#/components/schemas/UserMinimal'
+          readOnly: true
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromptField'
+          readOnly: true
+        version:
+          type: string
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        is_ai_generated:
+          type: boolean
+          description: Whether this template was generated by AI
+        ai_confidence:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: AI confidence score (0-1)
+        extracted_keywords:
+          description: AI-extracted keywords
+        smart_suggestions:
+          description: AI-generated suggestions
+        usage_count:
+          type: integer
+          minimum: 0
+          description: Number of times template was used
+        completion_rate:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Rate of successful completions (0-1)
+        average_rating:
+          type: number
+          format: double
+          maximum: 5
+          minimum: 0
+          description: Average user rating (0-5 stars)
+        popularity_score:
+          type: number
+          format: double
+          minimum: 0
+          description: Calculated popularity score
+        is_public:
+          type: boolean
+          description: Whether template is publicly visible
+        is_featured:
+          type: boolean
+          description: Whether template is featured
+        field_count:
+          type: string
+          readOnly: true
+        localizations:
+          description: Translations for different languages
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - category
+      - created_at
+      - description
+      - field_count
+      - fields
+      - id
+      - template_content
+      - title
+      - updated_at
+    TemplateDetailRequest:
+      type: object
+      description: |-
+        Complete template serializer with all details
+
+        Includes:
+        - All template data
+        - Associated fields
+        - Author information
+        - Category details
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          minLength: 1
+          description: Description of what this template does
+        template_content:
+          type: string
+          minLength: 1
+          description: Template content with {{placeholders}}
+        version:
+          type: string
+          minLength: 1
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        is_ai_generated:
+          type: boolean
+          description: Whether this template was generated by AI
+        ai_confidence:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: AI confidence score (0-1)
+        extracted_keywords:
+          description: AI-extracted keywords
+        smart_suggestions:
+          description: AI-generated suggestions
+        usage_count:
+          type: integer
+          minimum: 0
+          description: Number of times template was used
+        completion_rate:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Rate of successful completions (0-1)
+        average_rating:
+          type: number
+          format: double
+          maximum: 5
+          minimum: 0
+          description: Average user rating (0-5 stars)
+        popularity_score:
+          type: number
+          format: double
+          minimum: 0
+          description: Calculated popularity score
+        is_public:
+          type: boolean
+          description: Whether template is publicly visible
+        is_featured:
+          type: boolean
+          description: Whether template is featured
+        localizations:
+          description: Translations for different languages
+      required:
+      - description
+      - template_content
+      - title
+    TemplateList:
+      type: object
+      description: |-
+        Lightweight serializer for template lists
+
+        Optimized for performance with minimal data
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          description: Template title
+          maxLength: 200
+        description:
+          type: string
+          description: Description of what this template does
+        category:
+          allOf:
+          - $ref: '#/components/schemas/TemplateCategory'
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        version:
+          type: string
+          description: Template version
+          maxLength: 20
+        tags:
+          description: List of tags for searching
+        usage_count:
+          type: integer
+          minimum: 0
+          description: Number of times template was used
+        completion_rate:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Rate of successful completions (0-1)
+        average_rating:
+          type: number
+          format: double
+          maximum: 5
+          minimum: 0
+          description: Average user rating (0-5 stars)
+        popularity_score:
+          type: number
+          format: double
+          minimum: 0
+          description: Calculated popularity score
+        is_featured:
+          type: boolean
+          description: Whether template is featured
+        field_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - category
+      - created_at
+      - description
+      - field_count
+      - id
+      - title
+      - updated_at
+    ThemePreferenceEnum:
+      enum:
+      - light
+      - dark
+      - system
+      type: string
+      description: |-
+        * `light` - Light
+        * `dark` - Dark
+        * `system` - System
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserMinimal:
+      type: object
+      description: |-
+        Minimal user serializer for references in other models
+
+        Used when you need basic user info in other serializers
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        avatar_url:
+          type: string
+          readOnly: true
+        level:
+          type: integer
+          readOnly: true
+          description: User's current level
+        user_rank:
+          type: string
+          readOnly: true
+          description: User's current rank title
+      required:
+      - avatar_url
+      - first_name
+      - id
+      - last_name
+      - level
+      - user_rank
+      - username
+    UserProfile:
+      type: object
+      description: |-
+        Serializer for user profile display
+
+        Read-only serializer for showing user information
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        avatar_url:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          maxLength: 500
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        credits:
+          type: integer
+          readOnly: true
+          description: User's available credits
+        level:
+          type: integer
+          readOnly: true
+          description: User's current level
+        experience_points:
+          type: integer
+          readOnly: true
+          description: Total experience points earned
+        daily_streak:
+          type: integer
+          readOnly: true
+          description: Current daily login streak
+        user_rank:
+          type: string
+          readOnly: true
+          description: User's current rank title
+        rank_info:
+          type: string
+          readOnly: true
+        next_level_xp:
+          type: string
+          readOnly: true
+        is_premium:
+          type: boolean
+          readOnly: true
+          description: Whether user has premium subscription
+        premium_expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When premium subscription expires
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          description: User's preferred language code
+          maxLength: 10
+        ai_assistance_enabled:
+          type: boolean
+          description: Whether AI assistance is enabled
+        analytics_enabled:
+          type: boolean
+          description: Whether analytics tracking is enabled
+        templates_created:
+          type: integer
+          readOnly: true
+          description: Total templates created by user
+        templates_completed:
+          type: integer
+          readOnly: true
+          description: Total templates completed by user
+        total_prompts_generated:
+          type: integer
+          readOnly: true
+          description: Total prompts generated by user
+        completion_rate:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avatar_url
+      - completion_rate
+      - created_at
+      - credits
+      - daily_streak
+      - date_joined
+      - experience_points
+      - id
+      - is_premium
+      - last_login
+      - level
+      - next_level_xp
+      - premium_expires_at
+      - rank_info
+      - templates_completed
+      - templates_created
+      - total_prompts_generated
+      - updated_at
+      - user_rank
+      - username
+    UserRegistration:
+      type: object
+      description: |-
+        Serializer for user registration
+
+        Handles user creation with password confirmation
+        and input validation
+      properties:
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          maxLength: 500
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          description: User's preferred language code
+          maxLength: 10
+      required:
+      - email
+      - username
+    UserRegistrationRequest:
+      type: object
+      description: |-
+        Serializer for user registration
+
+        Handles user creation with password confirmation
+        and input validation
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          description: Password must be at least 8 characters long
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Confirm your password
+        bio:
+          type: string
+          maxLength: 500
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          minLength: 1
+          description: User's preferred language code
+          maxLength: 10
+      required:
+      - email
+      - password
+      - password_confirm
+      - username
+    UserUpdate:
+      type: object
+      description: |-
+        Serializer for updating user profile
+
+        Allows users to update their profile information
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          maxLength: 500
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          description: User's preferred language code
+          maxLength: 10
+        ai_assistance_enabled:
+          type: boolean
+          description: Whether AI assistance is enabled
+        analytics_enabled:
+          type: boolean
+          description: Whether analytics tracking is enabled
+    UserUpdateRequest:
+      type: object
+      description: |-
+        Serializer for updating user profile
+
+        Allows users to update their profile information
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          maxLength: 500
+        avatar:
+          type: string
+          format: binary
+          nullable: true
+        theme_preference:
+          allOf:
+          - $ref: '#/components/schemas/ThemePreferenceEnum'
+          description: |-
+            User's preferred theme
+
+            * `light` - Light
+            * `dark` - Dark
+            * `system` - System
+        language_preference:
+          type: string
+          minLength: 1
+          description: User's preferred language code
+          maxLength: 10
+        ai_assistance_enabled:
+          type: boolean
+          description: Whether AI assistance is enabled
+        analytics_enabled:
+          type: boolean
+          description: Whether analytics tracking is enabled
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

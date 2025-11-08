@@ -1,0 +1,49 @@
+{% extends "mvp_ui/base.html" %}
+
+{% block title %}Research Jobs - PromptCraft MVP{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1><i class="bi bi-search"></i> Research Jobs</h1>
+            <a href="{% url 'mvp_ui:research_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Research
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if jobs %}
+        {% for job in jobs %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ job.query|truncatewords:10 }}</h5>
+                    <p class="text-muted small mb-2">
+                        <strong>Status:</strong> 
+                        <span class="badge bg-{% if job.status == 'completed' %}success{% elif job.status == 'failed' %}danger{% elif job.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                            {{ job.status|title }}
+                        </span>
+                    </p>
+                    <p class="text-muted small">
+                        <strong>Created:</strong> {{ job.created_at|date:"Y-m-d H:i" }}
+                    </p>
+                    <a href="{% url 'mvp_ui:research_detail' job.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> No research jobs found. 
+            <a href="{% url 'mvp_ui:research_create' %}" class="alert-link">Start a new research job</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

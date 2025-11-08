@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - PromptCraft API Testing{% endblock %}
+
+{% block content %}
+<div class="status-card">
+    <h2>✅ System Status: Operational</h2>
+    <p>Your Django application is running successfully with Daphne ASGI server.</p>
+</div>
+
+<div class="info-grid">
+    <div class="info-box">
+        <h3>Debug Mode</h3>
+        <p>
+            {% if debug %}
+                <span class="badge-pill badge-success">Enabled</span>
+            {% else %}
+                <span class="badge-pill badge-danger">Disabled</span>
+            {% endif %}
+        </p>
+    </div>
+    
+    <div class="info-box">
+        <h3>CORS Allow All Origins</h3>
+        <p>
+            {% if cors_allow_all %}
+                <span class="badge-pill badge-success">Enabled</span>
+            {% else %}
+                <span class="badge-pill badge-danger">Disabled</span>
+            {% endif %}
+        </p>
+    </div>
+    
+    <div class="info-box">
+        <h3>Allowed Hosts</h3>
+        <p>
+            {% if '*' in allowed_hosts %}
+                <code>* (All hosts)</code>
+            {% else %}
+                <code>{{ allowed_hosts|join:", " }}</code>
+            {% endif %}
+        </p>
+    </div>
+    
+    <div class="info-box">
+        <h3>Server Address</h3>
+        <p><code>http://{{ request.get_host }}</code></p>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 20px; color: #495057;">📋 Configuration Details</h2>
+
+<div style="margin-bottom: 30px;">
+    <h3 style="color: #667eea; margin-bottom: 15px;">CORS Allowed Origins</h3>
+    {% if cors_allowed_origins %}
+        <pre>{{ cors_allowed_origins|join:"\n" }}</pre>
+    {% else %}
+        <p style="color: #6c757d;">No specific origins configured (using CORS_ALLOW_ALL_ORIGINS)</p>
+    {% endif %}
+</div>
+
+<h2 style="margin-bottom: 20px; color: #495057;">🧪 Quick Tests</h2>
+
+<div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 30px;">
+    <a href="{% url 'core:api-tester' %}" class="btn">Interactive API Tester</a>
+    <a href="/api/v2/status/" class="btn btn-secondary" target="_blank">System Status API</a>
+    <a href="/api/v2/templates/" class="btn btn-secondary" target="_blank">Templates API</a>
+    <a href="/api/v2/cors-test/" class="btn btn-secondary" target="_blank">CORS Test Endpoint</a>
+</div>
+
+<div class="status-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+    <h2>📚 Getting Started</h2>
+    <ol style="margin-left: 20px; margin-top: 15px; line-height: 1.8;">
+        <li>Use the <strong>API Tester</strong> to test your endpoints interactively</li>
+        <li>Check CORS configuration by testing cross-origin requests</li>
+        <li>Monitor system status and debug information in real-time</li>
+        <li>Test authentication and authorization flows</li>
+        <li>Verify WebSocket connections and real-time features</li>
+    </ol>
+</div>
+
+<div style="margin-top: 30px; padding: 25px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+    <h3 style="color: #856404; margin-bottom: 10px;">⚠️ Development Note</h3>
+    <p style="color: #856404; line-height: 1.6;">
+        This dashboard is for development and testing purposes. 
+        Make sure to disable DEBUG mode and configure proper CORS origins before deploying to production.
+    </p>
+</div>
+
+{% endblock %}

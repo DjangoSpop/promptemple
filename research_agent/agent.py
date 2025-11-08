@@ -1,11 +1,12 @@
 """
-Research Agent Orchestrator
+Enhanced Research Agent Orchestrator with SSE streaming and card-based synthesis.
 Coordinates the entire research pipeline: search → fetch → chunk → embed → retrieve → synthesize
 """
 import uuid
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any
+import time
+from typing import Dict, List, Optional, Any, Tuple
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
@@ -16,6 +17,10 @@ from .utils import clean_html_to_text, now_ms
 from .embeddings import split_text, embed_texts, get_embedder, estimate_tokens
 from .retrieval import top_k_chunks, rerank_chunks
 from .synthesis import synthesize_answer, generate_summary
+from .sse import (
+    push_planning_event, push_searching_event, push_clustering_event,
+    push_fetching_event, push_synthesis_event, push_end_event, push_error_event
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,23 +35,26 @@ class ResearchAgent:
 
     async def run(self) -> Dict[str, Any]:
         """
-        Execute the complete research pipeline.
+        Execute the complete research pipeline with SSE streaming.
 
         Returns:
             Result dictionary with success status and metadata
         """
+        start_time = time.time()
+        
         try:
             # Load job
             self.job = ResearchJob.objects.get(pk=self.job_id)
             self.job.status = "running"
             self.job.save(update_fields=["status"])
 
-            logger.info(f"Starting research job {self.job_id}: {self.job.query}")
+            logger.info(f"Starting enhanced research job {self.job_id}: {self.job.query}")
 
-            # Step 1: Web search
+            # Step 1: Planning and web search
+            push_planning_event(self.job_id, self.job.query)
             search_results = await self._search_phase()
 
-            # Step 2: Fetch and extract content
+            # Step 2: Fetch and extract content  
             docs = await self._fetch_phase(search_results)
 
             # Step 3: Chunk and embed content
@@ -55,7 +63,7 @@ class ResearchAgent:
             # Step 4: Retrieve relevant chunks
             relevant_chunks = await self._retrieval_phase()
 
-            # Step 5: Synthesize answer
+            # Step 5: Synthesize answer with cards
             await self._synthesis_phase(relevant_chunks)
 
             # Mark job as completed
@@ -63,19 +71,27 @@ class ResearchAgent:
             self.job.finished_at = timezone.now()
             self.job.save(update_fields=["status", "finished_at"])
 
-            logger.info(f"Research job {self.job_id} completed successfully")
+            # Calculate processing time and send final event
+            processing_time_ms = int((time.time() - start_time) * 1000)
+            total_cards = len(relevant_chunks) if relevant_chunks else 0
+            push_end_event(self.job_id, total_cards, processing_time_ms)
+
+            logger.info(f"Enhanced research job {self.job_id} completed in {processing_time_ms}ms")
 
             return {
                 "success": True,
                 "job_id": self.job_id,
                 "query": self.job.query,
-                "docs_processed": len(docs),
+                "docs_processed": len(docs) if docs else 0,
                 "chunks_created": Chunk.objects.filter(doc__job=self.job).count(),
-                "answer_available": hasattr(self.job, 'answer')
+                "answer_available": hasattr(self.job, 'answer'),
+                "processing_time_ms": processing_time_ms
             }
 
         except Exception as e:
-            logger.error(f"Research job {self.job_id} failed: {e}")
+            logger.error(f"Enhanced research job {self.job_id} failed: {e}")
+            push_error_event(self.job_id, str(e))
+            
             if self.job:
                 self.job.status = "error"
                 self.job.error = str(e)
@@ -90,7 +106,7 @@ class ResearchAgent:
 
     async def _search_phase(self) -> List[Dict[str, str]]:
         """
-        Phase 1: Web search for relevant URLs.
+        Phase 1: Web search for relevant URLs with streaming updates.
 
         Returns:
             List of search results
@@ -99,15 +115,18 @@ class ResearchAgent:
 
         search_results = web_search(
             query=self.job.query,
-            k=self.config.get('SEARCH_TOP_K', 6)
+            k=self.config.get('SEARCH_TOP_K', 8)
         )
+
+        # Stream search results
+        push_searching_event(self.job_id, 1, len(search_results))
 
         logger.info(f"Found {len(search_results)} search results")
         return search_results
 
     async def _fetch_phase(self, search_results: List[Dict[str, str]]) -> List[SourceDoc]:
         """
-        Phase 2: Fetch content from URLs.
+        Phase 2: Fetch content from URLs with streaming progress.
 
         Args:
             search_results: List of search results
@@ -116,21 +135,28 @@ class ResearchAgent:
             List of created SourceDoc instances
         """
         if not search_results:
+            push_fetching_event(self.job_id, 0, 0)
             return []
 
         logger.info(f"Fetching content from {len(search_results)} URLs")
 
         # Limit number of pages
-        max_pages = self.config.get('MAX_PAGES', 10)
+        max_pages = self.config.get('MAX_PAGES', 12)
         urls_to_fetch = [result['url'] for result in search_results[:max_pages]]
+        
+        # Stream initial fetching event
+        push_fetching_event(self.job_id, 0, len(urls_to_fetch))
 
         # Fetch URLs in batch
         timeout = self.config.get('FETCH_TIMEOUT_S', 15)
         fetch_results = await fetch_urls_batch(urls_to_fetch, timeout=timeout)
+        
+        # Stream progress update
+        push_fetching_event(self.job_id, len(fetch_results), len(urls_to_fetch))
 
         # Create SourceDoc instances
         docs = []
-        for result in search_results:
+        for result in search_results[:max_pages]:
             url = result['url']
             title = result['title']
 
@@ -254,19 +280,40 @@ class ResearchAgent:
 
     async def _synthesis_phase(self, chunks: List[Dict]) -> None:
         """
-        Phase 5: Synthesize final answer from retrieved chunks.
+        Phase 5: Synthesize final answer from retrieved chunks using card-based approach.
 
         Args:
             chunks: List of relevant chunks
         """
-        logger.info("Synthesizing answer from retrieved chunks")
-
+        from .sse import push_synthesis_event, stream_card_events, push_end_event
+        from .synthesis import cluster_by_domain, synthesize_cards_from_clusters
+        
+        logger.info("Starting card-based synthesis from retrieved chunks")
+        
         if not chunks:
             answer_md = "No relevant information found for this query."
             citations = []
+            push_synthesis_event(str(self.job.id), 0, 0)
         else:
-            # Generate answer using AI
-            answer_md, citations = synthesize_answer(self.job.query, chunks)
+            # Step 1: Cluster content by domain
+            domain_clusters = cluster_by_domain(chunks)
+            logger.info(f"Created {len(domain_clusters)} domain clusters")
+            
+            # Step 2: Synthesize cards from clusters
+            cards = synthesize_cards_from_clusters(self.job.query, domain_clusters)
+            logger.info(f"Generated {len(cards)} insight cards")
+            
+            # Step 3: Stream individual cards as they're created
+            if cards:
+                stream_card_events(str(self.job.id), cards)
+            
+            # Step 4: Combine cards into final answer
+            answer_md, citations = self._combine_cards_to_answer(cards)
+            
+            # Track synthesis metrics
+            total_generated = len(domain_clusters)  # Cards attempted
+            cards_rejected = total_generated - len(cards)
+            push_synthesis_event(str(self.job.id), len(cards), cards_rejected)
 
         # Create ResearchAnswer
         ResearchAnswer.objects.create(
@@ -275,7 +322,59 @@ class ResearchAgent:
             citations=citations
         )
 
-        logger.info("Answer synthesis completed")
+        logger.info("Card-based synthesis completed")
+    
+    def _combine_cards_to_answer(self, cards: List) -> Tuple[str, List[Dict]]:
+        """
+        Combine InsightCards into a final research answer.
+        
+        Args:
+            cards: List of InsightCard objects
+            
+        Returns:
+            Tuple of (final_answer_markdown, citations_list)
+        """
+        if not cards:
+            return "No relevant insights could be generated for this query.", []
+        
+        # Build final answer
+        answer_parts = [f"# Research Insights: {self.job.query}\n"]
+        all_citations = []
+        citation_counter = 1
+        
+        # Add executive summary if multiple cards
+        if len(cards) > 1:
+            answer_parts.append("## Executive Summary\n")
+            answer_parts.append(f"This research identified {len(cards)} key insights from multiple authoritative sources, providing a comprehensive analysis of {self.job.query}.\n")
+        
+        # Add each card as a section
+        for i, card in enumerate(cards, 1):
+            answer_parts.append(f"## {card.title}\n")
+            answer_parts.append(f"{card.content}\n")
+            
+            # Add authority and confidence indicators
+            if card.confidence < 0.7 or card.authority < 0.7:
+                confidence_indicator = "⚠️ " if card.confidence < 0.6 else "ℹ️ "
+                answer_parts.append(f"{confidence_indicator}*Confidence: {card.confidence:.1%}, Authority: {card.authority:.1%}*\n")
+            
+            # Process citations
+            for citation in card.citations:
+                citation_dict = {
+                    "n": citation_counter,
+                    "url": citation.url,
+                    "title": citation.title,
+                    "score": getattr(citation, 'score', 0.0)
+                }
+                all_citations.append(citation_dict)
+                citation_counter += 1
+        
+        # Add methodology note
+        if len(cards) > 1:
+            answer_parts.append("---\n")
+            answer_parts.append("*This analysis combines insights from multiple sources and domains to provide a comprehensive view of the research query.*")
+        
+        final_answer = "\n".join(answer_parts)
+        return final_answer, all_citations
 
 
 async def run_research_job(job_id: str) -> Dict[str, Any]:

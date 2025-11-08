@@ -1,0 +1,255 @@
+{% extends "mvp_ui/base.html" %}
+
+{% block title %}Dashboard - PromptCraft MVP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Health Status Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-{% if health.status == 'healthy' %}success{% else %}danger{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-heart-pulse"></i> System Health
+                </h5>
+                <h2 class="{% if health.status == 'healthy' %}text-success{% else %}text-danger{% endif %}">
+                    {% if health.status == 'healthy' %}
+                    <i class="bi bi-check-circle-fill"></i> OK
+                    {% else %}
+                    <i class="bi bi-x-circle-fill"></i> FAIL
+                    {% endif %}
+                </h2>
+                <p class="text-muted mb-0">{{ health.message|default:"All systems operational" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-graph-up"></i> API Requests
+                </h5>
+                <h2 class="text-primary">{{ recent_requests|length }}</h2>
+                <p class="text-muted mb-0">Last 50 requests tracked</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-speedometer"></i> Endpoints
+                </h5>
+                <h2 class="text-info">{{ endpoint_stats|length }}</h2>
+                <p class="text-muted mb-0">Unique endpoints tracked</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-person"></i> User Status
+                </h5>
+                <h2 class="{% if request.user.is_authenticated %}text-success{% else %}text-warning{% endif %}">
+                    {% if request.user.is_authenticated %}
+                    <i class="bi bi-check-circle"></i>
+                    {% else %}
+                    <i class="bi bi-dash-circle"></i>
+                    {% endif %}
+                </h2>
+                <p class="text-muted mb-0">
+                    {% if request.user.is_authenticated %}Authenticated{% else %}Anonymous{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'mvp_ui:template_create' %}" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Create Template
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'mvp_ui:research_create' %}" class="btn btn-info w-100">
+                            <i class="bi bi-search"></i> Start Research
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'mvp_ui:sse_demo' %}" class="btn btn-success w-100">
+                            <i class="bi bi-broadcast"></i> Test SSE
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent API Calls</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Time</th>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_requests %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ req.timestamp|date:"H:i:s" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ req.method }}</span>
+                                </td>
+                                <td>
+                                    <small class="font-monospace">{{ req.path|truncatechars:40 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if req.status_code < 300 %}success{% elif req.status_code < 400 %}info{% elif req.status_code < 500 %}warning{% else %}danger{% endif %}">
+                                        {{ req.status_code }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="{% if req.duration_ms > 1000 %}text-danger{% elif req.duration_ms > 500 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ req.duration_ms|floatformat:2 }}ms
+                                    </small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No requests tracked yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Endpoint Statistics (P95 Latency)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Calls</th>
+                                <th>Avg (ms)</th>
+                                <th>P95 (ms)</th>
+                                <th>Errors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for endpoint, stats in endpoint_stats.items %}
+                            <tr>
+                                <td>
+                                    <small class="font-monospace">{{ endpoint|truncatechars:30 }}</small>
+                                </td>
+                                <td>{{ stats.count }}</td>
+                                <td class="{% if stats.avg_ms > 1000 %}text-danger{% elif stats.avg_ms > 500 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ stats.avg_ms }}
+                                </td>
+                                <td class="{% if stats.p95_ms > 1000 %}text-danger{% elif stats.p95_ms > 500 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ stats.p95_ms }}
+                                </td>
+                                <td>
+                                    {% if stats.errors > 0 %}
+                                    <span class="badge bg-danger">{{ stats.errors }}</span>
+                                    {% else %}
+                                    <span class="text-success">0</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No statistics available yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Stats (if authenticated) -->
+{% if user_stats %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Your Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Templates Created</h6>
+                        <h3>{{ user_stats.templates_count|default:0 }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Total Usage</h6>
+                        <h3>{{ user_stats.usage_count|default:0 }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">Level</h6>
+                        <h3>{{ user_stats.level|default:1 }}</h3>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted">XP Points</h6>
+                        <h3>{{ user_stats.xp|default:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Auto-refresh dashboard every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

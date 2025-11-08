@@ -431,3 +431,158 @@ class AssistantMessage(models.Model):
             if self.tool_result:
                 message["content"] = json.dumps(self.tool_result)
         return message
+
+
+class AskMeSession(models.Model):
+    """Ask-Me prompt builder session management"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='askme_sessions', null=True, blank=True)
+
+    # Session data
+    intent = models.TextField(help_text="User's original intent/goal")
+    spec = models.JSONField(default=dict, help_text="Current prompt specification")
+    answered_vars = models.JSONField(default=dict, help_text="Variables that have been answered")
+
+    # Current state
+    current_questions = models.JSONField(default=list, help_text="Current set of questions")
+    preview_prompt = models.TextField(blank=True, help_text="Preview of the generated prompt")
+    final_prompt = models.TextField(blank=True, help_text="Final generated prompt")
+
+    # Status tracking
+    is_complete = models.BooleanField(default=False)
+    good_enough_to_run = models.BooleanField(default=False)
+
+    # Metadata
+    metadata = models.JSONField(default=dict, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'askme_sessions'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['is_complete', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"AskMe Session: {self.intent[:50]}..."
+
+    def initialize_spec(self):
+        """Initialize the prompt specification with default structure"""
+        if not self.spec:
+            self.spec = {
+                'goal': '',
+                'audience': '',
+                'tone': '',
+                'style': '',
+                'context': '',
+                'constraints': '',
+                'inputs': {},
+            }
+            self.save()
+
+    def update_spec_variable(self, variable: str, value: str):
+        """Update a specific variable in the spec"""
+        # Ensure spec is properly initialized
+        if not isinstance(self.spec, dict):
+            self.initialize_spec()
+        
+        # Ensure answered_vars is properly initialized
+        if not isinstance(self.answered_vars, dict):
+            self.answered_vars = {}
+        
+        if variable in ['goal', 'audience', 'tone', 'style', 'context', 'constraints']:
+            self.spec[variable] = value
+        else:
+            if 'inputs' not in self.spec:
+                self.spec['inputs'] = {}
+            self.spec['inputs'][variable] = value
+
+        self.answered_vars[variable] = value
+        self.updated_at = timezone.now()
+        self.save()
+
+    def get_completion_percentage(self) -> float:
+        """Calculate how complete the session is based on answered variables"""
+        core_fields = ['goal', 'audience', 'tone', 'style']
+        answered_core = sum(1 for field in core_fields if self.spec.get(field))
+        return answered_core / len(core_fields)
+
+
+class AskMeQuestion(models.Model):
+    """Individual questions generated for Ask-Me sessions"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(AskMeSession, on_delete=models.CASCADE, related_name='questions')
+
+    # Question details
+    qid = models.CharField(max_length=50, help_text="Unique question identifier")
+    title = models.CharField(max_length=255, help_text="Question text")
+    help_text = models.TextField(blank=True, help_text="Additional guidance for the user")
+    variable = models.CharField(max_length=100, help_text="Variable this question maps to")
+
+    # Question type and options
+    KIND_CHOICES = [
+        ('short_text', 'Short Text'),
+        ('long_text', 'Long Text'),
+        ('choice', 'Multiple Choice'),
+        ('boolean', 'Yes/No'),
+        ('number', 'Number'),
+    ]
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default='short_text')
+    options = models.JSONField(default=list, blank=True, help_text="Options for choice questions")
+
+    # Question properties
+    is_required = models.BooleanField(default=True)
+    suggested_answer = models.CharField(max_length=255, blank=True)
+
+    # Answer tracking
+    answer = models.TextField(blank=True)
+    is_answered = models.BooleanField(default=False)
+    answered_at = models.DateTimeField(null=True, blank=True)
+
+    # Metadata
+    order = models.IntegerField(default=0)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'askme_questions'
+        unique_together = ['session', 'qid']
+        ordering = ['order', 'created_at']
+        indexes = [
+            models.Index(fields=['session', 'is_answered']),
+            models.Index(fields=['qid']),
+        ]
+
+    def __str__(self):
+        return f"Q: {self.title}"
+
+    def mark_answered(self, answer: str):
+        """Mark the question as answered with the given answer"""
+        self.answer = answer
+        self.is_answered = True
+        self.answered_at = timezone.now()
+        self.save()
+
+        # Update the session spec
+        self.session.update_spec_variable(self.variable, answer)
+
+    def to_dict(self) -> dict:
+        """Convert question to dictionary for API responses"""
+        return {
+            'qid': self.qid,
+            'title': self.title,
+            'help_text': self.help_text,
+            'kind': self.kind,
+            'options': self.options,
+            'variable': self.variable,
+            'required': self.is_required,
+            'suggested': self.suggested_answer,
+            'is_answered': self.is_answered,
+            'answer': self.answer,
+        }

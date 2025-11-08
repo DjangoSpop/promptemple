@@ -5,7 +5,7 @@ import uuid
 import json
 import time
 import logging
-from typing import Generator
+from typing import Generator, Optional, Dict, Any
 
 from django.http import StreamingHttpResponse, JsonResponse, HttpResponseBadRequest
 from django.utils.timezone import now
@@ -33,12 +33,12 @@ logger = logging.getLogger(__name__)
 
 class ResearchThrottle(AnonRateThrottle):
     """Custom throttle for research endpoints."""
-    rate = "10/hour"
+    scope = 'research'
 
 
 class AuthenticatedResearchThrottle(UserRateThrottle):
     """Throttle for authenticated users."""
-    rate = "50/hour"
+    scope = 'research_auth'
 
 
 def sse_response(event_type: str, data: dict) -> str:
@@ -159,58 +159,87 @@ class ResearchJobViewSet(viewsets.ModelViewSet):
 @never_cache
 def stream_job_progress(request, job_id):
     """
-    Stream job progress using Server-Sent Events.
-
-    This endpoint provides real-time updates on job processing status.
+    Enhanced SSE streaming for research job progress with card events.
+    
+    This endpoint provides real-time updates including individual card synthesis.
     """
-    def event_generator() -> Generator[str, None, None]:
-        """Generate SSE events for job progress."""
-        yield sse_response("stream_start", {"job_id": job_id})
+    from .sse import stream_research_progress, create_sse_response
+    
+    try:
+        # Validate job exists
+        job = ResearchJob.objects.get(pk=job_id)
+    except ResearchJob.DoesNotExist:
+        return JsonResponse({"error": "Job not found"}, status=404)
+    
+    # Create SSE response with enhanced streaming
+    return create_sse_response(stream_research_progress(job_id))
 
-        # Poll for up to 10 minutes (600 iterations * 1 second)
-        for _ in range(600):
+
+@require_http_methods(["GET"])
+@never_cache  
+def stream_cards(request, job_id):
+    """
+    Stream individual insight cards as they are generated.
+    
+    This endpoint specifically streams card events for real-time card display.
+    """
+    def card_event_generator():
+        """Generate SSE events focused on cards."""
+        from .sse import ResearchStreamer, format_sse_event
+        
+        yield format_sse_event("stream_start", {"job_id": job_id, "type": "cards"})
+        
+        streamer = ResearchStreamer(job_id)
+        last_event_index = 0
+        
+        # Poll for card events
+        for iteration in range(300):  # 5 minutes for card-specific streaming
             try:
+                # Get new events, filter for card events
+                events = streamer.get_events(since_index=last_event_index)
+                
+                for event_data in events:
+                    event_type = event_data.get('event', '')
+                    if event_type == 'card':
+                        data = event_data.get('data', {})
+                        yield format_sse_event('card', data)
+                    elif event_type in ['synthesis', 'end', 'error']:
+                        data = event_data.get('data', {})
+                        yield format_sse_event(event_type, data)
+                        
+                        # End streaming on completion or error
+                        if event_type in ['end', 'error']:
+                            break
+                
+                last_event_index += len(events)
+                
+                # Check job status
                 job = ResearchJob.objects.get(pk=job_id)
+                if job.status in ["done", "error"]:
+                    break
+                    
+                time.sleep(1.0)
+                
             except ResearchJob.DoesNotExist:
-                yield sse_response("error", {"message": "Job not found"})
+                yield format_sse_event("error", {"message": "Job not found"})
                 break
-
-            # Get current progress
-            progress = ResearchJobStats.get_job_progress(job_id)
-            yield sse_response("progress", progress)
-
-            # Check if job is complete
-            if job.status == "error":
-                yield sse_response("error", {"message": job.error or "Job failed"})
+            except Exception as e:
+                yield format_sse_event("error", {"message": str(e)})
                 break
-            elif job.status == "done":
-                # Send final answer if available
-                if hasattr(job, 'answer'):
-                    answer_data = ResearchAnswerSerializer(job.answer).data
-                    yield sse_response("answer", answer_data)
-
-                yield sse_response("complete", {"job_id": job_id})
-                break
-
-            # Wait before next poll
-            time.sleep(1.0)
-        else:
-            # Timeout reached
-            yield sse_response("timeout", {"message": "Streaming timeout reached"})
-
+        
         yield "data: [DONE]\n\n"
-
+    
     response = StreamingHttpResponse(
-        event_generator(),
+        card_event_generator(),
         content_type="text/event-stream"
     )
-
+    
     # SSE headers
     response['Cache-Control'] = 'no-cache'
-    response['X-Accel-Buffering'] = 'no'  # Disable Nginx buffering
+    response['X-Accel-Buffering'] = 'no'
     response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Headers'] = 'Cache-Control'
-
+    
     return response
 
 
@@ -289,6 +318,7 @@ def quick_research(request):
             "query": job.query,
             "status": job.status,
             "stream_url": f"/api/v2/research/jobs/{job_id}/stream/",
+            "cards_stream_url": f"/api/v2/research/jobs/{job_id}/cards/stream/",
             "progress_url": f"/api/v2/research/jobs/{job_id}/progress/"
         }, status=status.HTTP_201_CREATED)
 
@@ -298,6 +328,90 @@ def quick_research(request):
             {"error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([ResearchThrottle])
+def intent_fast(request):
+    """
+    Fast-path intent endpoint with optional warm card generation.
+    
+    This endpoint returns immediately with intent_id and optionally includes
+    a warm card if quick synthesis is possible, then schedules full processing.
+    """
+    serializer = CreateJobSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Create intent/job
+        intent_id = uuid.uuid4()
+        job = ResearchJob.objects.create(
+            id=intent_id,
+            query=serializer.validated_data['query'],
+            top_k=serializer.validated_data.get('top_k', 6),
+            created_by=request.user if request.user.is_authenticated else None
+        )
+
+        response_data = {
+            "intent_id": str(intent_id),
+            "query": job.query,
+            "status": job.status,
+            "stream_url": f"/api/v2/research/jobs/{intent_id}/stream/",
+            "cards_stream_url": f"/api/v2/research/jobs/{intent_id}/cards/stream/"
+        }
+
+        # Try to generate a quick warm card (optional)
+        warm_card = None
+        try:
+            warm_card = _generate_warm_card(job.query)
+            if warm_card:
+                response_data["warm_card"] = warm_card
+        except Exception as e:
+            logger.warning(f"Warm card generation failed: {e}")
+
+        # Schedule background processing (high priority)
+        run_research_task.apply_async(args=[str(intent_id)], priority=9)
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        logger.error(f"Fast intent processing failed: {e}")
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+def _generate_warm_card(query: str) -> Optional[Dict[str, Any]]:
+    """
+    Generate a quick warm card for immediate response.
+    
+    Args:
+        query: Research query
+        
+    Returns:
+        Warm card data or None if generation fails
+    """
+    try:
+        # Simple template-based warm card for immediate user feedback
+        warm_card = {
+            "id": f"warm_{uuid.uuid4()}",
+            "title": f"Initial insights for: {query[:50]}...",
+            "content": f"## Researching: {query}\n\nWe're currently gathering comprehensive information about your query from multiple authoritative sources. This will include:\n\n- Web search across relevant domains\n- Content analysis and synthesis\n- Evidence-based insights with citations\n\nPlease monitor the stream for real-time updates as we process your research request.",
+            "type": "warm",
+            "confidence": 1.0,
+            "authority": 0.5,
+            "citations": [],
+            "generated_at": now().isoformat()
+        }
+        
+        return warm_card
+        
+    except Exception as e:
+        logger.error(f"Warm card generation error: {e}")
+        return None
 
 
 @api_view(['POST'])

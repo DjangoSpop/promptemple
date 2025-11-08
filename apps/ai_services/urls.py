@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from . import agent_views
+from . import askme_views
 
 router = DefaultRouter()
 
@@ -32,7 +33,21 @@ urlpatterns = [
     # RAG retrieval and answer endpoints
     path('rag/retrieve/', agent_views.rag_retrieve, name='rag-retrieve'),
     path('rag/answer/', agent_views.rag_answer, name='rag-answer'),
-    
+
+    # Ask-Me Prompt Builder endpoints
+    path('askme/start/', askme_views.askme_start_api, name='askme-start'),
+    path('askme/answer/', askme_views.askme_answer_api, name='askme-answer'),
+    path('askme/finalize/', askme_views.askme_finalize_api, name='askme-finalize'),
+    path('askme/stream/', askme_views.askme_stream_api, name='askme-stream'),
+
+    # Ask-Me session management
+    path('askme/sessions/', askme_views.askme_sessions_list, name='askme-sessions-list'),
+    path('askme/sessions/<uuid:session_id>/', askme_views.askme_session_detail, name='askme-session-detail'),
+    path('askme/sessions/<uuid:session_id>/delete/', askme_views.askme_session_delete, name='askme-session-delete'),
+
+    # Debug endpoint
+    path('askme/debug/', askme_views.askme_debug_test, name='askme-debug'),
+
     # Include router URLs
     path('', include(router.urls)),
 ]

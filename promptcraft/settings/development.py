@@ -17,9 +17,15 @@ except ImportError:
                 return cast(value)
         return value
 
+# Ensure SECRET_KEY is properly set
+SECRET_KEY = config('SECRET_KEY', default='dev-key-change-in-production-123456789')
+if SECRET_KEY == 'dev-key-change-in-production-123456':
+    print("⚠️ WARNING: Using default SECRET_KEY. Set SECRET_KEY environment variable for security!", file=sys.stderr)
+
 DEBUG = True  # Enable debug for development
 ALLOWED_HOSTS = [
-    'localhost', 
+    'localhost',
+    'localhost:3000',  # Allow localhost with port
     '127.0.0.1', 
     '10.0.2.2',  # Android AVD emulator
     '0.0.0.0',
@@ -99,7 +105,7 @@ except ImportError:
         }
     }
 
-# REST Framework configuration for development
+# REST Framework configuration for development - OVERRIDE base settings
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': [
@@ -108,19 +114,28 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    # Development-friendly: JWT only for consistency and to avoid session issues
+    # Development-friendly: Allow any for easier testing
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',  # Re-enabled for WebSocket support
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Easier development, views can override
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',  # MVP: Auth required for writes
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '1000/hour',  # Higher limit for development
+        'user': '5000/hour',  # Higher limit for development
+        'chat_completions': '100/min',  # Higher limit for development
+    },
 }
 
 # Spectacular settings for API documentation
@@ -152,16 +167,28 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
-# CORS settings for development
+# ============================================================================
+# CORS SETTINGS - Development Configuration
+# ============================================================================
+
+# Development Origins - Allow localhost and Android AVD
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3001",  # Alternative frontend port
     "http://127.0.0.1:3000",
-    "http://10.0.2.2:8000",
-    "http://0.0.0.0",# Android AVD accessing Django
+    "http://127.0.0.1:3001",
+    "http://10.0.2.2:8000",   # Android AVD accessing Django
+    "http://10.0.2.2:3000",   # Android AVD accessing frontend
+    "http://0.0.0.0",
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
+# Allow credentials (cookies, authorization headers)
+CORS_ALLOW_CREDENTIALS = False  # DEVELOPMENT ONLY - Set to True in production if needed!
+
+# Restrict origins for MVP security (even in development)
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
+
+# Custom headers that the frontend sends
 CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
@@ -172,9 +199,41 @@ CORS_ALLOWED_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-client-version',  # Allow frontend client version header
-    'x-request-id',      # Allow frontend request ID header
+    # ===== Custom Frontend Headers =====
+    'x-client-version',     # Frontend version tracking
+    'x-request-id',         # Request tracing and debugging
+    'x-operation-id',       # Operation correlation
+    'x-timestamp',          # Request timestamp
+    'x-correlation-id',     # Distributed tracing
+    'cache-control',        # Cache directives
+    'pragma',               # Legacy cache control
+    # ===================================
 ]
+
+# Expose headers to the frontend
+CORS_EXPOSE_HEADERS = [
+    'x-request-id',
+    'x-correlation-id',
+    'x-client-version',
+    'x-ratelimit-limit',
+    'x-ratelimit-remaining',
+    'x-ratelimit-reset',
+    'content-type',
+    'content-length',
+]
+
+# Allowed HTTP methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Preflight request cache duration (in seconds) - 24 hours
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # Debug toolbar
 if DEBUG and 'debug_toolbar' not in INSTALLED_APPS:
@@ -323,6 +382,34 @@ CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
 # Task time limits
 CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes
 CELERY_TASK_TIME_LIMIT = 600       # 10 minutes
+
+# ==================================================
+# SOCIAL AUTH CONFIGURATION
+# ==================================================
+
+# Social account providers configuration
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    },
+    'github': {
+        'SCOPE': [
+            'user:email',
+        ],
+    },
+}
+
+# Social account settings
+SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # For development
 
 # Result backend configuration
 CELERY_RESULT_EXPIRES = 3600  # 1 hour

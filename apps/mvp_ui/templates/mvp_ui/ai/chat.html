@@ -1,0 +1,33 @@
+{% extends "mvp_ui/base.html" %}
+
+{% block title %}AI Chat - PromptCraft MVP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="bi bi-chat-dots"></i> AI Chat Interface</h1>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Chat</h5>
+            </div>
+            <div class="card-body">
+                <div id="chatMessages" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px;">
+                    <p class="text-muted text-center">Chat interface coming soon. Use the API endpoint directly at <code>/api/v2/chat/completions/</code></p>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Type your message..." id="chatInput">
+                    <button class="btn btn-primary" type="button" id="sendBtn">
+                        <i class="bi bi-send"></i> Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

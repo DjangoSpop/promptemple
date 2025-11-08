@@ -6,7 +6,10 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "promptcraft.settings")
+    # Determine which settings module to use based on environment
+    environment = os.environ.get("DJANGO_ENVIRONMENT", "development")
+    settings_module = f"promptcraft.settings.{environment}"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

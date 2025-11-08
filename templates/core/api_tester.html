@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block title %}API Tester - PromptCraft{% endblock %}
+
+{% block extra_css %}
+<style>
+    .endpoint-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .endpoint-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+    }
+    
+    .endpoint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .endpoint-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #212529;
+    }
+    
+    .method-badge {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+    }
+    
+    .method-get {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .method-post {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .endpoint-url {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 15px;
+        word-break: break-all;
+    }
+    
+    .endpoint-description {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .test-controls {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .request-body {
+        flex: 1;
+    }
+    
+    .request-body textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .request-body textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .test-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .test-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .test-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .response-container {
+        margin-top: 20px;
+        display: none;
+    }
+    
+    .response-container.show {
+        display: block;
+    }
+    
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: #2d3748;
+        color: white;
+        border-radius: 8px 8px 0 0;
+        font-weight: 600;
+    }
+    
+    .response-status {
+        font-size: 0.875rem;
+    }
+    
+    .status-success {
+        color: #38ef7d;
+    }
+    
+    .status-error {
+        color: #f5576c;
+    }
+    
+    .response-body {
+        background: #1a202c;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 0 0 8px 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        overflow-x: auto;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .headers-section {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .headers-section h4 {
+        margin-bottom: 10px;
+        color: #495057;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .header-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .header-input input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+    
+    .header-input input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="status-card">
+    <h2>🔧 Interactive API Testing Dashboard</h2>
+    <p>Test your API endpoints directly from the browser. Monitor requests, responses, and CORS behavior in real-time.</p>
+</div>
+
+<div style="margin-bottom: 20px; padding: 20px; background: #e7f3ff; border-left: 4px solid #0066cc; border-radius: 8px;">
+    <strong>Base URL:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px;">{{ api_base_url }}</code>
+</div>
+
+{% for endpoint in endpoints %}
+<div class="endpoint-card" id="endpoint-{{ forloop.counter }}">
+    <div class="endpoint-header">
+        <div class="endpoint-title">{{ endpoint.name }}</div>
+        <div class="method-badge method-{{ endpoint.method|lower }}">{{ endpoint.method }}</div>
+    </div>
+    
+    <div class="endpoint-url">{{ endpoint.url }}</div>
+    <div class="endpoint-description">{{ endpoint.description }}</div>
+    
+    <div class="test-controls">
+        {% if endpoint.method == 'POST' and endpoint.sample_body %}
+        <div class="request-body">
+            <textarea id="body-{{ forloop.counter }}" placeholder="Request body (JSON)">{{ endpoint.sample_body }}</textarea>
+        </div>
+        {% endif %}
+        <button class="test-btn" onclick="testEndpoint('{{ endpoint.url }}', '{{ endpoint.method }}', {{ forloop.counter }})">
+            Test Endpoint
+        </button>
+    </div>
+    
+    <div class="headers-section">
+        <h4>Custom Headers (Optional)</h4>
+        <div class="header-input">
+            <input type="text" id="header-key-{{ forloop.counter }}" placeholder="Header name (e.g., Authorization)">
+            <input type="text" id="header-value-{{ forloop.counter }}" placeholder="Header value (e.g., Bearer token)">
+        </div>
+    </div>
+    
+    <div class="response-container" id="response-{{ forloop.counter }}">
+        <div class="response-header">
+            <span>Response</span>
+            <span class="response-status" id="status-{{ forloop.counter }}"></span>
+        </div>
+        <pre class="response-body" id="response-body-{{ forloop.counter }}"></pre>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function testEndpoint(url, method, index) {
+        const btn = event.target;
+        const responseContainer = document.getElementById(`response-${index}`);
+        const statusElement = document.getElementById(`status-${index}`);
+        const responseBody = document.getElementById(`response-body-${index}`);
+        const headerKey = document.getElementById(`header-key-${index}`).value;
+        const headerValue = document.getElementById(`header-value-${index}`).value;
+        
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span> Testing...';
+        responseContainer.classList.add('show');
+        statusElement.innerHTML = 'Loading...';
+        statusElement.className = 'response-status';
+        responseBody.textContent = 'Sending request...';
+        
+        try {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Client-Name': 'PromptCraft',
+                    'X-Client-Version': '1.0.0',
+                }
+            };
+            
+            // Add custom header if provided
+            if (headerKey && headerValue) {
+                options.headers[headerKey] = headerValue;
+            }
+            
+            // Add body for POST requests
+            if (method === 'POST') {
+                const bodyElement = document.getElementById(`body-${index}`);
+                if (bodyElement && bodyElement.value) {
+                    options.body = bodyElement.value;
+                }
+            }
+            
+            const startTime = Date.now();
+            const response = await fetch(url, options);
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+            
+            // Display response
+            statusElement.innerHTML = `Status: ${response.status} ${response.statusText} | Time: ${duration}ms`;
+            statusElement.className = `response-status ${response.ok ? 'status-success' : 'status-error'}`;
+            
+            // Format response body
+            if (typeof data === 'object') {
+                responseBody.textContent = JSON.stringify(data, null, 2);
+            } else {
+                responseBody.textContent = data;
+            }
+            
+            // Show CORS headers
+            const corsHeaders = {
+                'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials'),
+            };
+            
+            const corsInfo = '\n\n--- CORS Headers ---\n' + JSON.stringify(corsHeaders, null, 2);
+            responseBody.textContent += corsInfo;
+            
+        } catch (error) {
+            statusElement.innerHTML = 'Error: ' + error.message;
+            statusElement.className = 'response-status status-error';
+            responseBody.textContent = `Error Details:\n${error.stack || error.message}\n\nThis could be a CORS error, network error, or server error.`;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Test Endpoint';
+        }
+    }
+</script>
+{% endblock %}

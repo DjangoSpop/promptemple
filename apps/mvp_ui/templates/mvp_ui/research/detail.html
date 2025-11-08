@@ -1,0 +1,91 @@
+{% extends "mvp_ui/base.html" %}
+
+{% block title %}Research Job - PromptCraft MVP{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'mvp_ui:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'mvp_ui:research_list' %}">Research</a></li>
+                <li class="breadcrumb-item active">Job Details</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Research Query</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">{{ job.query }}</p>
+                
+                {% if job.answer %}
+                <hr>
+                <h5>Answer</h5>
+                <div class="bg-light p-3 rounded">
+                    {{ job.answer|linebreaks }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if progress %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Progress</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ progress.message|default:"Processing..." }}</p>
+                {% if progress.percent %}
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ progress.percent }}%">
+                        {{ progress.percent }}%
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Job Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Status:</dt>
+                    <dd class="col-sm-7">
+                        <span class="badge bg-{% if job.status == 'completed' %}success{% elif job.status == 'failed' %}danger{% elif job.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                            {{ job.status|title }}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-5">Created:</dt>
+                    <dd class="col-sm-7">{{ job.created_at|date:"Y-m-d H:i" }}</dd>
+                    
+                    {% if job.completed_at %}
+                    <dt class="col-sm-5">Completed:</dt>
+                    <dd class="col-sm-7">{{ job.completed_at|date:"Y-m-d H:i" }}</dd>
+                    {% endif %}
+                    
+                    <dt class="col-sm-5">Job ID:</dt>
+                    <dd class="col-sm-7"><small class="font-monospace">{{ job.id }}</small></dd>
+                </dl>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'mvp_ui:research_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

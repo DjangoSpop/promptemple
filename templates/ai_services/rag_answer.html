@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Q&A Test - PromptCraft</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .back-link { color: white; text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: 600; }
+        .card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #667eea; margin-bottom: 10px; font-size: 2em; }
+        h2 { color: #667eea; margin-bottom: 15px; }
+        .subtitle { color: #666; margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+        input, textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 1em; }
+        textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+        .button-group { display: flex; gap: 15px; margin-top: 20px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-secondary { background: #e2e8f0; color: #333; }
+        .status { padding: 12px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; }
+        .status.success { background: #d1fae5; color: #065f46; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .status.processing { background: #fef3c7; color: #92400e; }
+        .answer-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+            margin-top: 20px;
+        }
+        .answer-box h3 { color: #333; margin-bottom: 15px; }
+        .answer-box .content { color: #333; line-height: 1.8; white-space: pre-wrap; }
+        .sources { margin-top: 20px; }
+        .source-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .source-item .score {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .metric-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-box .label { font-size: 0.9em; color: #666; margin-bottom: 5px; }
+        .metric-box .value { font-size: 1.5em; font-weight: bold; color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/ai-test/" class="back-link">← Back to Dashboard</a>
+        
+        <div class="card">
+            <h1>💬 RAG-Powered Q&A Test</h1>
+            <p class="subtitle">Ask questions and get AI-generated answers grounded in retrieved documents</p>
+            
+            <div class="form-group">
+                <label for="question">Your Question</label>
+                <textarea id="question" placeholder="Ask a question... (e.g., What are the best practices for prompt engineering?)"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="jwt-token">JWT Token {% if not user.is_authenticated %}(Required){% endif %}</label>
+                <input type="text" id="jwt-token" placeholder="Bearer token from /api/v2/auth/login/">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="askQuestion()">💡 Get Answer</button>
+                <button class="btn-secondary" onclick="clearResults()">🗑️ Clear</button>
+            </div>
+            
+            <div id="status-container"></div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Response Metrics</h2>
+            <div class="metrics">
+                <div class="metric-box">
+                    <div class="label">Sources Used</div>
+                    <div class="value" id="sources-count">0</div>
+                </div>
+                <div class="metric-box">
+                    <div class="label">Response Time</div>
+                    <div class="value" id="response-time">0s</div>
+                </div>
+                <div class="metric-box">
+                    <div class="label">Confidence</div>
+                    <div class="value" id="confidence">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" id="answer-card" style="display: none;">
+            <h2>✨ AI-Generated Answer</h2>
+            <div class="answer-box">
+                <h3>Answer:</h3>
+                <div class="content" id="answer-content"></div>
+            </div>
+        </div>
+        
+        <div class="card" id="sources-card" style="display: none;">
+            <h2>📚 Source Documents</h2>
+            <div class="sources" id="sources"></div>
+        </div>
+    </div>
+    
+    <script>
+        function updateStatus(message, type = 'info') {
+            document.getElementById('status-container').innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function askQuestion() {
+            const question = document.getElementById('question').value.trim();
+            const token = document.getElementById('jwt-token').value.trim();
+            
+            if (!question) {
+                updateStatus('⚠️ Please enter a question', 'error');
+                return;
+            }
+            
+            updateStatus('🔄 Generating answer with RAG...', 'processing');
+            const startTime = Date.now();
+            
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+                }
+                
+                const response = await fetch('{{ api_base_url }}{{ endpoint }}', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ query: question, include_sources: true })
+                });
+                
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(`HTTP ${response.status}: ${errorData.error || errorData.detail || 'Request failed'}`);
+                }
+                
+                const result = await response.json();
+                
+                // Update metrics
+                document.getElementById('response-time').textContent = `${elapsed}s`;
+                const sources = result.sources || result.context || [];
+                document.getElementById('sources-count').textContent = sources.length;
+                document.getElementById('confidence').textContent = result.confidence ? result.confidence.toFixed(2) : '-';
+                
+                // Display answer
+                document.getElementById('answer-content').textContent = result.answer || result.response || 'No answer generated';
+                document.getElementById('answer-card').style.display = 'block';
+                
+                // Display sources
+                if (sources.length > 0) {
+                    const sourcesDiv = document.getElementById('sources');
+                    sourcesDiv.innerHTML = '';
+                    
+                    sources.forEach((source, idx) => {
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.className = 'source-item';
+                        sourceDiv.innerHTML = `
+                            <span class="score">Source #${idx + 1} | Relevance: ${(source.score || source.similarity || 0).toFixed(3)}</span>
+                            <div style="margin-top: 8px; color: #333;">${source.content || source.text || JSON.stringify(source)}</div>
+                        `;
+                        sourcesDiv.appendChild(sourceDiv);
+                    });
+                    
+                    document.getElementById('sources-card').style.display = 'block';
+                }
+                
+                updateStatus(`✅ Answer generated in ${elapsed}s`, 'success');
+                
+            } catch (error) {
+                updateStatus(`❌ Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('status-container').innerHTML = '';
+            document.getElementById('answer-card').style.display = 'none';
+            document.getElementById('sources-card').style.display = 'none';
+            document.getElementById('sources-count').textContent = '0';
+            document.getElementById('response-time').textContent = '0s';
+            document.getElementById('confidence').textContent = '-';
+        }
+    </script>
+</body>
+</html>

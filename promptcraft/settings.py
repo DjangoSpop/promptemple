@@ -105,24 +105,28 @@ LOCAL_APPS = [
     # Only add apps that actually exist
 ]
 
-# Check which local apps exist and add them
+# Check which local apps exist and add them (including mvp_ui)
 apps_dir = BASE_DIR / 'apps'
 if apps_dir.exists():
     for app_path in apps_dir.iterdir():
         if app_path.is_dir() and (app_path / '__init__.py').exists():
             LOCAL_APPS.append(f'apps.{app_path.name}')
 
+# Add research_agent app
+LOCAL_APPS.append('research_agent')
+
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # Must be early in the list
+    "corsheaders.middleware.CorsMiddleware",  # CORS middleware - MUST be before SessionMiddleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.mvp_ui.middleware.PerformanceMiddleware",  # MVP UI performance tracking
 ]
 
 # Add debug toolbar middleware if installed and in debug mode
@@ -230,51 +234,66 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
         "10.0.2.2",  # Android emulator
     ]
 
-# CORS settings for mobile development
-if 'corsheaders' in THIRD_PARTY_APPS:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://localhost:3001",   # React dev server
-        "http://localhost:8000",
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8000",
-        "http://10.0.2.2:8000",  # Android emulator
-        "http://10.0.3.2:8000",  # Alternative Android emulator
-        # Production frontend domain
-    ]
-    CORS_ALLOW_CREDENTIALS = True
-    # Allow all origins in development for mobile testing
-    if DEBUG:
-        CORS_ALLOW_ALL_ORIGINS = True
-    
-    # Allow custom headers from frontend
-    CORS_ALLOWED_HEADERS = [
-'accept',
-        'accept-encoding',
-        'accept-language',
-        'authorization',
-        'cache-control',
-        'content-type',
-        'dnt',
-        'origin',
-        'pragma',
-        'user-agent',
-        'x-csrftoken',
-        'x-requested-with',
-        'x-client-version',
-        'x-client-name',
-        'x-request-id',   # Custom frontend header
-    ]
-    CORS_ALLOWED_METHODS = [
-        'GET',
-        'POST',
-        'PUT',
-        'PATCH',
-        'DELETE',
-        'OPTIONS',
-    ]
+# CORS settings for development and production
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:8000",
+    "http://10.0.2.2:8000",  # Android emulator
+    "http://10.0.3.2:8000",  # Alternative Android emulator
+]
+
+if not DEBUG:
+    # Production frontend domains
+    CORS_ALLOWED_ORIGINS.extend([
+        "https://www.prompt-temple.com",
+        "https://prompt-temple.com",
+    ])
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Allow all origins in development
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow custom headers from frontend
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'accept-language',
+    'authorization',
+    'cache-control',
+    'content-type',
+    'dnt',
+    'origin',
+    'pragma',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-client-version',
+    'x-client-name',
+    'x-request-id',
+    'x-access-token',
+]
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+    'HEAD',
+]
+
+# Expose headers to frontend
+CORS_EXPOSE_HEADERS = [
+    'Content-Type',
+    'X-CSRFToken',
+]
 
 # REST Framework settings (JWT-only authentication to avoid session dependency)
 REST_FRAMEWORK = {
@@ -293,9 +312,13 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/hour',
-        'user': '1000/hour',
-        'chat_completions': '5/min',  # Conservative rate for SSE streaming
+        # Development: Very lenient rates for testing
+        # Production: More conservative rates
+        'anon': '1000/hour' if DEBUG else '100/hour',
+        'user': '5000/hour' if DEBUG else '1000/hour',
+        'chat_completions': '60/min' if DEBUG else '5/min',  # SSE streaming
+        'research': '1000/hour' if DEBUG else '100/hour',  # Research endpoints for anonymous users
+        'research_auth': '2000/hour' if DEBUG else '500/hour',  # Research endpoints for authenticated users
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -433,6 +456,24 @@ SEARCH_SETTINGS = {
     'BATCH_SIZE': int(config('SEARCH_BATCH_SIZE', default='100')),
     'UPDATE_FREQUENCY': int(config('INDEX_UPDATE_FREQUENCY', default='3600')),  # seconds
 }
+
+# Research Agent Configuration
+RESEARCH = {
+    'SEARCH_PROVIDER': config('RESEARCH_SEARCH_PROVIDER', default='tavily'),
+    'SEARCH_TOP_K': int(config('RESEARCH_SEARCH_TOP_K', default='8')),
+    'MAX_PAGES': int(config('RESEARCH_MAX_PAGES', default='12')),
+    'FETCH_TIMEOUT_S': int(config('RESEARCH_FETCH_TIMEOUT', default='15')),
+    'MAX_TOKENS_PER_CHUNK': int(config('RESEARCH_MAX_TOKENS_PER_CHUNK', default='800')),
+    'CHUNK_OVERLAP_TOKENS': int(config('RESEARCH_CHUNK_OVERLAP_TOKENS', default='120')),
+    'MIN_AUTHORITY_SCORE': float(config('RESEARCH_MIN_AUTHORITY_SCORE', default='0.6')),
+    'MIN_CONFIDENCE_SCORE': float(config('RESEARCH_MIN_CONFIDENCE_SCORE', default='0.5')),
+    'MAX_CARDS_PER_DOMAIN': int(config('RESEARCH_MAX_CARDS_PER_DOMAIN', default='2')),
+    'ENABLE_QUALITY_GUARDS': config('RESEARCH_ENABLE_QUALITY_GUARDS', default=True, cast=bool),
+    'ENABLE_DOMAIN_CLUSTERING': config('RESEARCH_ENABLE_DOMAIN_CLUSTERING', default=True, cast=bool),
+}
+
+# Tavily API Configuration
+TAVILY_API_KEY = config('TAVILY_API_KEY', default='')
 
 # ==================================================
 # CHAT STREAMING & SSE CONFIGURATION

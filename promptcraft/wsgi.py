@@ -9,8 +9,10 @@ from pathlib import Path
 
 from django.core.wsgi import get_wsgi_application
 
-# Set Django settings
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "promptcraft.settings")
+# Set Django settings based on environment
+environment = os.environ.get("DJANGO_ENVIRONMENT", "production")
+settings_module = f"promptcraft.settings.{environment}"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
 
 # Configure logging
 BASE_DIR = Path(__file__).resolve().parent.parent

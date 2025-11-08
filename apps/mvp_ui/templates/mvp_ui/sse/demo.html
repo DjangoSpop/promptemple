@@ -1,0 +1,230 @@
+{% extends "mvp_ui/base.html" %}
+
+{% block title %}SSE Streaming Demo - PromptCraft MVP{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-broadcast"></i> Server-Sent Events (SSE) Demo
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Controls</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <button id="connectBtn" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-play-circle"></i> Connect
+                    </button>
+                    <button id="disconnectBtn" class="btn btn-danger w-100 mb-2" disabled>
+                        <i class="bi bi-stop-circle"></i> Disconnect
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning w-100">
+                        <i class="bi bi-trash"></i> Clear Log
+                    </button>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="autoScrollCheck" checked>
+                    <label class="form-check-label" for="autoScrollCheck">
+                        Auto-scroll
+                    </label>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>Connection Status:</strong>
+                    <div id="connectionStatus" class="mt-2">
+                        <span class="badge bg-secondary">Disconnected</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-secondary">
+                    <strong>Events Received:</strong>
+                    <div id="eventCount" class="mt-2 fs-4">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">About SSE</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    Server-Sent Events (SSE) provide a simple way to stream data from server to client over HTTP.
+                    This demo connects to <code>/mvp-ui/sse/test/</code> and displays events in real-time.
+                </p>
+                <ul class="small text-muted">
+                    <li>Automatic reconnection on disconnect</li>
+                    <li>Exponential backoff retry strategy</li>
+                    <li>Event ordering preserved</li>
+                    <li>No external dependencies</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Event Log</h5>
+            </div>
+            <div class="card-body p-0">
+                <pre id="eventLog" class="m-0 p-3 bg-dark text-light" style="height: 600px; overflow-y: auto; font-size: 12px; font-family: 'Courier New', monospace;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let eventSource = null;
+let eventCount = 0;
+let retryCount = 0;
+const MAX_RETRIES = 5;
+const BASE_RETRY_DELAY = 1000;
+
+const connectBtn = document.getElementById('connectBtn');
+const disconnectBtn = document.getElementById('disconnectBtn');
+const clearBtn = document.getElementById('clearBtn');
+const eventLog = document.getElementById('eventLog');
+const eventCountEl = document.getElementById('eventCount');
+const connectionStatus = document.getElementById('connectionStatus');
+const autoScrollCheck = document.getElementById('autoScrollCheck');
+
+function logMessage(message, type = 'info') {
+    const timestamp = new Date().toISOString();
+    const colors = {
+        info: '#00bcd4',
+        success: '#4caf50',
+        error: '#f44336',
+        warning: '#ff9800',
+        data: '#9c27b0'
+    };
+    
+    const color = colors[type] || colors.info;
+    const line = `<span style="color: #888">[${timestamp}]</span> <span style="color: ${color}">[${type.toUpperCase()}]</span> ${message}\n`;
+    
+    eventLog.innerHTML += line;
+    
+    if (autoScrollCheck.checked) {
+        eventLog.scrollTop = eventLog.scrollHeight;
+    }
+}
+
+function updateConnectionStatus(status, badgeClass) {
+    connectionStatus.innerHTML = `<span class="badge bg-${badgeClass}">${status}</span>`;
+}
+
+function connect() {
+    if (eventSource) {
+        logMessage('Already connected', 'warning');
+        return;
+    }
+    
+    logMessage('Connecting to SSE endpoint...', 'info');
+    updateConnectionStatus('Connecting...', 'warning');
+    
+    try {
+        eventSource = new EventSource('{% url "mvp_ui:sse_test" %}');
+        
+        eventSource.onopen = function(e) {
+            logMessage('Connection established', 'success');
+            updateConnectionStatus('Connected', 'success');
+            retryCount = 0;
+            connectBtn.disabled = true;
+            disconnectBtn.disabled = false;
+        };
+        
+        eventSource.onmessage = function(e) {
+            eventCount++;
+            eventCountEl.textContent = eventCount;
+            
+            if (e.data === '[DONE]') {
+                logMessage('Stream completed', 'success');
+                disconnect();
+                return;
+            }
+            
+            try {
+                const data = JSON.parse(e.data);
+                logMessage(`Event received: ${JSON.stringify(data, null, 2)}`, 'data');
+            } catch (err) {
+                logMessage(`Raw data: ${e.data}`, 'data');
+            }
+        };
+        
+        eventSource.onerror = function(e) {
+            logMessage('Connection error occurred', 'error');
+            updateConnectionStatus('Error', 'danger');
+            
+            if (eventSource.readyState === EventSource.CLOSED) {
+                logMessage('Connection closed by server', 'warning');
+                disconnect();
+                
+                // Auto-retry with exponential backoff
+                if (retryCount < MAX_RETRIES) {
+                    const delay = BASE_RETRY_DELAY * Math.pow(2, retryCount);
+                    retryCount++;
+                    logMessage(`Retrying in ${delay}ms (attempt ${retryCount}/${MAX_RETRIES})...`, 'warning');
+                    
+                    setTimeout(() => {
+                        if (!eventSource) {
+                            connect();
+                        }
+                    }, delay);
+                } else {
+                    logMessage('Max retries exceeded. Please reconnect manually.', 'error');
+                }
+            }
+        };
+        
+    } catch (err) {
+        logMessage(`Failed to create EventSource: ${err.message}`, 'error');
+        updateConnectionStatus('Failed', 'danger');
+        disconnect();
+    }
+}
+
+function disconnect() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        logMessage('Disconnected from SSE endpoint', 'info');
+        updateConnectionStatus('Disconnected', 'secondary');
+    }
+    
+    connectBtn.disabled = false;
+    disconnectBtn.disabled = true;
+}
+
+function clearLog() {
+    eventLog.innerHTML = '';
+    eventCount = 0;
+    eventCountEl.textContent = '0';
+    logMessage('Log cleared', 'info');
+}
+
+// Event listeners
+connectBtn.addEventListener('click', connect);
+disconnectBtn.addEventListener('click', disconnect);
+clearBtn.addEventListener('click', clearLog);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        eventSource.close();
+    }
+});
+
+// Initial log message
+logMessage('SSE Demo ready. Click "Connect" to start.', 'info');
+</script>
+{% endblock %}

@@ -32,6 +32,13 @@ app.conf.update(
     task_acks_late=True,
     worker_max_tasks_per_child=1000,
     task_routes={
+        # Research Agent Tasks (three-queue system)
+        'research_agent.tasks.run_research_task': {'queue': 'high'},  # plan_prompt, seed_search
+        'research_agent.tasks.cleanup_old_jobs': {'queue': 'low'},    # backfill, maintenance
+        'research_agent.tasks.rebuild_embeddings': {'queue': 'low'},
+        'research_agent.tasks.generate_research_report': {'queue': 'low'},
+        
+        # AI Services
         'apps.ai_services.tasks.*': {'queue': 'ai_processing'},
         'apps.analytics.tasks.*': {'queue': 'analytics'},
         'apps.templates.tasks.*': {'queue': 'templates'},

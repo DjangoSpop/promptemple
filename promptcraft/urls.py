@@ -32,6 +32,8 @@ def api_root(request):
         'endpoints': {
             'health': '/health/',
             'api_docs': '/api/schema/swagger-ui/',
+            'mvp_auth': '/api/mvp/auth/',
+            'mvp_templates': '/api/mvp/templates/',
             'templates': '/api/v2/templates/',
             'categories': '/api/v2/template-categories/',
             'auth': '/api/v2/auth/',
@@ -73,9 +75,12 @@ def api_root(request):
         'research_endpoints': {
             'jobs': '/api/v2/research/jobs/',
             'quick': '/api/v2/research/quick/',
+            'intent_fast': '/api/v2/research/intent_fast/',
             'batch': '/api/v2/research/batch/',
             'health': '/api/v2/research/health/',
             'stats': '/api/v2/research/stats/',
+            'stream': '/api/v2/research/jobs/{job_id}/stream/',
+            'cards_stream': '/api/v2/research/jobs/{job_id}/cards/stream/',
         }
     })
 
@@ -84,6 +89,9 @@ urlpatterns = [
      path('sentry-debug/', trigger_error),
     # Health check endpoint (simple, no DB dependencies for Railway)
     path('health/', health_simple, name='health-check'),
+    
+    # MVP UI - Full-stack Django interface for API testing
+    path('mvp-ui/', include('apps.mvp_ui.urls', namespace='mvp_ui')),
     
     # Socket.IO compatibility endpoints (to handle frontend Socket.IO requests gracefully)
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
@@ -96,6 +104,10 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    
+    # MVP API - Professional clean endpoints for production
+    path('api/mvp/auth/', include(('apps.users.mvp_urls', 'mvp_auth'), namespace='mvp_auth')),
+    path('api/mvp/templates/', include(('apps.templates.mvp_urls', 'mvp_templates'), namespace='mvp_templates')),
     
     # API v2 URLs (current version)
     path('api/v2/', include(('apps.templates.urls', 'templates_api_v2'), namespace='templates_api_v2')),
@@ -119,8 +131,8 @@ urlpatterns = [
     path('api/v1/billing/', include(('apps.billing.urls', 'billing_v1'), namespace='billing_v1')),
     path('api/v1/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v1'), namespace='orchestrator_v1')),
     
-    # Coming Soon page
-    path('', TemplateView.as_view(template_name='coming_soon.html'), name='coming_soon'),
+    # Web interface - Testing Dashboard (place this LAST, before debug toolbar)
+    path('', include('apps.core.urls')),
 ]
 
 # Add debug toolbar URLs in development

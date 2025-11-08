@@ -168,18 +168,30 @@ CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'  # Less restrictive
 
-# CORS Settings for Production
+# ============================================================================
+# CORS SETTINGS - Production Configuration
+# ============================================================================
+
+# Production Origins - HTTPS only for security
 CORS_ALLOWED_ORIGINS = [
     "https://prompt-temple.com",
     "https://www.prompt-temple.com",
     "https://api.prompt-temple.com",
-    "http://localhost:3000",  # Remove in production
-    "http://127.0.0.1:3000",
-    "http://10.0.2.2:8000",  # Android AVD emulator
-    "http://10.0.2.2:3000",  # Android AVD emulator frontend
+    "http://localhost:3000",   # For local testing - REMOVE in final production!
+    "http://localhost:3001",   # Alternative port - REMOVE in final production!
+    "http://127.0.0.1:3000",   # REMOVE in final production!
+    "http://127.0.0.1:3001",   # REMOVE in final production!
+    "http://10.0.2.2:8000",    # Android AVD emulator
+    "http://10.0.2.2:3000",    # Android AVD emulator frontend
 ]
+
+# Allow credentials (cookies, authorization headers)
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # Strict CORS in production
+
+# DO NOT use CORS_ALLOW_ALL_ORIGINS in production
+CORS_ALLOW_ALL_ORIGINS = False  # Strict CORS - NEVER set to True in production!
+
+# Custom headers that the frontend sends
 CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
@@ -190,17 +202,41 @@ CORS_ALLOWED_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-client-version',  # Custom frontend header
-    'x-request-id',      # Custom frontend header
-    'cache-control',
-    'pragma',
+    # ===== Custom Frontend Headers =====
+    'x-client-version',     # Frontend version tracking
+    'x-request-id',         # Request tracing and debugging
+    'x-operation-id',       # Operation correlation
+    'x-timestamp',          # Request timestamp
+    'x-correlation-id',     # Distributed tracing
+    'cache-control',        # Cache directives
+    'pragma',               # Legacy cache control
+    # ===================================
 ]
+
+# Expose headers to the frontend
 CORS_EXPOSE_HEADERS = [
-    'content-type',
     'x-request-id',
+    'x-correlation-id',
     'x-client-version',
+    'x-ratelimit-limit',
+    'x-ratelimit-remaining',
+    'x-ratelimit-reset',
+    'content-type',
+    'content-length',
 ]
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+# Allowed HTTP methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Preflight request cache duration (in seconds) - 24 hours
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # Static files configuration
 STATIC_URL = '/static/'

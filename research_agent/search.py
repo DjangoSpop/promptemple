@@ -7,6 +7,11 @@ from typing import List, Dict, Tuple, Optional
 from django.conf import settings
 from .utils import validate_url, extract_domain
 
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -191,6 +196,10 @@ async def fetch_urls_batch(urls: List[str], timeout: int = 15, max_concurrent: i
     """
     if not urls:
         return []
+    
+    if not httpx:
+        logger.error("httpx not available for URL fetching. Install with: pip install httpx")
+        return [(url, 0, "") for url in urls]
 
     results = []
     semaphore = asyncio.Semaphore(max_concurrent)

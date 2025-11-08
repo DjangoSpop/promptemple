@@ -245,6 +245,8 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
     'x-csrftoken',
     'x-requested-with',
     'x-request-id',          # ADD THIS
+    'x-client-version',
+    'x-request-id',
     'x-client-version',      # ADD THIS
 ]
     # Ensure both modern and legacy setting names are present so every
