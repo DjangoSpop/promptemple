@@ -1,0 +1,401 @@
+/**
+ * Floating Action Widget (FAW)
+ * Quick navigation and actions widget
+ *
+ * Features:
+ * - Bottom-right fixed position
+ * - Expandable menu with smooth animations
+ * - Quick access to Templates, Optimizer, Research
+ * - Glassmorphic design with gold accent
+ * - Mobile-optimized positioning
+ */
+
+/* ============================================
+   FLOATING ACTION BUTTON (Main)
+   ============================================ */
+.floating-action-widget {
+  position: fixed;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  z-index: var(--z-fixed);
+}
+
+.fab-main {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-royal-gold) 0%, var(--color-amber) 100%);
+  border: none;
+  box-shadow:
+    0 8px 24px rgba(181, 142, 31, 0.4),
+    0 0 0 0 rgba(181, 142, 31, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--color-obsidian);
+  font-size: 1.5rem;
+  position: relative;
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.fab-main:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 12px 32px rgba(181, 142, 31, 0.6),
+    0 0 0 4px rgba(181, 142, 31, 0.2);
+}
+
+.fab-main:active {
+  transform: scale(0.95);
+}
+
+.fab-main:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 4px;
+}
+
+.fab-main i {
+  transition: transform var(--transition-base);
+}
+
+.fab-main.active i {
+  transform: rotate(135deg);
+}
+
+@keyframes pulse-ring {
+  0%, 100% {
+    box-shadow:
+      0 8px 24px rgba(181, 142, 31, 0.4),
+      0 0 0 0 rgba(181, 142, 31, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 8px 24px rgba(181, 142, 31, 0.4),
+      0 0 0 12px rgba(181, 142, 31, 0);
+  }
+}
+
+/* ============================================
+   FAB MENU (Expandable Actions)
+   ============================================ */
+.fab-menu {
+  position: absolute;
+  bottom: calc(100% + var(--space-md));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all var(--transition-base);
+  pointer-events: none;
+}
+
+.floating-action-widget.active .fab-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  animation: slideInRight var(--transition-base) backwards;
+}
+
+.fab-menu-item:nth-child(1) { animation-delay: 0ms; }
+.fab-menu-item:nth-child(2) { animation-delay: 50ms; }
+.fab-menu-item:nth-child(3) { animation-delay: 100ms; }
+.fab-menu-item:nth-child(4) { animation-delay: 150ms; }
+.fab-menu-item:nth-child(5) { animation-delay: 200ms; }
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fab-menu-label {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 43, 69, 0.15);
+  border: 1px solid rgba(0, 43, 69, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+}
+
+.fab-menu-item:hover .fab-menu-label {
+  opacity: 1;
+  visibility: visible;
+}
+
+.fab-menu-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(0, 43, 69, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 43, 69, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--color-primary);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.fab-menu-btn:hover {
+  transform: scale(1.1);
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 6px 20px rgba(0, 43, 69, 0.3);
+}
+
+.fab-menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* Icon-specific colors */
+.fab-menu-btn.templates {
+  color: var(--color-secondary);
+}
+
+.fab-menu-btn.templates:hover {
+  background: linear-gradient(135deg, var(--color-royal-gold) 0%, var(--color-amber) 100%);
+  color: var(--color-obsidian);
+}
+
+.fab-menu-btn.optimizer {
+  color: #10B981;
+}
+
+.fab-menu-btn.optimizer:hover {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+}
+
+.fab-menu-btn.research {
+  color: #3B82F6;
+}
+
+.fab-menu-btn.research:hover {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+}
+
+.fab-menu-btn.dashboard {
+  color: #8B5CF6;
+}
+
+.fab-menu-btn.dashboard:hover {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  color: white;
+}
+
+/* ============================================
+   TOOLTIP (Alternative to label)
+   ============================================ */
+.fab-menu-item[data-tooltip] {
+  position: relative;
+}
+
+.fab-menu-item[data-tooltip]:hover::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + var(--space-sm));
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 43, 69, 0.95);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: tooltipFadeIn 0.2s ease-out;
+  pointer-events: none;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* ============================================
+   NOTIFICATION BADGE
+   ============================================ */
+.fab-menu-btn .notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-error);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* ============================================
+   RESPONSIVE BEHAVIOR
+   ============================================ */
+@media (max-width: 768px) {
+  .floating-action-widget {
+    bottom: var(--space-lg);
+    right: var(--space-lg);
+  }
+
+  .fab-main {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+
+  .fab-menu {
+    bottom: calc(100% + var(--space-sm));
+  }
+
+  .fab-menu-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.125rem;
+  }
+
+  .fab-menu-label {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  /* Show labels by default on mobile when menu is open */
+  .floating-action-widget.active .fab-menu-label {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* Very small screens - simplify */
+@media (max-width: 480px) {
+  .floating-action-widget {
+    bottom: var(--space-md);
+    right: var(--space-md);
+  }
+
+  .fab-menu-label {
+    display: none;
+  }
+
+  /* Use tooltips instead */
+  .fab-menu-item[data-tooltip]:active::before {
+    content: attr(data-tooltip);
+    position: fixed;
+    bottom: calc(100% + var(--space-xl));
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    background: rgba(0, 43, 69, 0.95);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+  }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .fab-main,
+  .fab-menu,
+  .fab-menu-item,
+  .fab-menu-btn {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .fab-main,
+  .fab-menu-btn {
+    border: 2px solid currentColor;
+  }
+
+  .fab-menu-label {
+    border: 2px solid var(--color-primary);
+  }
+}
+
+/* ============================================
+   BACKDROP (Optional - for mobile overlay)
+   ============================================ */
+.fab-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 43, 69, 0.3);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-base);
+  z-index: calc(var(--z-fixed) - 1);
+  pointer-events: none;
+}
+
+.floating-action-widget.active + .fab-backdrop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (min-width: 769px) {
+  .fab-backdrop {
+    display: none;
+  }
+}
