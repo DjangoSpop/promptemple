@@ -1,5 +1,5 @@
 # Minimal Production Requirements for PromptCraft API
-# CRUD + Authentication + API Documentation ONLY
+# Authentication + CRUD + API Documentation + Async Support
 
 # ============================================
 # CORE DJANGO
@@ -20,12 +20,18 @@ psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 
 # ============================================
+# ASYNC SUPPORT (Daphne for WebSocket/HTTP2)
+# ============================================
+daphne==4.1.2
+channels==4.1.0
+
+# ============================================
 # CORS & SECURITY
 # ============================================
 django-cors-headers==4.3.1
 
 # ============================================
-# PRODUCTION SERVER
+# PRODUCTION SERVER (Gunicorn fallback)
 # ============================================
 gunicorn==23.0.0
 whitenoise==6.8.1
