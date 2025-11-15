@@ -1,0 +1,38 @@
+{
+  "name": "PromptCraft API",
+  "description": "AI Prompt Management Platform - Minimal Production API",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "DJANGO_ENVIRONMENT": {
+      "description": "Django settings module to use",
+      "value": "production"
+    },
+    "SECRET_KEY": {
+      "description": "Django secret key for cryptographic signing",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Enable debug mode (false in production)",
+      "value": "False"
+    },
+    "ALLOWED_HOSTS": {
+      "description": "Comma-separated list of allowed hosts",
+      "value": ".herokuapp.com,localhost"
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL database URL (auto-provisioned by Heroku)",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": []
+}
