@@ -60,6 +60,7 @@ share/python-wheels/
 
 # Virtual environments (ignore all venv folders)
 venv/
+Venv/
 ENV/
 env/
 .venv/
@@ -68,6 +69,7 @@ venv.bak/
 .conda/
 conda/
 env*/
+site-packages/
 
 # If you intentionally want to keep site-packages from a venv, uncomment lines below:
 # !venv/lib/**/site-packages/
@@ -136,13 +138,17 @@ Thumbs.db
 .cache/
 .tmp/
 
-# Logs
+# Logs (MUST BE EXCLUDED)
 logs/
+logs/*
 *.log
+django.log
 celerybeat-schedule
 celerybeat-schedule.*
 
-# Database files
+# Database files (CRITICAL - EXCLUDE FROM GIT)
+db.sqlite3
+db.sqlite3-journal
 *.sqlite3
 *.db
 

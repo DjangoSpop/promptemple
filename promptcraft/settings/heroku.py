@@ -67,7 +67,12 @@ SESSION_CACHE_ALIAS = 'default'
 # ============================================
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
+STATICFILES_DIRS = []  # No additional static directories
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# WhiteNoise Configuration
+WHITENOISE_MANIFEST_STRICT = False  # Don't fail on missing files
+WHITENOISE_ALLOW_ALL_ORIGINS = True
 
 # ============================================
 # MEDIA FILES
@@ -83,6 +88,14 @@ INSTALLED_APPS = [
     app for app in INSTALLED_APPS 
     if not any(x in app for x in ['research_agent', 'channels', 'django_celery'])
 ]
+
+# ============================================
+# MIDDLEWARE - Add WhiteNoise
+# ============================================
+# Insert WhiteNoise middleware right after SecurityMiddleware
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
+    MIDDLEWARE.insert(security_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # ============================================
 # DISABLE FEATURES NOT NEEDED FOR MVP
