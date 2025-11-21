@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     '.herokuapp.com',
     'www.prompt-temple.com',
     'prompt-temple.com',
+    'api.prompt-temple.com',
 ]
 
 # ============================================
@@ -138,10 +139,25 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CORS_ALLOWED_ORIGINS = [
     'https://www.prompt-temple.com',
     'https://prompt-temple.com',
+    'https://api.prompt-temple.com',
 ]
 
 # Allow credentials for authentication
 CORS_ALLOW_CREDENTIALS = True
+
+# Allow custom headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-client-version',  # Custom header for client version tracking
+]
 
 # ============================================
 # LOGGING
