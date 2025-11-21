@@ -1,0 +1,35 @@
+# Production Requirements - Use development.txt for local dev
+-r requirements/base.txt
+
+# Production Server & Monitoring
+gunicorn==23.0.0
+sentry-sdk==2.17.0
+
+# Configuration & Environment  
+python-decouple==3.8
+django-environ==0.11.2
+dj-database-url==2.1.0
+
+# Background Tasks
+django-celery-beat==2.5.0
+django-celery-results==2.5.1
+
+# Additional AI Services
+anthropic==0.64.0
+
+# Vector Database (lightweight for production)
+chromadb==0.5.5
+sentence-transformers==2.2.2
+
+# Payment Processing
+stripe==12.5.0
+
+# Static Files & Storage
+whitenoise==6.8.1
+
+# HTTP extras
+httpx-sse==0.4.1
+
+# Utilities
+pytz==2024.1
+python-dateutil==2.9.0.post0

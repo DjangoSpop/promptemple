@@ -182,6 +182,11 @@ CORS_ALLOWED_ORIGINS = [
     "http://0.0.0.0",
 ]
 
+# ============================================
+# FRONTEND CONFIGURATION
+# ============================================
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
 # Allow credentials (cookies, authorization headers)
 CORS_ALLOW_CREDENTIALS = False  # DEVELOPMENT ONLY - Set to True in production if needed!
 

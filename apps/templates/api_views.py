@@ -3,27 +3,31 @@
 # Provides modern API endpoints for the frontend with pagination, search, and monetization
 # """
 
-# from rest_framework import viewsets, status, filters
-# from rest_framework.decorators import action, api_view, permission_classes
-# from rest_framework.response import Response
-# from rest_framework.permissions import IsAuthenticated, AllowAny
-# from rest_framework.pagination import PageNumberPagination
-# from django_filters.rest_framework import DjangoFilterBackend
-# from django.db.models import Q, Count, Avg, F
-# from django.utils import timezone
-# from django.core.cache import cache
-# from django.contrib.auth import get_user_model
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q, Count, Avg, F
+from django.utils import timezone
+from django.core.cache import cache
+from django.contrib.auth import get_user_model
+from django.http import StreamingHttpResponse
+import time
+import json
 
-# from .models import Template, TemplateCategory, TemplateUsage, TemplateRating
-# from .serializers import (
-#     TemplateListSerializer, TemplateDetailSerializer, TemplateCategorySerializer,
-#     TemplateUsageSerializer, SuggestionSerializer
-# )
-# from .services.suggestion_service import SuggestionAPIService
-# from apps.billing.models import UserSubscription
-# from apps.analytics.models import AnalyticsEvent
+from .models import Template, TemplateCategory, TemplateUsage, TemplateRating
+from .serializers import (
+    TemplateListSerializer, TemplateDetailSerializer, TemplateCategorySerializer,
+    TemplateUsageSerializer, SuggestionSerializer
+)
+from .services.suggestion_service import SuggestionAPIService
+from apps.billing.models import UserSubscription
+from apps.analytics.models import AnalyticsEvent
+from apps.ai_services.services import AIService
 
-# User = get_user_model()
+User = get_user_model()
 
 
 # class InfiniteScrollPagination(PageNumberPagination):
@@ -669,3 +673,89 @@
 #         return subscription.is_premium
 #     except UserSubscription.DoesNotExist:
 #         return False
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def stream_validation(request, template_id):
+    """
+    Server-Sent Events endpoint for real-time AI template validation
+    Streams progress updates, quality scores, and feedback during validation
+    """
+    try:
+        # Get and validate template
+        template = Template.objects.get(id=template_id, is_active=True)
+    except Template.DoesNotExist:
+        return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Check permissions - user must own the template or be a collaborator
+    if template.author != request.user and request.user not in template.collaborators.all():
+        return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+    def validation_generator():
+        """Generator function for SSE validation stream"""
+        try:
+            # Send initial connection event
+            yield f"event: connected\ndata: {json.dumps({'status': 'connected'})}\n\n"
+
+            # Phase 1: Analysis (0-30%)
+            yield f"event: progress\ndata: {json.dumps({'progress': 10, 'phase': 'analysis', 'message': 'Analyzing template structure...'})}\n\n"
+            time.sleep(0.5)
+
+            yield f"event: progress\ndata: {json.dumps({'progress': 20, 'phase': 'analysis', 'message': 'Checking field completeness...'})}\n\n"
+            time.sleep(0.5)
+
+            yield f"event: progress\ndata: {json.dumps({'progress': 30, 'phase': 'analysis', 'message': 'Evaluating content quality...'})}\n\n"
+
+            # Phase 2: AI Validation (30-80%)
+            yield f"event: progress\ndata: {json.dumps({'progress': 40, 'phase': 'ai_validation', 'message': 'Running AI quality assessment...'})}\n\n"
+            time.sleep(1)
+
+            # Use AIService for analysis
+            ai_service = AIService()
+            analysis = ai_service.analyze_template(template, request.user)
+
+            yield f"event: progress\ndata: {json.dumps({'progress': 60, 'phase': 'ai_validation', 'message': 'Processing suggestions...'})}\n\n"
+            time.sleep(0.5)
+
+            yield f"event: progress\ndata: {json.dumps({'progress': 80, 'phase': 'ai_validation', 'message': 'Finalizing quality score...'})}\n\n"
+
+            # Phase 3: Complete (80-100%)
+            yield f"event: progress\ndata: {json.dumps({'progress': 90, 'phase': 'complete', 'message': 'Generating final report...'})}\n\n"
+            time.sleep(0.5)
+
+            # Send completion data
+            quality_score = analysis.get('overall_score', 85) / 100.0  # Convert to 0-1 scale
+
+            completion_data = {
+                'quality_score': quality_score,
+                'feedback': analysis.get('suggestions', []),
+                'optimization_tips': analysis.get('optimization_tips', []),
+                'predicted_completion_rate': analysis.get('predicted_completion_rate', 0.78),
+                'difficulty_level': analysis.get('difficulty_level', 'intermediate'),
+                'estimated_time_minutes': analysis.get('estimated_time_minutes', 8),
+                'validation_timestamp': timezone.now().isoformat(),
+            }
+
+            yield f"event: complete\ndata: {json.dumps(completion_data)}\n\n"
+
+            # Send final progress
+            yield f"event: progress\ndata: {json.dumps({'progress': 100, 'phase': 'complete', 'message': 'Validation complete!'})}\n\n"
+
+        except Exception as e:
+            # Send error event
+            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+
+    # Return SSE response
+    response = StreamingHttpResponse(
+        validation_generator(),
+        content_type='text/event-stream'
+    )
+
+    # SSE headers
+    response['Cache-Control'] = 'no-cache'
+    response['Connection'] = 'keep-alive'
+    response['Access-Control-Allow-Origin'] = '*'  # Adjust for production
+    response['Access-Control-Allow-Headers'] = 'Cache-Control'
+
+    return response

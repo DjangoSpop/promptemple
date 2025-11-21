@@ -1,4 +1,36 @@
 
+# ============================================
+# HEROKU DEPLOYMENT - LARGE FILES EXCLUSION
+# ============================================
+
+# Large dataset files (~500MB+)
+prompt_dataset_v1.csv
+prompt_dataset_v1.jsonl
+prompt_examples_with_suggestions.csv
+*.csv
+*.jsonl
+!requirements*.txt  # Keep requirements files
+!templates_fixture.json  # Keep fixture for seeding
+
+# ML/AI artifacts (not using local models)
+rag_index/
+search_index/
+vector_store/
+embeddings/
+*.pkl
+*.pickle
+*.h5
+*.model
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# ============================================
+# PYTHON COMPILED FILES
+# ============================================
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

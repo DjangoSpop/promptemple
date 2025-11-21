@@ -37,6 +37,9 @@ except ImportError:
     
     ADVANCED_FEATURES = False
 
+# Import API views for SSE endpoint
+from apps.templates.api_views import stream_validation
+
 # Create router and register viewsets
 router = DefaultRouter()
 router.register(r'templates', TemplateViewSet, basename='template')
@@ -58,6 +61,9 @@ urlpatterns = [
     # Performance and health monitoring  
     path('metrics/performance/', get_performance_metrics, name='performance-metrics'),
     path('health/websocket/', WebSocketHealthCheck.as_view(), name='websocket-health'),
+    
+    # AI Validation SSE endpoint
+    path('templates/<uuid:template_id>/validate/stream/', stream_validation, name='stream-validation'),
     
     # System status endpoint - always available
     path('status/', system_status, name='system-status'),

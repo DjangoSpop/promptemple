@@ -86,7 +86,7 @@ def api_root(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-     path('sentry-debug/', trigger_error),
+    path('sentry-debug/', trigger_error),
     # Health check endpoint (simple, no DB dependencies for Railway)
     path('health/', health_simple, name='health-check'),
     

@@ -1,38 +1,138 @@
 {
-  "name": "PromptCraft API",
-  "description": "AI Prompt Management Platform - Minimal Production API",
-  "buildpacks": [
-    {
-      "url": "heroku/python"
-    }
+  "name": "Prompt Temple - AI Prompt Management",
+  "description": "Professional AI prompt template management platform with gamification and social features",
+  "repository": "https://github.com/DjangoSpop/promptemple",
+  "logo": "https://prompt-temple.com/logo.png",
+  "keywords": [
+    "django",
+    "ai",
+    "prompts",
+    "templates",
+    "deepseek",
+    "openai",
+    "gamification"
   ],
+  "website": "https://www.prompt-temple.com",
+  "success_url": "/api/v2/templates/",
   "env": {
+    "DJANGO_SETTINGS_MODULE": {
+      "description": "Django settings module for Heroku",
+      "value": "promptcraft.settings.heroku",
+      "required": true
+    },
     "DJANGO_ENVIRONMENT": {
-      "description": "Django settings module to use",
-      "value": "production"
+      "description": "Environment name",
+      "value": "heroku",
+      "required": true
     },
     "SECRET_KEY": {
       "description": "Django secret key for cryptographic signing",
-      "generator": "secret"
+      "generator": "secret",
+      "required": true
     },
     "DEBUG": {
-      "description": "Enable debug mode (false in production)",
-      "value": "False"
+      "description": "Debug mode (should be False in production)",
+      "value": "False",
+      "required": true
+    },
+    "DEEPSEEK_API_KEY": {
+      "description": "DeepSeek API key for AI services",
+      "value": "",
+      "required": true
+    },
+    "DEEPSEEK_BASE_URL": {
+      "description": "DeepSeek API base URL",
+      "value": "https://api.deepseek.com",
+      "required": false
+    },
+    "DEEPSEEK_DEFAULT_MODEL": {
+      "description": "Default DeepSeek model",
+      "value": "deepseek-chat",
+      "required": false
+    },
+    "GOOGLE_OAUTH2_CLIENT_ID": {
+      "description": "Google OAuth2 Client ID for social authentication",
+      "value": "",
+      "required": false
+    },
+    "GOOGLE_OAUTH2_CLIENT_SECRET": {
+      "description": "Google OAuth2 Client Secret",
+      "value": "",
+      "required": false
+    },
+    "GITHUB_CLIENT_ID": {
+      "description": "GitHub OAuth Client ID",
+      "value": "",
+      "required": false
+    },
+    "GITHUB_CLIENT_SECRET": {
+      "description": "GitHub OAuth Client Secret",
+      "value": "",
+      "required": false
+    },
+    "STRIPE_SECRET_KEY": {
+      "description": "Stripe secret key for payment processing",
+      "value": "",
+      "required": false
+    },
+    "STRIPE_PUBLISHABLE_KEY": {
+      "description": "Stripe publishable key",
+      "value": "",
+      "required": false
+    },
+    "SENTRY_DSN": {
+      "description": "Sentry DSN for error tracking (optional)",
+      "value": "",
+      "required": false
+    },
+    "FRONTEND_URL": {
+      "description": "Frontend application URL",
+      "value": "https://www.prompt-temple.com",
+      "required": false
     },
     "ALLOWED_HOSTS": {
-      "description": "Comma-separated list of allowed hosts",
-      "value": ".herokuapp.com,localhost"
-    },
-    "DATABASE_URL": {
-      "description": "PostgreSQL database URL (auto-provisioned by Heroku)",
+      "description": "Allowed hosts for Django",
+      "value": ".herokuapp.com,www.prompt-temple.com,prompt-temple.com",
       "required": false
     }
   },
   "formation": {
     "web": {
       "quantity": 1,
-      "size": "eco"
+      "size": "basic"
     }
   },
-  "addons": []
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini",
+      "as": "DATABASE"
+    },
+    {
+      "plan": "heroku-redis:mini",
+      "as": "REDIS"
+    }
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "python manage.py migrate && python manage.py seed_templates"
+  },
+  "stack": "heroku-22",
+  "environments": {
+    "test": {
+      "formation": {
+        "web": {
+          "quantity": 0
+        }
+      },
+      "addons": [
+        {
+          "plan": "heroku-postgresql:mini"
+        }
+      ]
+    }
+  }
 }

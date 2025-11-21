@@ -23,6 +23,10 @@ class SocialAuthSerializer(serializers.Serializer):
         choices=['google', 'github'],
         help_text="Social authentication provider"
     )
+    redirect_uri = serializers.URLField(
+        required=False,
+        help_text="OAuth redirect URI used in authorization request"
+    )
 
 
 class SocialUserProfileSerializer(serializers.ModelSerializer):

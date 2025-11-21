@@ -1,0 +1,153 @@
+# .slugignore - Exclude files from Heroku slug (deployment package)
+# This reduces slug size and speeds up deployment
+
+# ============================================
+# DOCUMENTATION (Keep only README)
+# ============================================
+*.md
+!README.md
+!DEPLOYMENT.md
+
+# Markdown documentation files
+ARCHITECTURE.md
+API_*.md
+AUTH_*.md
+BACKEND_*.md
+CHAT_*.md
+CORS_*.md
+CRITICAL_*.md
+DEEPSEEK_*.md
+DEPLOYMENT_*.md
+EGYPTIAN_*.md
+ENHANCED_*.md
+ENTERPRISE_*.md
+FRONTEND_*.md
+ICON-*.md
+IMPLEMENTATION_*.md
+INGESTION_*.md
+INTEGRATION_*.md
+INSTALLATION_*.md
+ONBOARDING_*.md
+iteration*.md
+complete_project_structure.md
+enhanced_second_iteration.md
+deploy_*.ps1
+deploy_*.sh
+
+# ============================================
+# TEST FILES (Not needed in production)
+# ============================================
+tests/
+test_*.py
+*_test.py
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.nox/
+
+# ============================================
+# LARGE DATASET FILES (~500MB saved)
+# ============================================
+prompt_dataset_v1.csv
+prompt_dataset_v1.jsonl
+prompt_examples_with_suggestions.csv
+*.csv
+*.jsonl
+*.xlsx
+
+# ============================================
+# ML/AI ARTIFACTS (Not using local models)
+# ============================================
+rag_index/
+search_index/
+vector_store/
+embeddings/
+*.pkl
+*.pickle
+*.h5
+*.model
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# ============================================
+# DEVELOPMENT TOOLS
+# ============================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.env.local
+.env.development
+.env.example
+
+# ============================================
+# GIT FILES (Not needed in slug)
+# ============================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ============================================
+# DOCKER FILES (Not using Docker on Heroku)
+# ============================================
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+docker-compose.*.yml
+docker.yaml
+.dockerignore
+
+# ============================================
+# PYTHON CACHE & BYTECODE
+# ============================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# ============================================
+# LOGS (Not needed in production)
+# ============================================
+*.log
+logs/
+celerybeat-schedule
+celerybeat-schedule.*
+
+# ============================================
+# DATABASE FILES (Using Heroku Postgres)
+# ============================================
+db.sqlite3
+*.sqlite3
+*.db
+db.sqlite3-journal
+
+# ============================================
+# STATIC & MEDIA (Collected by Heroku)
+# ============================================
+staticfiles/
+mediafiles/
+
+# ============================================
+# UNUSED APPS (Optional - uncomment if needed)
+# ============================================
+# research_agent/ - Can be separate microservice later
+
+# ============================================
+# OTHER DEVELOPMENT FILES
+# ============================================
+.DS_Store
+Thumbs.db
+debug_*.py
+analyze_*.py
+ASKME_*.md

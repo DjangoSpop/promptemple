@@ -183,40 +183,70 @@ class SocialAuthProviderInfoView(APIView):
         """Get provider information"""
         providers = []
 
-        # Check Google configuration
-        google_config = settings.SOCIALACCOUNT_PROVIDERS.get('google', {})
-        google_app = google_config.get('APP', {})
-        if google_app.get('client_id'):
-            providers.append({
-                'name': 'google',
-                'display_name': 'Google',
-                'enabled': True,
-                'initiate_url': '/api/v2/auth/social/google/initiate/',
-                'callback_url': '/api/v2/auth/social/callback/',
-                'scopes': google_config.get('SCOPE', ['profile', 'email'])
-            })
+        try:
+            # Try to get configuration from settings first, fallback to environment
+            from decouple import config as env_config
+            
+            # Check Google configuration
+            google_client_id = None
+            google_scopes = ['profile', 'email']
+            
+            if hasattr(settings, 'SOCIALACCOUNT_PROVIDERS') and 'google' in settings.SOCIALACCOUNT_PROVIDERS:
+                google_config = settings.SOCIALACCOUNT_PROVIDERS.get('google', {})
+                google_app = google_config.get('APP', {})
+                google_client_id = google_app.get('client_id')
+                google_scopes = google_config.get('SCOPE', google_scopes)
+            else:
+                google_client_id = env_config('GOOGLE_OAUTH2_CLIENT_ID', default='')
+            
+            if google_client_id:
+                providers.append({
+                    'name': 'google',
+                    'display_name': 'Google',
+                    'enabled': True,
+                    'initiate_url': '/api/v2/auth/social/google/initiate/',
+                    'callback_url': '/api/v2/auth/social/callback/',
+                    'scopes': google_scopes
+                })
 
-        # Check GitHub configuration
-        github_config = settings.SOCIALACCOUNT_PROVIDERS.get('github', {})
-        github_app = github_config.get('APP', {})
-        if github_app.get('client_id'):
-            providers.append({
-                'name': 'github',
-                'display_name': 'GitHub',
-                'enabled': True,
-                'initiate_url': '/api/v2/auth/social/github/initiate/',
-                'callback_url': '/api/v2/auth/social/callback/',
-                'scopes': github_config.get('SCOPE', ['user:email', 'read:user'])
-            })
+            # Check GitHub configuration
+            github_client_id = None
+            github_scopes = ['user:email', 'read:user']
+            
+            if hasattr(settings, 'SOCIALACCOUNT_PROVIDERS') and 'github' in settings.SOCIALACCOUNT_PROVIDERS:
+                github_config = settings.SOCIALACCOUNT_PROVIDERS.get('github', {})
+                github_app = github_config.get('APP', {})
+                github_client_id = github_app.get('client_id')
+                github_scopes = github_config.get('SCOPE', github_scopes)
+            else:
+                github_client_id = env_config('GITHUB_CLIENT_ID', default='')
+            
+            if github_client_id:
+                providers.append({
+                    'name': 'github',
+                    'display_name': 'GitHub',
+                    'enabled': True,
+                    'initiate_url': '/api/v2/auth/social/github/initiate/',
+                    'callback_url': '/api/v2/auth/social/callback/',
+                    'scopes': github_scopes
+                })
 
-        return Response({
-            'providers': providers,
-            'callback_url': '/api/v2/auth/social/callback/',
-            'frontend_callback_urls': {
-                'google': 'http://localhost:3000/auth/callback/google',
-                'github': 'http://localhost:3000/auth/callback/github'
-            }
-        }, status=status.HTTP_200_OK)
+            return Response({
+                'providers': providers,
+                'callback_url': '/api/v2/auth/social/callback/',
+                'frontend_callback_urls': {
+                    'google': 'http://localhost:3000/auth/callback/google',
+                    'github': 'http://localhost:3000/auth/callback/github'
+                }
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            logger.error(f"Failed to get social auth providers: {e}")
+            return Response({
+                'error': 'Configuration error',
+                'message': 'Social authentication is not properly configured',
+                'providers': []
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

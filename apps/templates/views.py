@@ -139,26 +139,36 @@ class TemplateViewSet(viewsets.ModelViewSet):
         """
         template = serializer.save(author=self.request.user)
         
-        # Track analytics
-        AnalyticsService.track_event(
-            user=self.request.user,
-            event_name='template_created',
-            category='template',
-            properties={
-                'template_id': str(template.id),
-                'title': template.title,
-                'category': template.category.name,
-                'field_count': template.field_count
-            }
-        )
+        # Track analytics (with error handling)
+        try:
+            AnalyticsService.track_event(
+                user=self.request.user,
+                event_name='template_created',
+                category='template',
+                properties={
+                    'template_id': str(template.id),
+                    'title': template.title,
+                    'category': template.category.name if template.category else 'Unknown',
+                    'field_count': template.field_count
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Analytics tracking failed during template creation: {e}")
         
-        # Award experience points
-        user = self.request.user
-        user.experience_points += 25
-        user.save(update_fields=['experience_points'])
+        # Award experience points (with error handling)
+        try:
+            user = self.request.user
+            if hasattr(user, 'experience_points'):
+                user.experience_points += 25
+                user.save(update_fields=['experience_points'])
+        except Exception as e:
+            logger.warning(f"Experience points update failed: {e}")
         
-        # Check for achievements
-        GamificationService.check_achievements(user)
+        # Check for achievements (with error handling)
+        try:
+            GamificationService.check_achievements(self.request.user)
+        except Exception as e:
+            logger.warning(f"Achievement check failed: {e}")
     
     def perform_update(self, serializer):
         """
@@ -166,16 +176,19 @@ class TemplateViewSet(viewsets.ModelViewSet):
         """
         template = serializer.save()
         
-        # Track analytics
-        AnalyticsService.track_event(
-            user=self.request.user,
-            event_name='template_updated',
-            category='template',
-            properties={
-                'template_id': str(template.id),
-                'title': template.title
-            }
-        )
+        # Track analytics (with error handling)
+        try:
+            AnalyticsService.track_event(
+                user=self.request.user,
+                event_name='template_updated',
+                category='template',
+                properties={
+                    'template_id': str(template.id),
+                    'title': template.title
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Analytics tracking failed during template update: {e}")
     
     def perform_destroy(self, instance):
         """
@@ -184,16 +197,19 @@ class TemplateViewSet(viewsets.ModelViewSet):
         instance.is_active = False
         instance.save(update_fields=['is_active'])
         
-        # Track analytics
-        AnalyticsService.track_event(
-            user=self.request.user,
-            event_name='template_deleted',
-            category='template',
-            properties={
-                'template_id': str(instance.id),
-                'title': instance.title
-            }
-        )
+        # Track analytics (with error handling)
+        try:
+            AnalyticsService.track_event(
+                user=self.request.user,
+                event_name='template_deleted',
+                category='template',
+                properties={
+                    'template_id': str(instance.id),
+                    'title': instance.title
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Analytics tracking failed during template deletion: {e}")
     
     @action(detail=True, methods=['post'])
     def start_usage(self, request, pk=None):

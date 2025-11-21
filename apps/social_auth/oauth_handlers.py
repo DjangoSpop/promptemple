@@ -48,8 +48,24 @@ class GoogleOAuthHandler(BaseOAuthHandler):
     def __init__(self):
         super().__init__()
         self.provider_name = 'google'
-        self.client_id = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
-        self.client_secret = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['secret']
+        
+        # Try to get from settings.SOCIALACCOUNT_PROVIDERS first, fallback to environment variables
+        try:
+            if hasattr(settings, 'SOCIALACCOUNT_PROVIDERS') and 'google' in settings.SOCIALACCOUNT_PROVIDERS:
+                google_config = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']
+                self.client_id = google_config['client_id']
+                self.client_secret = google_config['secret']
+            else:
+                raise AttributeError("SOCIALACCOUNT_PROVIDERS not configured")
+        except (AttributeError, KeyError):
+            # Fallback to environment variables
+            from decouple import config
+            self.client_id = config('GOOGLE_OAUTH2_CLIENT_ID', default='')
+            self.client_secret = config('GOOGLE_OAUTH2_CLIENT_SECRET', default='')
+        
+        if not self.client_id or not self.client_secret:
+            raise ValidationError("Google OAuth credentials not configured")
+        
         self.token_url = 'https://oauth2.googleapis.com/token'
         self.user_info_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
 
@@ -74,7 +90,7 @@ class GoogleOAuthHandler(BaseOAuthHandler):
                 'client_secret': self.client_secret,
                 'code': code,
                 'grant_type': 'authorization_code',
-                'redirect_uri': redirect_uri or 'http://localhost:3000/auth/callback/google',
+                'redirect_uri':'http://localhost:3000/auth/callback/google',
             }
 
             response = requests.post(self.token_url, data=data, timeout=10)
@@ -185,8 +201,24 @@ class GitHubOAuthHandler(BaseOAuthHandler):
     def __init__(self):
         super().__init__()
         self.provider_name = 'github'
-        self.client_id = settings.SOCIALACCOUNT_PROVIDERS['github']['APP']['client_id']
-        self.client_secret = settings.SOCIALACCOUNT_PROVIDERS['github']['APP']['secret']
+        
+        # Try to get from settings.SOCIALACCOUNT_PROVIDERS first, fallback to environment variables
+        try:
+            if hasattr(settings, 'SOCIALACCOUNT_PROVIDERS') and 'github' in settings.SOCIALACCOUNT_PROVIDERS:
+                github_config = settings.SOCIALACCOUNT_PROVIDERS['github']['APP']
+                self.client_id = github_config['client_id']
+                self.client_secret = github_config['secret']
+            else:
+                raise AttributeError("SOCIALACCOUNT_PROVIDERS not configured")
+        except (AttributeError, KeyError):
+            # Fallback to environment variables
+            from decouple import config
+            self.client_id = config('GITHUB_CLIENT_ID', default='')
+            self.client_secret = config('GITHUB_CLIENT_SECRET', default='')
+        
+        if not self.client_id or not self.client_secret:
+            raise ValidationError("GitHub OAuth credentials not configured")
+        
         self.token_url = 'https://github.com/login/oauth/access_token'
         self.user_info_url = 'https://api.github.com/user'
         self.user_emails_url = 'https://api.github.com/user/emails'
