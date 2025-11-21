@@ -133,6 +133,22 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# SSL/TLS Settings for Custom Domain
+SECURE_SSL_HOST = None  # Allow all HTTPS hosts in ALLOWED_HOSTS
+SECURE_REDIRECT_EXEMPT = []  # No exemptions from SSL redirect
+
+# Cookie Settings for Custom Domain
+SESSION_COOKIE_DOMAIN = None  # Allow cookies across subdomains
+SESSION_COOKIE_SAMESITE = 'Lax'  # Balance security and functionality
+CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    'https://www.prompt-temple.com',
+    'https://prompt-temple.com',
+    'https://api.prompt-temple.com',
+    'https://prompt-temple-mvp-2eac79cfc23e.herokuapp.com',
+]
+
 # ============================================
 # CORS SETTINGS
 # ============================================
