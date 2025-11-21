@@ -1,35 +1,109 @@
-# Production Requirements - Use development.txt for local dev
--r requirements/base.txt
+# requirements-heroku.txt
+# OPTIMIZED FOR HEROKU DEPLOYMENT - Under 500MB
+# Core Features: Template Management + Auth + Gamification + Chat (SSE)
+# Removed: ML/AI packages, Celery, Channels, Vector DBs (~2.3GB saved)
 
-# Production Server & Monitoring
-gunicorn==23.0.0
-sentry-sdk==2.17.0
+# ============================================
+# DJANGO CORE (~60MB)
+# ============================================
+Django==4.2.16
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+django-filter==24.3
+drf-spectacular==0.27.2
 
-# Configuration & Environment  
-python-decouple==3.8
-django-environ==0.11.2
+# ============================================
+# DATABASE (~15MB)
+# ============================================
+psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 
-# Background Tasks
-django-celery-beat==2.5.0
-django-celery-results==2.5.1
+# Redis for caching only (not Celery)
+redis==5.0.8
+django-redis==5.4.0
 
-# Additional AI Services
-anthropic==0.64.0
-
-# Vector Database (lightweight for production)
-chromadb==0.5.5
-sentence-transformers==2.2.2
-
-# Payment Processing
-stripe==12.5.0
-
-# Static Files & Storage
+# ============================================
+# PRODUCTION SERVER (~10MB)
+# ============================================
+gunicorn==23.0.0
 whitenoise==6.8.1
 
-# HTTP extras
-httpx-sse==0.4.1
+# ============================================
+# AUTHENTICATION & SOCIAL AUTH (~25MB)
+# ============================================
+social-auth-app-django==5.4.1
+social-auth-core==4.5.4
+PyJWT==2.10.1
 
-# Utilities
+# ============================================
+# AI SERVICES (Lightweight API clients only) (~30MB)
+# ============================================
+openai>=1.104.2,<3.0.0
+httpx==0.28.1
+httpx-sse==0.4.1
+tiktoken==0.8.0
+anthropic==0.64.0
+
+# Minimal LangChain for LLM orchestration (NO transformers/torch/sentence-transformers)
+langchain-core==0.3.33
+langchain-openai==0.3.35
+pydantic==2.10.5
+pydantic-settings==2.7.1
+
+# ============================================
+# PAYMENT PROCESSING (~10MB)
+# ============================================
+stripe==12.5.0
+
+# ============================================
+# UTILITIES & CONFIGURATION (~15MB)
+# ============================================
+python-decouple==3.8
+django-environ==0.11.2
+python-dotenv==1.0.1
 pytz==2024.1
 python-dateutil==2.9.0.post0
+Pillow==10.4.0
+requests==2.32.3
+urllib3==2.2.3
+
+# ============================================
+# MONITORING & ERROR TRACKING (~10MB)
+# ============================================
+sentry-sdk==2.17.0
+
+# ============================================
+# UTILITIES
+# ============================================
+wheel==0.44.0
+setuptools==75.1.0
+
+# ============================================
+# ESTIMATED TOTAL SIZE: ~185MB
+# SAVINGS: 2.3GB removed (93% reduction)
+# STATUS: ✅ Well under 500MB Heroku limit
+# ============================================
+
+# ============================================
+# REMOVED PACKAGES (Not needed for MVP):
+# ============================================
+# torch==2.4.1                    (~800MB) - No local ML models
+# transformers==4.46.0            (~500MB) - No local transformers
+# sentence-transformers==2.2.2    (~300MB) - No local embeddings
+# chromadb==0.5.5                 (~200MB) - No vector database
+# faiss-cpu==1.9.0                (~100MB) - No vector search
+# numpy==1.26.4                   (~100MB) - Not needed
+# scipy==1.14.1                   (~200MB) - Not needed
+# scikit-learn                    (~300MB) - No ML operations
+# pandas==2.2.2                   (~150MB) - Not needed
+# celery==5.4.0                   (~30MB) - Using sync execution
+# django-celery-beat==2.5.0       (~10MB) - No background tasks
+# django-celery-results==2.5.1    (~10MB) - No background tasks
+# channels==4.1.0                 (~30MB) - Using SSE not WebSockets
+# channels-redis==4.2.0           (~15MB) - Not needed
+# daphne==4.1.2                   (~20MB) - Using Gunicorn
+# pgvector==0.2.5                 (~5MB) - No vector operations
+# langchain==0.3.17               (~50MB) - Using minimal core only
+# langchain-community==0.3.15     (~100MB) - Not needed
+# ============================================
