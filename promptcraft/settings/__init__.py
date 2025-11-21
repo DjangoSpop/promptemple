@@ -19,11 +19,13 @@ except ImportError:
         return value
 
 # Set the environment variable to specify which settings module to use
-# Valid options: development, production, testing
+# Valid options: development, production, testing, heroku
 # Default to development for easier local setup
 ENVIRONMENT = config('DJANGO_ENVIRONMENT', default='development')
 
-if ENVIRONMENT == 'production':
+if ENVIRONMENT == 'heroku':
+    from .heroku import *
+elif ENVIRONMENT == 'production':
     from .production import *
 elif ENVIRONMENT == 'testing':
     from .testing import *
