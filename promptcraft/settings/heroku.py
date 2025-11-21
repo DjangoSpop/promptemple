@@ -49,6 +49,7 @@ CACHES = {
             'CONNECTION_POOL_KWARGS': {
                 'max_connections': 50,
                 'retry_on_timeout': True,
+                'ssl_cert_reqs': None,  # Disable SSL certificate verification for Heroku Redis
             }
         },
         'KEY_PREFIX': 'promptcraft',
