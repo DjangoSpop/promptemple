@@ -20,6 +20,7 @@ psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 redis==5.0.1
 hiredis==2.2.3
+django-redis==5.4.0
 
 # ===== Production Server & Static Files (~20MB) =====
 gunicorn==23.0.0
