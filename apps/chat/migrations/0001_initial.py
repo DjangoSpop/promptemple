@@ -435,23 +435,24 @@ class Migration(migrations.Migration):
                 ],
             },
         ),
+        # Use unique index names to avoid conflicts with templates app
         migrations.AddIndex(
             model_name="chatmessage",
             index=models.Index(
-                fields=["session", "created_at"], name="chat_messag_session_597c4e_idx"
+                fields=["session", "created_at"], name="chat_msg_session_597c4e_idx"
             ),
         ),
         migrations.AddIndex(
             model_name="chatmessage",
             index=models.Index(
-                fields=["role", "created_at"], name="chat_messag_role_b6a95d_idx"
+                fields=["role", "created_at"], name="chat_msg_role_b6a95d_idx"
             ),
         ),
         migrations.AddIndex(
             model_name="chatmessage",
             index=models.Index(
                 fields=["contains_templates", "templates_extracted"],
-                name="chat_messag_contain_178b2e_idx",
+                name="chat_msg_contain_178b2e_idx",
             ),
         ),
     ]
