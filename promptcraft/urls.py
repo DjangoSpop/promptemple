@@ -119,7 +119,7 @@ urlpatterns = [
     path('api/v2/core/', include(('apps.core.urls', 'core_v2'), namespace='core_v2')),
     path('api/v2/billing/', include(('apps.billing.urls', 'billing_v2'), namespace='billing_v2')),
     path('api/v2/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v2'), namespace='orchestrator_v2')),
-    path('', include(('research_agent.urls', 'research_agent'), namespace='research_agent')),
+    # path('', include(('research_agent.urls', 'research_agent'), namespace='research_agent')),  # Disabled for Heroku MVP
     
     # API v1 URLs (legacy support)
     path('api/v1/', include(('apps.templates.urls', 'templates_api_v1'), namespace='templates_api_v1')),
