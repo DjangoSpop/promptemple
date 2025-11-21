@@ -36,7 +36,14 @@ DATABASES = {
 # ============================================
 # CACHING - Redis (without Celery)
 # ============================================
+import ssl
+
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Configure SSL context for Heroku Redis (self-signed cert)
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
 CACHES = {
     'default': {
@@ -49,7 +56,7 @@ CACHES = {
             'CONNECTION_POOL_KWARGS': {
                 'max_connections': 50,
                 'retry_on_timeout': True,
-                'ssl_cert_reqs': None,  # Disable SSL certificate verification for Heroku Redis
+                'ssl_cert_reqs': ssl.CERT_NONE,
             }
         },
         'KEY_PREFIX': 'promptcraft',
