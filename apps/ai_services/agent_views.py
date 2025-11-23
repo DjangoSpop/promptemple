@@ -21,8 +21,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from drf_spectacular.openapi import OpenApiTypes
+
+# drf_spectacular optional
+try:
+    from drf_spectacular.utils import extend_schema, OpenApiParameter
+    from drf_spectacular.openapi import OpenApiTypes
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    # Create no-op decorators if drf_spectacular not available
+    def extend_schema(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    OpenApiParameter = None
+    OpenApiTypes = None
+    DRF_SPECTACULAR_AVAILABLE = False
 
 from apps.billing.models import UsageQuota, UserSubscription
 from apps.ai_services.rag_service import get_rag_agent, OptimizationRequest
@@ -443,7 +456,7 @@ optimize_prompt = async_api_view(optimize_prompt)
 @extend_schema(
     summary="Retrieve documents for a query",
     description="Return top-k retrieved documents from the RAG index",
-    responses={200: OpenApiTypes.OBJECT}
+    responses={200: OpenApiTypes.OBJECT} if DRF_SPECTACULAR_AVAILABLE else None
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -482,7 +495,7 @@ def rag_retrieve(request):
 @extend_schema(
     summary="RAG answer endpoint",
     description="Run retrieval and generate an answer (non-streaming).",
-    responses={200: OpenApiTypes.OBJECT}
+    responses={200: OpenApiTypes.OBJECT} if DRF_SPECTACULAR_AVAILABLE else None
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

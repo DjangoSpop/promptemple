@@ -47,6 +47,7 @@ else:
     ALLOWED_HOSTS = [
         'www.prompt-temple.com',
         'prompt-temple.com',
+        '.herokuapp.com',  # Allow all Heroku apps
     ]
 TEMPLATES = [
     {
@@ -77,7 +78,6 @@ THIRD_PARTY_APPS = [
     # API framework
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'drf_spectacular',  # Commented out - not installed
     # CORS handling
     'corsheaders',
     # WebSocket support
@@ -114,6 +114,10 @@ if apps_dir.exists():
 
 # Add research_agent app
 LOCAL_APPS.append('research_agent')
+
+# Ensure prompt_history is added
+if 'apps.prompt_history' not in LOCAL_APPS:
+    LOCAL_APPS.append('apps.prompt_history')
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -253,6 +257,7 @@ if not DEBUG:
         "https://www.prompt-temple.com",
         "https://prompt-temple.com",
     ])
+    # Note: Heroku app URLs should be added via environment variable if needed
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -323,7 +328,6 @@ REST_FRAMEWORK = {
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Commented out - not installed
 }
 
 sentry_sdk.init(

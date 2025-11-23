@@ -107,7 +107,7 @@ except ImportError:
 
 # REST Framework configuration for development - OVERRIDE base settings
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Optional - commented since drf_spectacular may not be installed
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
@@ -250,9 +250,13 @@ if DEBUG and 'debug_toolbar' not in INSTALLED_APPS:
     except ImportError:
         print("⚠️ debug_toolbar not installed, skipping", file=sys.stderr)
 
-# Add drf-spectacular to installed apps
-if 'drf_spectacular' not in INSTALLED_APPS:
-    INSTALLED_APPS += ['drf_spectacular']
+# Add drf-spectacular to installed apps (optional)
+try:
+    import drf_spectacular
+    if 'drf_spectacular' not in INSTALLED_APPS:
+        INSTALLED_APPS += ['drf_spectacular']
+except ImportError:
+    pass  # drf_spectacular is optional for development
 
 # JWT Settings for development
 from datetime import timedelta
@@ -289,68 +293,35 @@ if DEBUG:
         '10.0.2.2',  # Android AVD
     ]
 
-# Override cache configuration for development (fallback to memory cache if Redis unavailable)
-try:
-    import redis
-    redis_url = config('REDIS_URL', default='redis://localhost:6379')
-    redis_client = redis.Redis.from_url(redis_url + '/0')
-    redis_client.ping()
-    # Redis is available, use it
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': redis_url + '/1',
-            'KEY_PREFIX': 'promptcraft',
-            'TIMEOUT': 300,
-        },
-        # Sessions cache for backward compatibility
-        'sessions': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': redis_url + '/2',
-            'KEY_PREFIX': 'sessions',
-            'TIMEOUT': 86400,  # 24 hours
+# Override cache configuration for development (always use in-memory for simplicity)
+# Note: Enable Redis by setting REDIS_URL environment variable and uncommenting the try block below
+print("⚠️ Using in-memory cache for development (Redis disabled for faster startup)", file=sys.stderr)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'dev-cache',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,
+        }
+    },
+    # Session cache for development (backward compatibility)
+    'sessions': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'dev-sessions',
+        'TIMEOUT': 86400,  # 24 hours
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
         }
     }
-    
-    # Override channel layers for development with Redis
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [redis_url + '/3'],
-                'symmetric_encryption_keys': [config('CHANNEL_LAYER_SECRET', default='secret-key')],
-            },
-        },
+}
+
+# In-memory channel layer for development
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
-    print("✅ Redis available for caching and WebSockets", file=sys.stderr)
-except (ImportError, redis.ConnectionError, Exception) as e:
-    print(f"⚠️ Redis not available ({e}), using in-memory cache and channels", file=sys.stderr)
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'dev-cache',
-            'TIMEOUT': 300,
-            'OPTIONS': {
-                'MAX_ENTRIES': 500,
-            }
-        },
-        # Session cache for development (backward compatibility)
-        'sessions': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'dev-sessions',
-            'TIMEOUT': 86400,  # 24 hours
-            'OPTIONS': {
-                'MAX_ENTRIES': 1000,
-            }
-        }
-    }
-    
-    # In-memory channel layer for development
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer'
-        }
-    }
+}
 
 # Override session configuration for development (use cache with proper fallback)
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'

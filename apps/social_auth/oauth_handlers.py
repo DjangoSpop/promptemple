@@ -85,14 +85,19 @@ class GoogleOAuthHandler(BaseOAuthHandler):
     def exchange_code_for_token(self, code, redirect_uri=None):
         """Exchange authorization code for access token"""
         try:
+            # Use provided redirect_uri or fall back to default
+            if not redirect_uri:
+                redirect_uri = 'http://localhost:3000/auth/callback/google'
+            
             data = {
                 'client_id': self.client_id,
                 'client_secret': self.client_secret,
                 'code': code,
                 'grant_type': 'authorization_code',
-                'redirect_uri':'http://localhost:3000/auth/callback/google',
+                'redirect_uri': redirect_uri,
             }
 
+            logger.info(f"Exchanging Google code for token with redirect_uri: {redirect_uri}")
             response = requests.post(self.token_url, data=data, timeout=10)
             response.raise_for_status()
 
@@ -104,7 +109,10 @@ class GoogleOAuthHandler(BaseOAuthHandler):
 
         except requests.RequestException as e:
             logger.error(f"Google token exchange failed: {e}")
-            raise ValidationError("Failed to exchange code for token")
+            logger.error(f"Response status: {getattr(e.response, 'status_code', 'N/A')}")
+            logger.error(f"Response body: {getattr(e.response, 'text', 'N/A')}")
+            logger.error(f"Request data used: client_id={self.client_id[:10]}..., redirect_uri={redirect_uri}, code_length={len(code)}")
+            raise ValidationError(f"Failed to exchange code for token: {str(e)}")
 
     def get_user_info(self, access_token):
         """Get user information from Google"""

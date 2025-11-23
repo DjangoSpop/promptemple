@@ -5,13 +5,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from drf_spectacular.views import (
-    SpectacularAPIView, 
-    SpectacularRedocView, 
-    SpectacularSwaggerView
-)
+# drf_spectacular optional
+try:
+    from drf_spectacular.views import (
+        SpectacularAPIView, 
+        SpectacularRedocView, 
+        SpectacularSwaggerView
+    )
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    DRF_SPECTACULAR_AVAILABLE = False
 from django.views.generic import TemplateView
-from apps.core.views import HealthCheckView, health_simple
+from apps.core.views import HealthCheckView, health_simple, redis_health
 from apps.core.socketio_views import SocketIOCompatibilityView, WebSocketInfoView
 from django.http import JsonResponse
 
@@ -89,9 +94,10 @@ urlpatterns = [
     path('sentry-debug/', trigger_error),
     # Health check endpoint (simple, no DB dependencies for Railway)
     path('health/', health_simple, name='health-check'),
+    path('health/redis/', redis_health, name='redis-health'),
     
-    # MVP UI - Full-stack Django interface for API testing
-    path('mvp-ui/', include('apps.mvp_ui.urls', namespace='mvp_ui')),
+    # MVP UI removed from routes to deprecate legacy surface
+    # path('mvp-ui/', include('apps.mvp_ui.urls', namespace='mvp_ui')),
     
     # Socket.IO compatibility endpoints (to handle frontend Socket.IO requests gracefully)
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
@@ -100,14 +106,21 @@ urlpatterns = [
     # API root
     path('api/', api_root, name='api-root'),
     
-    # API Documentation URLs (temporarily disabled)
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # API Documentation URLs (optional - requires drf_spectacular)
+]
+
+if DRF_SPECTACULAR_AVAILABLE:
+    urlpatterns.extend([
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ])
+
+urlpatterns.extend([
     
-    # MVP API - Professional clean endpoints for production
-    path('api/mvp/auth/', include(('apps.users.mvp_urls', 'mvp_auth'), namespace='mvp_auth')),
-    path('api/mvp/templates/', include(('apps.templates.mvp_urls', 'mvp_templates'), namespace='mvp_templates')),
+    # MVP API removed from routing (deprecated)
+    # path('api/mvp/auth/', include(('apps.users.mvp_urls', 'mvp_auth'), namespace='mvp_auth')),
+    # path('api/mvp/templates/', include(('apps.templates.mvp_urls', 'mvp_templates'), namespace='mvp_templates')),
     
     # API v2 URLs (current version)
     path('api/v2/', include(('apps.templates.urls', 'templates_api_v2'), namespace='templates_api_v2')),
@@ -119,21 +132,22 @@ urlpatterns = [
     path('api/v2/core/', include(('apps.core.urls', 'core_v2'), namespace='core_v2')),
     path('api/v2/billing/', include(('apps.billing.urls', 'billing_v2'), namespace='billing_v2')),
     path('api/v2/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v2'), namespace='orchestrator_v2')),
+    path('api/v2/history/', include(('apps.prompt_history.urls', 'prompt_history_v2'), namespace='prompt_history_v2')),
     # path('', include(('research_agent.urls', 'research_agent'), namespace='research_agent')),  # Disabled for Heroku MVP
     
-    # API v1 URLs (legacy support)
-    path('api/v1/', include(('apps.templates.urls', 'templates_api_v1'), namespace='templates_api_v1')),
-    path('api/v1/auth/', include(('apps.users.urls', 'users_v1'), namespace='users_v1')),
-    path('api/v1/ai/', include(('apps.ai_services.urls', 'ai_services_v1'), namespace='ai_services_v1')),
-    path('api/v1/gamification/', include(('apps.gamification.urls', 'gamification_v1'), namespace='gamification_v1')),
-    path('api/v1/analytics/', include(('apps.analytics.urls', 'analytics_v1'), namespace='analytics_v1')),
-    path('api/v1/core/', include(('apps.core.urls', 'core_v1'), namespace='core_v1')),
-    path('api/v1/billing/', include(('apps.billing.urls', 'billing_v1'), namespace='billing_v1')),
-    path('api/v1/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v1'), namespace='orchestrator_v1')),
+    # API v1 routing removed - v2 is the single supported surface
+    # path('api/v1/', include(('apps.templates.urls', 'templates_api_v1'), namespace='templates_api_v1')),
+    # path('api/v1/auth/', include(('apps.users.urls', 'users_v1'), namespace='users_v1')),
+    # path('api/v1/ai/', include(('apps.ai_services.urls', 'ai_services_v1'), namespace='ai_services_v1')),
+    # path('api/v1/gamification/', include(('apps.gamification.urls', 'gamification_v1'), namespace='gamification_v1')),
+    # path('api/v1/analytics/', include(('apps.analytics.urls', 'analytics_v1'), namespace='analytics_v1')),
+    # path('api/v1/core/', include(('apps.core.urls', 'core_v1'), namespace='core_v1')),
+    # path('api/v1/billing/', include(('apps.billing.urls', 'billing_v1'), namespace='billing_v1')),
+    # path('api/v1/orchestrator/', include(('apps.orchestrator.urls', 'orchestrator_v1'), namespace='orchestrator_v1')),
     
     # Web interface - Testing Dashboard (place this LAST, before debug toolbar)
     path('', include('apps.core.urls')),
-]
+])
 
 # Add debug toolbar URLs in development
 if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:

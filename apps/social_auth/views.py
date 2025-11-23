@@ -78,6 +78,9 @@ class SocialAuthCallbackView(APIView):
     def post(self, request):
         """Handle OAuth callback"""
         try:
+            # Log incoming request data for debugging
+            logger.info(f"Social auth callback received: provider={request.data.get('provider')}, has_code={bool(request.data.get('code'))}, has_state={bool(request.data.get('state'))}, redirect_uri={request.data.get('redirect_uri')}")
+            
             # Validate request data
             serializer = SocialAuthSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -90,6 +93,7 @@ class SocialAuthCallbackView(APIView):
             if state:
                 stored_state = request.session.get(f'{provider}_oauth_state')
                 if stored_state and stored_state != state:
+                    logger.warning(f"State mismatch for {provider}: expected={stored_state}, received={state}")
                     return Response({
                         'error': 'Invalid state parameter',
                         'message': 'Possible CSRF attack detected'
@@ -98,8 +102,9 @@ class SocialAuthCallbackView(APIView):
             # Get OAuth handler
             oauth_handler = get_oauth_handler(provider)
 
-            # Get redirect URI from request
+            # Get redirect URI from request - MUST match what was used in initiation
             redirect_uri = request.data.get('redirect_uri', f'http://localhost:3000/auth/callback/{provider}')
+            logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
 
             # Exchange code for access token
             token_data = oauth_handler.exchange_code_for_token(code, redirect_uri)

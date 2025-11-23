@@ -14,16 +14,33 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     Serializer for user registration
     
     Handles user creation with password confirmation
-    and input validation
+    and input validation.
+    
+    Supports both naming conventions:
+    - password/password_confirm (preferred)
+    - password1/password2 (Django allauth compatibility)
     """
     
     password = serializers.CharField(
         write_only=True,
+        required=False,  # Made optional to support password1/password2
         min_length=8,
         help_text="Password must be at least 8 characters long"
     )
     password_confirm = serializers.CharField(
         write_only=True,
+        required=False,  # Made optional to support password1/password2
+        help_text="Confirm your password"
+    )
+    password1 = serializers.CharField(
+        write_only=True,
+        required=False,  # Alternative field name for compatibility
+        min_length=8,
+        help_text="Password must be at least 8 characters long"
+    )
+    password2 = serializers.CharField(
+        write_only=True,
+        required=False,  # Alternative field name for compatibility
         help_text="Confirm your password"
     )
     
@@ -31,8 +48,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'username', 'email', 'first_name', 'last_name',
-            'password', 'password_confirm', 'bio',
-            'theme_preference', 'language_preference'
+            'password', 'password_confirm', 'password1', 'password2',
+            'bio', 'theme_preference', 'language_preference'
         ]
         extra_kwargs = {
             'email': {'required': True},
@@ -62,9 +79,27 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         """Validate password confirmation and strength"""
-        password = attrs.get('password')
-        password_confirm = attrs.pop('password_confirm', None)
+        # Support both password naming conventions
+        password = attrs.get('password') or attrs.get('password1')
+        password_confirm = attrs.pop('password_confirm', None) or attrs.pop('password2', None)
         
+        # Remove alternative password fields to avoid conflicts
+        attrs.pop('password1', None)
+        attrs.pop('password2', None)
+        
+        # Ensure password is provided
+        if not password:
+            raise serializers.ValidationError({
+                'password': "Password is required. Use either 'password' or 'password1' field."
+            })
+        
+        # Ensure password confirmation is provided
+        if not password_confirm:
+            raise serializers.ValidationError({
+                'password_confirm': "Password confirmation is required. Use either 'password_confirm' or 'password2' field."
+            })
+        
+        # Check passwords match
         if password != password_confirm:
             raise serializers.ValidationError({
                 'password_confirm': "Passwords do not match."
@@ -77,6 +112,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'password': list(e.messages)
             })
+        
+        # Store the validated password back
+        attrs['password'] = password
         
         return attrs
     

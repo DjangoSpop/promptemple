@@ -9,6 +9,7 @@ router = DefaultRouter()
 urlpatterns = [
     # Authentication endpoints
     path('register/', views.UserRegistrationView.as_view(), name='user-register'),
+    path('registration/', views.UserRegistrationView.as_view(), name='user-registration'),  # Alias for compatibility
     path('login/', views.UserLoginView.as_view(), name='user-login'),
     path('logout/', views.UserLogoutView.as_view(), name='user-logout'),
     path('refresh/', TokenRefreshView.as_view(), name='token-refresh'),

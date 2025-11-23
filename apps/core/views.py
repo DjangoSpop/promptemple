@@ -197,6 +197,33 @@ def system_status(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def redis_health(request):
+    """Health check for Redis cache and channels. Returns 200 with ok true/false."""
+    from django.core.cache import cache
+    try:
+        # Prefer direct ping when available
+        ok = False
+        try:
+            # django-redis exposes .client.get_client() in many setups
+            client = cache
+            val = cache.get('__health_check__')
+            cache.set('__health_check__', 'ok', 5)
+            ok = cache.get('__health_check__') == 'ok'
+        except Exception:
+            # Fallback to simple get/set
+            cache.set('__health_check__', 'ok', 5)
+            ok = cache.get('__health_check__') == 'ok'
+
+        if ok:
+            return Response({'ok': True}, status=200)
+        else:
+            return Response({'ok': False, 'error': 'cache_unreachable'}, status=503)
+    except Exception as e:
+        return Response({'ok': False, 'error': str(e)}, status=503)
+
+
 @api_view(['GET', 'POST', 'OPTIONS'])
 @permission_classes([permissions.AllowAny])
 def cors_test(request):

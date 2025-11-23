@@ -59,11 +59,12 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = []
 
 # Conditionally add third-party apps if they're installed
-try:
-    import debug_toolbar
-    THIRD_PARTY_APPS.append('debug_toolbar')
-except ImportError:
-    pass
+# Note: debug_toolbar is disabled due to namespace registration issues
+# try:
+#     import debug_toolbar
+#     THIRD_PARTY_APPS.append('debug_toolbar')
+# except ImportError:
+#     pass
 
 try:
     import rest_framework
