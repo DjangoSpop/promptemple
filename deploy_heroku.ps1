@@ -1,16 +1,16 @@
 # Heroku Deployment Script for PromptCraft Backend
 # Run this script to deploy to Heroku with all necessary configurations
 
-Write-Host "🚀 PromptCraft Backend - Heroku Deployment Script" -ForegroundColor Cyan
+Write-Host "Heroku Deployment Script" -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if Heroku CLI is installed
 try {
     heroku --version | Out-Null
-    Write-Host "✅ Heroku CLI installed" -ForegroundColor Green
+    Write-Host "[OK] Heroku CLI installed" -ForegroundColor Green
 } catch {
-    Write-Host "❌ Heroku CLI not found. Please install from: https://devcenter.heroku.com/articles/heroku-cli" -ForegroundColor Red
+    Write-Host "[ERROR] Heroku CLI not found. Please install from: https://devcenter.heroku.com/articles/heroku-cli" -ForegroundColor Red
     exit 1
 }
 
@@ -18,18 +18,18 @@ try {
 try {
     $herokuAuth = heroku auth:whoami 2>&1
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Logged in to Heroku as: $herokuAuth" -ForegroundColor Green
+        Write-Host "[OK] Logged in to Heroku as: $herokuAuth" -ForegroundColor Green
     } else {
-        Write-Host "⚠️  Not logged in to Heroku. Please login:" -ForegroundColor Yellow
+        Write-Host "[WARN] Not logged in to Heroku. Please login:" -ForegroundColor Yellow
         heroku login
     }
 } catch {
-    Write-Host "⚠️  Not logged in to Heroku. Please login:" -ForegroundColor Yellow
+    Write-Host "[WARN] Not logged in to Heroku. Please login:" -ForegroundColor Yellow
     heroku login
 }
 
 Write-Host ""
-Write-Host "📋 Deployment Options:" -ForegroundColor Yellow
+Write-Host "Deployment Options:" -ForegroundColor Yellow
 Write-Host "1. Create new Heroku app"
 Write-Host "2. Use existing Heroku app"
 Write-Host "3. Configure environment variables only"
@@ -89,7 +89,7 @@ switch ($choice) {
 # Configure environment variables
 if ($choice -in @("1", "3", "5")) {
     Write-Host ""
-    Write-Host "⚙️  Configuring Environment Variables" -ForegroundColor Cyan
+    Write-Host "Configuring Environment Variables" -ForegroundColor Cyan
     Write-Host "====================================" -ForegroundColor Cyan
     
     # Django Configuration
@@ -117,7 +117,7 @@ if ($choice -in @("1", "3", "5")) {
     # Google OAuth
     Write-Host ""
     Write-Host "Google OAuth Configuration:" -ForegroundColor Yellow
-    Write-Host "⚠️  IMPORTANT: Make sure to add redirect URI to Google Console!" -ForegroundColor Red
+    Write-Host "[IMPORTANT] Make sure to add redirect URI to Google Console!" -ForegroundColor Red
     Write-Host "   https://www.prompt-temple.com/auth/callback/google" -ForegroundColor Yellow
     
     $googleClientId = Read-Host "Enter GOOGLE_OAUTH2_CLIENT_ID (press Enter for existing)"
@@ -175,20 +175,20 @@ if ($choice -in @("1", "3", "5")) {
     }
     
     Write-Host ""
-    Write-Host "✅ Environment variables configured" -ForegroundColor Green
+    Write-Host "[OK] Environment variables configured" -ForegroundColor Green
 }
 
 # Deploy code
 if ($choice -in @("1", "4", "5")) {
     Write-Host ""
-    Write-Host "📦 Preparing Code for Deployment" -ForegroundColor Cyan
+    Write-Host "Preparing Code for Deployment" -ForegroundColor Cyan
     Write-Host "================================" -ForegroundColor Cyan
     
     # Check git status
     $gitStatus = git status --porcelain
     if ($gitStatus) {
         Write-Host ""
-        Write-Host "⚠️  Uncommitted changes detected:" -ForegroundColor Yellow
+        Write-Host "[WARN] Uncommitted changes detected:" -ForegroundColor Yellow
         git status --short
         
         Write-Host ""
@@ -197,7 +197,7 @@ if ($choice -in @("1", "4", "5")) {
             $commitMsg = Read-Host "Enter commit message"
             git add .
             git commit -m "$commitMsg"
-            Write-Host "✅ Changes committed" -ForegroundColor Green
+            Write-Host "[OK] Changes committed" -ForegroundColor Green
         }
     }
     
@@ -213,20 +213,20 @@ if ($choice -in @("1", "4", "5")) {
     } elseif ($currentBranch -eq "master") {
         git push heroku master
     } else {
-        Write-Host "⚠️  Current branch is '$currentBranch'" -ForegroundColor Yellow
+        Write-Host "[WARN] Current branch is '$currentBranch'" -ForegroundColor Yellow
         $pushBranch = Read-Host "Push $currentBranch to heroku main? (y/n)"
         if ($pushBranch -eq "y") {
             git push heroku "${currentBranch}:main"
         } else {
-            Write-Host "❌ Deployment cancelled" -ForegroundColor Red
+            Write-Host "[ERROR] Deployment cancelled" -ForegroundColor Red
             exit 1
         }
     }
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Code deployed successfully" -ForegroundColor Green
+        Write-Host "[OK] Code deployed successfully" -ForegroundColor Green
     } else {
-        Write-Host "❌ Deployment failed. Check logs above." -ForegroundColor Red
+        Write-Host "[ERROR] Deployment failed. Check logs above." -ForegroundColor Red
         exit 1
     }
 }
@@ -234,15 +234,15 @@ if ($choice -in @("1", "4", "5")) {
 # Run migrations
 if ($choice -in @("1", "5")) {
     Write-Host ""
-    Write-Host "🗄️  Running Database Migrations" -ForegroundColor Cyan
+    Write-Host "Running Database Migrations" -ForegroundColor Cyan
     Write-Host "===============================" -ForegroundColor Cyan
     
     heroku run python manage.py migrate -a $appName
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "✅ Migrations completed" -ForegroundColor Green
+        Write-Host "[OK] Migrations completed" -ForegroundColor Green
     } else {
-        Write-Host "⚠️  Migrations failed. Check errors above." -ForegroundColor Yellow
+        Write-Host "[WARN] Migrations failed. Check errors above." -ForegroundColor Yellow
     }
     
     Write-Host ""
@@ -254,7 +254,7 @@ if ($choice -in @("1", "5")) {
 
 # Final checks
 Write-Host ""
-Write-Host "🔍 Final Checks" -ForegroundColor Cyan
+Write-Host "Final Checks" -ForegroundColor Cyan
 Write-Host "===============" -ForegroundColor Cyan
 
 Write-Host ""
@@ -266,21 +266,21 @@ Write-Host "Recent Logs:" -ForegroundColor Yellow
 heroku logs --tail -n 50 -a $appName
 
 Write-Host ""
-Write-Host "✅ Deployment Complete!" -ForegroundColor Green
+Write-Host "[OK] Deployment Complete!" -ForegroundColor Green
 Write-Host "======================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Your app is available at:" -ForegroundColor Cyan
 heroku domains -a $appName
 
 Write-Host ""
-Write-Host "📋 Next Steps:" -ForegroundColor Yellow
+Write-Host "Next Steps:" -ForegroundColor Yellow
 Write-Host "1. Verify health check: https://$appName.herokuapp.com/health/"
 Write-Host "2. Test API endpoints: https://$appName.herokuapp.com/api/"
 Write-Host "3. Test OAuth flow from frontend"
 Write-Host "4. Monitor logs: heroku logs --tail -a $appName"
 Write-Host "5. Set up custom domain (optional)"
 Write-Host ""
-Write-Host "⚠️  IMPORTANT: Update Google OAuth Console with production redirect URI!" -ForegroundColor Red
+Write-Host "[IMPORTANT] Update Google OAuth Console with production redirect URI!" -ForegroundColor Red
 Write-Host "   https://console.cloud.google.com/apis/credentials" -ForegroundColor Yellow
 Write-Host "   Add: https://www.prompt-temple.com/auth/callback/google" -ForegroundColor Yellow
 Write-Host ""
@@ -291,4 +291,4 @@ if ($openApp -eq "y") {
 }
 
 Write-Host ""
-Write-Host "🎉 Deployment script completed!" -ForegroundColor Green
+Write-Host "[DONE] Deployment script completed!" -ForegroundColor Green
