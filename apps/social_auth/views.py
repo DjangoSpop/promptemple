@@ -2,6 +2,7 @@ from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -43,8 +44,10 @@ class SocialAuthInitiateView(APIView):
             # Generate state for CSRF protection
             state = oauth_handler.generate_state()
 
-            # Get redirect URI from query params or use default
-            redirect_uri = request.GET.get('redirect_uri', f'http://localhost:3000/auth/callback/{provider}')
+            # Get redirect URI from query params or use environment-based default
+            from decouple import config as env_config
+            frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+            redirect_uri = request.GET.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
 
             # Get authorization URL
             auth_url = oauth_handler.get_auth_url(redirect_uri, state)
@@ -103,11 +106,24 @@ class SocialAuthCallbackView(APIView):
             oauth_handler = get_oauth_handler(provider)
 
             # Get redirect URI from request - MUST match what was used in initiation
-            redirect_uri = request.data.get('redirect_uri', f'http://localhost:3000/auth/callback/{provider}')
+            from decouple import config as env_config
+            frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+            redirect_uri = request.data.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
             logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
+            logger.debug(f"Frontend URL from env: {frontend_url}")
 
             # Exchange code for access token
-            token_data = oauth_handler.exchange_code_for_token(code, redirect_uri)
+            try:
+                token_data = oauth_handler.exchange_code_for_token(code, redirect_uri)
+            except ValidationError as ve:
+                logger.error(f"Token exchange validation error: {ve}")
+                return Response({
+                    'error': 'OAuth token exchange failed',
+                    'message': str(ve),
+                    'provider': provider,
+                    'redirect_uri_used': redirect_uri,
+                    'help': f'Ensure {redirect_uri} is added to authorized redirect URIs in your {provider.title()} OAuth Console'
+                }, status=status.HTTP_401_UNAUTHORIZED)
             access_token = token_data['access_token']
 
             # Get user info from provider
@@ -119,11 +135,13 @@ class SocialAuthCallbackView(APIView):
             # Generate JWT tokens
             tokens = safe_jwt_token_generation(user)
 
-            # Prepare response data
+            # Prepare response data with tokens at root level for easy frontend access
             response_data = {
                 'message': 'Social authentication successful',
                 'user': SocialUserProfileSerializer(user, context={'request': request}).data,
                 'tokens': tokens,
+                'access': tokens['access'],  # Add at root level for convenience
+                'refresh': tokens['refresh'],  # Add at root level for convenience
                 'is_new_user': is_new_user,
                 'provider': provider
             }
@@ -168,6 +186,7 @@ class SocialAuthCallbackView(APIView):
             if f'{provider}_oauth_state' in request.session:
                 del request.session[f'{provider}_oauth_state']
 
+            logger.info(f"Social auth successful for user {user.username} (id={user.id}), provider={provider}, is_new={is_new_user}")
             return Response(response_data, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -236,13 +255,17 @@ class SocialAuthProviderInfoView(APIView):
                     'scopes': github_scopes
                 })
 
+            # Get frontend URL from environment
+            frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+            
             return Response({
                 'providers': providers,
                 'callback_url': '/api/v2/auth/social/callback/',
                 'frontend_callback_urls': {
-                    'google': 'http://localhost:3000/auth/callback/google',
-                    'github': 'http://localhost:3000/auth/callback/github'
-                }
+                    'google': f'{frontend_url}/auth/callback/google',
+                    'github': f'{frontend_url}/auth/callback/github'
+                },
+                'frontend_url': frontend_url
             }, status=status.HTTP_200_OK)
         
         except Exception as e:
@@ -332,7 +355,9 @@ def link_social_account(request):
         oauth_handler = get_oauth_handler(provider)
 
         # Get redirect URI from request
-        redirect_uri = request.data.get('redirect_uri', f'http://localhost:3000/auth/link/{provider}')
+        from decouple import config as env_config
+        frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+        redirect_uri = request.data.get('redirect_uri', f'{frontend_url}/auth/link/{provider}')
 
         # Exchange code for access token
         token_data = oauth_handler.exchange_code_for_token(code, redirect_uri)

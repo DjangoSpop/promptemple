@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.db import models
 from rest_framework.exceptions import ValidationError
 from .serializers import GoogleUserInfoSerializer, GitHubUserInfoSerializer, GitHubEmailSerializer
 
@@ -67,13 +68,15 @@ class GoogleOAuthHandler(BaseOAuthHandler):
             raise ValidationError("Google OAuth credentials not configured")
         
         self.token_url = 'https://oauth2.googleapis.com/token'
-        self.user_info_url = 'https://www.googleapis.com/oauth2/v2/userinfo'
+        # Use v3 endpoint which properly returns 'sub' field
+        self.user_info_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
     def get_auth_url(self, redirect_uri, state):
         """Get Google OAuth authorization URL"""
+        # Include openid scope to ensure we get the 'sub' field
         scope = 'openid email profile'
         return (
-            f"https://accounts.google.com/o/oauth2/auth?"
+            f"https://accounts.google.com/o/oauth2/v2/auth?"
             f"client_id={self.client_id}&"
             f"redirect_uri={redirect_uri}&"
             f"scope={scope}&"
@@ -85,9 +88,11 @@ class GoogleOAuthHandler(BaseOAuthHandler):
     def exchange_code_for_token(self, code, redirect_uri=None):
         """Exchange authorization code for access token"""
         try:
-            # Use provided redirect_uri or fall back to default
+            # Use provided redirect_uri or fall back to environment-based default
             if not redirect_uri:
-                redirect_uri = 'http://localhost:3000/auth/callback/google'
+                from decouple import config
+                frontend_url = config('FRONTEND_URL', default='http://localhost:3000')
+                redirect_uri = f'{frontend_url}/auth/callback/google'
             
             data = {
                 'client_id': self.client_id,
@@ -98,37 +103,79 @@ class GoogleOAuthHandler(BaseOAuthHandler):
             }
 
             logger.info(f"Exchanging Google code for token with redirect_uri: {redirect_uri}")
+            logger.debug(f"Token exchange request data: client_id={self.client_id[:20]}..., code_length={len(code)}")
+            
             response = requests.post(self.token_url, data=data, timeout=10)
+            
+            # Log response for debugging
+            logger.debug(f"Google token exchange response status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_body = response.text
+                logger.error(f"Google OAuth error response: {error_body}")
+                logger.error(f"Used redirect_uri: {redirect_uri}")
+                logger.error(f"Client ID (first 20 chars): {self.client_id[:20]}...")
+                
+                # Parse error message if available
+                try:
+                    error_data = response.json()
+                    error_desc = error_data.get('error_description', error_data.get('error', 'Unknown error'))
+                    raise ValidationError(
+                        f"Google OAuth failed: {error_desc}. "
+                        f"Ensure the redirect_uri '{redirect_uri}' is registered in your Google OAuth Console."
+                    )
+                except:
+                    raise ValidationError(
+                        f"Google OAuth failed with status {response.status_code}. "
+                        f"Verify that redirect_uri '{redirect_uri}' matches exactly what's registered in Google Console."
+                    )
+            
             response.raise_for_status()
-
             token_data = response.json()
+            
             if 'access_token' not in token_data:
+                logger.error(f"No access_token in response: {token_data}")
                 raise ValidationError("Failed to obtain access token from Google")
 
+            logger.info("Successfully obtained Google access token")
             return token_data
 
         except requests.RequestException as e:
             logger.error(f"Google token exchange failed: {e}")
             logger.error(f"Response status: {getattr(e.response, 'status_code', 'N/A')}")
             logger.error(f"Response body: {getattr(e.response, 'text', 'N/A')}")
-            logger.error(f"Request data used: client_id={self.client_id[:10]}..., redirect_uri={redirect_uri}, code_length={len(code)}")
-            raise ValidationError(f"Failed to exchange code for token: {str(e)}")
+            logger.error(f"Request data - client_id={self.client_id[:10]}..., redirect_uri={redirect_uri}, code_length={len(code)}")
+            
+            error_msg = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                error_msg = f"{e.response.status_code} {e.response.reason} for url: {e.response.url}"
+            
+            raise ValidationError(f"Failed to exchange code for token: {error_msg}")
 
     def get_user_info(self, access_token):
         """Get user information from Google"""
         try:
             headers = {'Authorization': f'Bearer {access_token}'}
+            logger.info(f"Fetching user info from: {self.user_info_url}")
             response = requests.get(self.user_info_url, headers=headers, timeout=10)
             response.raise_for_status()
 
             user_data = response.json()
+            logger.info(f"Google user info response: {user_data}")
+            
+            # Validate the response
             serializer = GoogleUserInfoSerializer(data=user_data)
+            if not serializer.is_valid():
+                logger.error(f"Google user info validation failed: {serializer.errors}")
+                logger.error(f"Received data: {user_data}")
             serializer.is_valid(raise_exception=True)
 
             return serializer.validated_data
 
         except requests.RequestException as e:
             logger.error(f"Google user info fetch failed: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Response body: {e.response.text}")
             raise ValidationError("Failed to fetch user information from Google")
 
     def create_or_update_user(self, user_data):
@@ -142,21 +189,30 @@ class GoogleOAuthHandler(BaseOAuthHandler):
             is_new_user = False
 
             # First check if user exists with this Google ID
-            try:
-                user = User.objects.get(provider_id=google_id, provider_name='google')
-            except User.DoesNotExist:
-                # Check if user exists with this email
-                try:
-                    user = User.objects.get(email=email)
+            user = User.objects.filter(provider_id=google_id, provider_name='google').first()
+            
+            if not user:
+                # Check if user exists with this email (prioritize Google-linked accounts)
+                user = User.objects.filter(email=email).order_by(
+                    # Prioritize existing Google users, then any user
+                    models.Case(
+                        models.When(provider_name='google', then=0),
+                        default=1
+                    )
+                ).first()
+                
+                if user:
                     # Link the Google account to existing user
+                    logger.info(f"Linking Google account to existing user: {user.username}")
                     user.provider_id = google_id
                     user.provider_name = 'google'
                     if user_data.get('picture'):
                         user.social_avatar_url = user_data['picture']
-                except User.DoesNotExist:
+                else:
                     # Create new user
                     is_new_user = True
                     username = self._generate_username(email, user_data.get('given_name', ''))
+                    logger.info(f"Creating new user with username: {username}")
 
                     user = User.objects.create(
                         username=username,
@@ -183,8 +239,10 @@ class GoogleOAuthHandler(BaseOAuthHandler):
             return user, is_new_user
 
         except Exception as e:
-            logger.error(f"User creation/update failed for Google: {e}")
-            raise ValidationError("Failed to create or update user")
+            # Log full stack trace for debugging
+            logger.exception(f"User creation/update failed for Google: {e}")
+            # Propagate the original exception message to help frontend debugging
+            raise ValidationError(f"Failed to create or update user: {str(e)}")
 
     def _generate_username(self, email, first_name):
         """Generate unique username"""
@@ -250,20 +308,42 @@ class GitHubOAuthHandler(BaseOAuthHandler):
                 'client_secret': self.client_secret,
                 'code': code,
             }
+            
+            # GitHub doesn't strictly require redirect_uri in token exchange,
+            # but include it for consistency if provided
+            if redirect_uri:
+                data['redirect_uri'] = redirect_uri
 
             headers = {'Accept': 'application/json'}
+            logger.info(f"Exchanging GitHub code for token{' with redirect_uri: ' + redirect_uri if redirect_uri else ''}")
+            
             response = requests.post(self.token_url, data=data, headers=headers, timeout=10)
+            
+            if response.status_code != 200:
+                error_body = response.text
+                logger.error(f"GitHub OAuth error response: {error_body}")
+                try:
+                    error_data = response.json()
+                    error_desc = error_data.get('error_description', error_data.get('error', 'Unknown error'))
+                    raise ValidationError(f"GitHub OAuth failed: {error_desc}")
+                except:
+                    raise ValidationError(f"GitHub OAuth failed with status {response.status_code}")
+            
             response.raise_for_status()
-
             token_data = response.json()
+            
             if 'access_token' not in token_data:
+                logger.error(f"No access_token in GitHub response: {token_data}")
                 raise ValidationError("Failed to obtain access token from GitHub")
 
+            logger.info("Successfully obtained GitHub access token")
             return token_data
 
         except requests.RequestException as e:
             logger.error(f"GitHub token exchange failed: {e}")
-            raise ValidationError("Failed to exchange code for token")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Response body: {e.response.text}")
+            raise ValidationError(f"Failed to exchange code for token: {str(e)}")
 
     def get_user_info(self, access_token):
         """Get user information from GitHub"""
@@ -320,21 +400,29 @@ class GitHubOAuthHandler(BaseOAuthHandler):
             is_new_user = False
 
             # First check if user exists with this GitHub ID
-            try:
-                user = User.objects.get(provider_id=github_id, provider_name='github')
-            except User.DoesNotExist:
-                # Check if user exists with this email
-                try:
-                    user = User.objects.get(email=email)
+            user = User.objects.filter(provider_id=github_id, provider_name='github').first()
+            
+            if not user:
+                # Check if user exists with this email (prioritize GitHub-linked accounts)
+                user = User.objects.filter(email=email).order_by(
+                    models.Case(
+                        models.When(provider_name='github', then=0),
+                        default=1
+                    )
+                ).first()
+                
+                if user:
                     # Link the GitHub account to existing user
+                    logger.info(f"Linking GitHub account to existing user: {user.username}")
                     user.provider_id = github_id
                     user.provider_name = 'github'
                     if user_data.get('avatar_url'):
                         user.social_avatar_url = user_data['avatar_url']
-                except User.DoesNotExist:
+                else:
                     # Create new user
                     is_new_user = True
                     username = self._generate_username(github_username, email)
+                    logger.info(f"Creating new user with username: {username}")
 
                     # Parse name if available
                     full_name = user_data.get('name', '')
@@ -367,8 +455,10 @@ class GitHubOAuthHandler(BaseOAuthHandler):
             return user, is_new_user
 
         except Exception as e:
-            logger.error(f"User creation/update failed for GitHub: {e}")
-            raise ValidationError("Failed to create or update user")
+            # Log full stack trace for debugging
+            logger.exception(f"User creation/update failed for GitHub: {e}")
+            # Propagate the original exception message to help frontend debugging
+            raise ValidationError(f"Failed to create or update user: {str(e)}")
 
     def _generate_username(self, github_username, email):
         """Generate unique username"""
