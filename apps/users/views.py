@@ -11,6 +11,19 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 import logging
 
+# Import drf-spectacular decorators
+try:
+    from drf_spectacular.utils import extend_schema, OpenApiParameter
+    from drf_spectacular.types import OpenApiTypes
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    # Fallback decorator that does nothing if drf-spectacular is not installed
+    def extend_schema(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    DRF_SPECTACULAR_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 from apps.users.serializers import (
@@ -54,6 +67,14 @@ def safe_jwt_token_generation(user):
             logger.error(f"JWT token generation fallback also failed: {e2}")
             raise Exception(f"JWT token generation failed: {str(e)}")
 
+@extend_schema(
+    description="Check if username is available for registration",
+    parameters=[
+        OpenApiParameter(name='username', type=OpenApiTypes.STR, location=OpenApiParameter.QUERY, required=True)
+    ],
+    responses={200: dict},
+    tags=["Users"]
+)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def check_username_availability(request):
@@ -82,6 +103,14 @@ def check_username_availability(request):
     }, status=status.HTTP_200_OK)
 # Create placeholder services to avoid import errors for now
 
+@extend_schema(
+    description="Check if email is available for registration",
+    parameters=[
+        OpenApiParameter(name='email', type=OpenApiTypes.STR, location=OpenApiParameter.QUERY, required=True)
+    ],
+    responses={200: dict},
+    tags=["Users"]
+)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def check_email_availability(request):

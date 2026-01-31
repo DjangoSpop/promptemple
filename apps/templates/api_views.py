@@ -17,6 +17,18 @@ from django.http import StreamingHttpResponse
 import time
 import json
 
+# Import drf-spectacular decorators
+try:
+    from drf_spectacular.utils import extend_schema
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    # Fallback decorator that does nothing if drf-spectacular is not installed
+    def extend_schema(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    DRF_SPECTACULAR_AVAILABLE = False
+
 from .models import Template, TemplateCategory, TemplateUsage, TemplateRating
 from .serializers import (
     TemplateListSerializer, TemplateDetailSerializer, TemplateCategorySerializer,
@@ -675,6 +687,11 @@ User = get_user_model()
 #         return False
 
 
+@extend_schema(
+    description="Server-Sent Events endpoint for real-time AI template validation",
+    responses={200: dict, 404: dict, 403: dict},
+    tags=["Templates"]
+)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def stream_validation(request, template_id):

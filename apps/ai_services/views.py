@@ -13,6 +13,18 @@ import json
 import time
 from typing import Dict, Any, Optional
 
+# Import drf-spectacular decorators
+try:
+    from drf_spectacular.utils import extend_schema
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    # Fallback decorator that does nothing if drf-spectacular is not installed
+    def extend_schema(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    DRF_SPECTACULAR_AVAILABLE = False
+
 from .models import AssistantThread, AssistantMessage
 from .ai_assistants import AssistantRegistry
 # Import DeepSeek services

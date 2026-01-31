@@ -97,6 +97,12 @@ except ImportError:
     pass
 
 try:
+    import graphene_django
+    THIRD_PARTY_APPS.append('graphene_django')
+except ImportError:
+    pass
+
+try:
     import django_celery_beat
     THIRD_PARTY_APPS.append('django_celery_beat')
 except ImportError:
@@ -461,3 +467,26 @@ RESEARCH = {
 
 # Tavily API Configuration
 TAVILY_API_KEY = config('TAVILY_API_KEY', default='')
+
+# ==================================================
+# GRAPHQL CONFIGURATION
+# ==================================================
+
+# GraphQL Settings
+if 'graphene_django' in THIRD_PARTY_APPS:
+    GRAPHENE = {
+        'SCHEMA': 'apps.prompt_history.schema.schema',
+        'MIDDLEWARE': [
+            'graphene_django.debug.DjangoDebugMiddleware',
+        ],
+        # Relay connection settings
+        'RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST': True,
+        'RELAY_CONNECTION_MAX_LIMIT': 100,
+        
+        # Camelcase to snake_case conversion
+        'CAMELCASE_ERRORS': True,
+        
+        # Security
+        'MAX_PAGE_SIZE': 100,
+        'ATOMIC_MUTATIONS': True,
+    }

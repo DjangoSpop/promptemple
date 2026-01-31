@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.csrf import csrf_exempt
+
 # drf_spectacular optional
 try:
     from drf_spectacular.views import (
@@ -15,6 +17,14 @@ try:
     DRF_SPECTACULAR_AVAILABLE = True
 except ImportError:
     DRF_SPECTACULAR_AVAILABLE = False
+
+# GraphQL optional
+try:
+    from graphene_django.views import GraphQLView
+    GRAPHQL_AVAILABLE = True
+except ImportError:
+    GRAPHQL_AVAILABLE = False
+
 from django.views.generic import TemplateView
 from apps.core.views import HealthCheckView, health_simple, redis_health
 from apps.core.socketio_views import SocketIOCompatibilityView, WebSocketInfoView
@@ -37,6 +47,8 @@ def api_root(request):
         'endpoints': {
             'health': '/health/',
             'api_docs': '/api/schema/swagger-ui/',
+            'graphql': '/api/graphql/',
+            'graphiql': '/api/graphql/' if settings.DEBUG else None,
             'mvp_auth': '/api/mvp/auth/',
             'mvp_templates': '/api/mvp/templates/',
             'templates': '/api/v2/templates/',
@@ -114,6 +126,12 @@ if DRF_SPECTACULAR_AVAILABLE:
         path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
         path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
         path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    ])
+
+# GraphQL endpoint (optional - requires graphene-django)
+if GRAPHQL_AVAILABLE:
+    urlpatterns.extend([
+        path('api/graphql/', csrf_exempt(GraphQLView.as_view(graphiql=settings.DEBUG)), name='graphql'),
     ])
 
 urlpatterns.extend([

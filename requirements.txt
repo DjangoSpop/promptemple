@@ -37,6 +37,10 @@ langchain==0.1.9
 langchain-community==0.0.24
 langchain-openai==0.0.7
 
+# ===== GraphQL Support (~15MB) =====
+graphene-django==3.2.0
+graphene==3.3
+
 # ===== Payment & Monetization (~10MB) =====
 stripe==8.0.0
 

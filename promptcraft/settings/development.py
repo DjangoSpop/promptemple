@@ -107,7 +107,7 @@ except ImportError:
 
 # REST Framework configuration for development - OVERRIDE base settings
 REST_FRAMEWORK = {
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Optional - commented since drf_spectacular may not be installed
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Required for drf-spectacular to parse schemas
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',

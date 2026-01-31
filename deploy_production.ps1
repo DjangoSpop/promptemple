@@ -63,7 +63,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "`nPress Ctrl+C to stop the server" -ForegroundColor Gray
     
     # Start with Daphne for WebSocket support
-    daphne -b 0.0.0.0 -p 8000 promptcraft.asgi:application
+    daphne -b 0.0.0.0 -p 8000 promptcraft.asgi:applicationn
     
 } else {
     Write-Host "`n❌ DeepSeek API test failed!" -ForegroundColor Red

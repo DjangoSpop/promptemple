@@ -1,0 +1,61 @@
+# ===== LEAN PRODUCTION REQUIREMENTS =====
+# Total estimated size: ~200MB
+# Optimized for Railway/Heroku deployment
+# Focus: Prompt enhancement + Templates + Basic AI services
+
+# ===== Core Django Framework (~60MB) =====
+Django==4.2.16
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter==23.5
+
+# ===== Authentication & Security (~25MB) =====
+djangorestframework-simplejwt==5.3.1
+django-allauth==0.57.2
+PyJWT==2.8.0
+cryptography==41.0.7
+
+# ===== Database & Caching (~15MB) =====
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+redis==5.0.1
+django-redis==5.4.0
+
+# ===== Production Server & Static Files (~20MB) =====
+gunicorn==23.0.0
+whitenoise==6.8.1
+
+# ===== API Documentation (~10MB) =====
+drf-spectacular==0.27.0
+
+# ===== Payment & Monetization (~10MB) =====
+stripe==8.0.0
+
+# ===== Essential Utilities (~5MB) =====
+python-decouple==3.8
+requests==2.31.0
+Pillow==10.2.0
+
+# ===== WebSocket Support (Optional - ~25MB) =====
+# Uncomment if you need real-time streaming
+# channels==4.0.0
+# channels-redis==4.2.0
+# daphne==4.1.0
+
+# ===== Monitoring (Optional - ~15MB) =====
+# sentry-sdk==1.40.0
+
+# ===== Development Only =====
+# pytest==7.4.3
+# pytest-django==4.7.0
+# black==24.1.0
+# flake8==7.0.0
+
+# REMOVED: Heavy packages that bloated slug size
+# ❌ langchain (20MB+) - Replaced with direct API calls
+# ❌ openai (15MB) - Using requests instead
+# ❌ anthropic (10MB) - Using requests instead
+# ❌ chromadb (80MB+) - Not needed for MVP
+# ❌ transformers (200MB+) - Not needed
+# ❌ torch/tensorflow - Not needed
+# ❌ graphene-django - Defer GraphQL for later iteration
