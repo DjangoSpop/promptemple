@@ -275,15 +275,15 @@ CORS_ALLOW_METHODS = [
 # Preflight request cache duration (in seconds) - 24 hours
 CORS_PREFLIGHT_MAX_AGE = 86400
 
-# Debug toolbar - only add if actually installed
-if DEBUG and 'debug_toolbar' not in INSTALLED_APPS:
-    try:
-        import debug_toolbar
+# Debug toolbar (only if installed)
+try:
+    import debug_toolbar  # noqa: F401
+    if DEBUG and 'debug_toolbar' not in INSTALLED_APPS:
         INSTALLED_APPS += ['debug_toolbar']
         MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
         INTERNAL_IPS = ['127.0.0.1']
-    except ImportError:
-        print("⚠️ debug_toolbar not installed, skipping", file=sys.stderr)
+except ImportError:
+    pass  # debug_toolbar is optional
 
 # Add drf-spectacular to installed apps (optional)
 try:
