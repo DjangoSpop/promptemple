@@ -20,6 +20,8 @@ ALLOWED_HOSTS = [
     'www.prompt-temple.com',
     'prompt-temple.com',
     'api.prompt-temple.com',
+    'localhost',
+    '127.0.0.1',
 ]
 
 # ============================================
@@ -147,6 +149,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://prompt-temple.com',
     'https://api.prompt-temple.com',
     'https://prompt-temple-mvp-2eac79cfc23e.herokuapp.com',
+    'https://prompt-temple-2777469a4e35.herokuapp.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ]
 
 # ============================================
@@ -156,6 +161,9 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.prompt-temple.com',
     'https://prompt-temple.com',
     'https://api.prompt-temple.com',
+    'https://prompt-temple-2777469a4e35.herokuapp.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ]
 
 # Allow credentials for authentication
@@ -240,6 +248,35 @@ LANGCHAIN_SETTINGS = {
     'AI_MAX_RETRIES': 3,
     'AI_RATE_LIMIT_PER_MINUTE': 60,
 }
+
+# ============================================
+# FRONTEND URL
+# ============================================
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
+# ============================================
+# SOCIAL AUTH CONFIGURATION (Google OAuth)
+# ============================================
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'APP': {
+            'client_id': config('GOOGLE_OAUTH2_CLIENT_ID', default=''),
+            'secret': config('GOOGLE_OAUTH2_CLIENT_SECRET', default=''),
+        },
+    },
+}
+
+SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # ============================================
 # DEPLOYMENT INFO
