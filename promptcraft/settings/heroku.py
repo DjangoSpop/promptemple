@@ -37,41 +37,40 @@ DATABASES = {
 }
 
 # ============================================
-# CACHING - Redis (without Celery)
+# CACHING - Use Redis if available, otherwise in-memory
 # ============================================
-import ssl
+REDIS_URL = os.environ.get('REDIS_URL', None)
 
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-
-# Configure SSL context for Heroku Redis (self-signed cert)
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SOCKET_CONNECT_TIMEOUT': 5,
-            'SOCKET_TIMEOUT': 5,
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 50,
-                'retry_on_timeout': True,
-                'ssl_cert_reqs': ssl.CERT_NONE,
-            }
-        },
-        'KEY_PREFIX': 'promptcraft',
-        'TIMEOUT': 300,
+if REDIS_URL:
+    import ssl
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 50,
+                    'retry_on_timeout': True,
+                }
+            },
+            'KEY_PREFIX': 'promptcraft',
+            'TIMEOUT': 300,
+        }
     }
-}
-
-# ============================================
-# SESSION CONFIGURATION
-# ============================================
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+else:
+    # No Redis addon — use Django's built-in LocMemCache
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'promptcraft-cache',
+        }
+    }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # ============================================
 # STATIC FILES - WhiteNoise
