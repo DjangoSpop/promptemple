@@ -141,8 +141,31 @@ REST_FRAMEWORK = {
 # Spectacular settings for API documentation
 SPECTACULAR_SETTINGS = {
     'TITLE': 'PromptCraft API',
-    'DESCRIPTION': 'Comprehensive API documentation for PromptCraft - AI Prompt Management Platform',
-    'VERSION': '1.0.0',
+    'DESCRIPTION': '''Comprehensive API documentation for PromptCraft - AI Prompt Management Platform.
+
+## REST API Endpoints
+All REST endpoints are documented below with full request/response schemas.
+
+## GraphQL API
+A GraphQL endpoint is also available at `/api/graphql/` with the following features:
+
+### SavedPrompt CRUD Operations
+- **Queries**: `savedPrompt`, `allSavedPrompts`, `favoriteSavedPrompts`, `searchSavedPrompts`, `publicSavedPrompts`
+- **Mutations**: `createSavedPrompt`, `updateSavedPrompt`, `deleteSavedPrompt`, `toggleFavoriteSavedPrompt`, `useSavedPrompt`, `duplicateSavedPrompt`
+
+### PromptIteration Operations
+- **Queries**: `promptIteration`, `allIterationsForPrompt`, `latestIteration`, `bookmarkedIterations`, `searchIterations`
+- **Mutations**: `createPromptIteration`, `updatePromptIteration`, `deletePromptIteration`, `setActiveIteration`
+
+### ConversationThread Operations
+- **Queries**: `conversationThread`, `allConversationThreads`
+- **Mutations**: `createConversationThread`, `addIterationToThread`
+
+Access GraphiQL (interactive GraphQL IDE) at `/api/graphql/` in development mode.
+
+For detailed GraphQL documentation, see [SAVED_PROMPTS_GRAPHQL_API.md](https://github.com/promptcraft/docs/SAVED_PROMPTS_GRAPHQL_API.md)
+''',
+    'VERSION': '2.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SCHEMA_PATH_PREFIX': '/api/',
     'COMPONENT_SPLIT_REQUEST': True,
@@ -154,6 +177,18 @@ SPECTACULAR_SETTINGS = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    'TAGS': [
+        {'name': 'Saved Prompts', 'description': 'CRUD operations for user-saved plain prompts. Also available via GraphQL.'},
+        {'name': 'Prompt Iterations', 'description': 'Version control and iteration tracking for prompts. Also available via GraphQL.'},
+        {'name': 'Conversation Threads', 'description': 'Multi-turn conversation management. Also available via GraphQL.'},
+        {'name': 'Prompt History', 'description': 'Prompt optimization history and tracking.'},
+        {'name': 'Authentication', 'description': 'User authentication and authorization.'},
+        {'name': 'Templates', 'description': 'Prompt template management.'},
+        {'name': 'Chat', 'description': 'AI chat completions and streaming.'},
+        {'name': 'Gamification', 'description': 'Achievements, levels, and rewards.'},
+        {'name': 'Analytics', 'description': 'Usage analytics and insights.'},
+        {'name': 'Billing', 'description': 'Subscription and payment management.'},
+    ],
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
         'persistAuthorization': True,

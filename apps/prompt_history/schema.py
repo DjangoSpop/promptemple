@@ -4,7 +4,7 @@ GraphQL Schema for Prompt History and Iteration Management
 import graphene
 from graphene_django import DjangoObjectType
 from django.db.models import Q
-from .models import PromptHistory, PromptIteration, ConversationThread, ThreadMessage
+from .models import PromptHistory, PromptIteration, ConversationThread, ThreadMessage, SavedPrompt
 
 
 # ==================== Object Types ====================
@@ -64,6 +64,18 @@ class ThreadMessageType(DjangoObjectType):
         fields = ('id', 'thread', 'iteration', 'message_order', 'created_at')
 
 
+class SavedPromptType(DjangoObjectType):
+    """GraphQL type for SavedPrompt model - User's saved plain prompts"""
+    class Meta:
+        model = SavedPrompt
+        fields = (
+            'id', 'user', 'title', 'content', 'description',
+            'category', 'tags', 'use_count', 'last_used_at',
+            'is_favorite', 'is_public', 'metadata', 'is_deleted',
+            'created_at', 'updated_at'
+        )
+
+
 # ==================== Input Types ====================
 
 class CreatePromptIterationInput(graphene.InputObjectType):
@@ -106,6 +118,31 @@ class CreateConversationThreadInput(graphene.InputObjectType):
     title = graphene.String(required=False)
     description = graphene.String(required=False)
     status = graphene.String(required=False)
+
+
+class CreateSavedPromptInput(graphene.InputObjectType):
+    """Input type for creating a saved prompt"""
+    title = graphene.String(required=True)
+    content = graphene.String(required=True)
+    description = graphene.String(required=False)
+    category = graphene.String(required=False)
+    tags = graphene.List(graphene.String, required=False)
+    is_favorite = graphene.Boolean(required=False)
+    is_public = graphene.Boolean(required=False)
+    metadata = graphene.JSONString(required=False)
+
+
+class UpdateSavedPromptInput(graphene.InputObjectType):
+    """Input type for updating a saved prompt"""
+    prompt_id = graphene.UUID(required=True)
+    title = graphene.String(required=False)
+    content = graphene.String(required=False)
+    description = graphene.String(required=False)
+    category = graphene.String(required=False)
+    tags = graphene.List(graphene.String, required=False)
+    is_favorite = graphene.Boolean(required=False)
+    is_public = graphene.Boolean(required=False)
+    metadata = graphene.JSONString(required=False)
 
 
 # ==================== Queries ====================
@@ -168,6 +205,40 @@ class Query(graphene.ObjectType):
         tags=graphene.List(graphene.String, required=False),
         limit=graphene.Int(default_value=20),
         description="Search iterations by text, type, or tags"
+    )
+
+    # Saved Prompt Queries (CRUD for plain prompts)
+    saved_prompt = graphene.Field(
+        SavedPromptType,
+        id=graphene.UUID(required=True),
+        description="Get a single saved prompt by ID"
+    )
+    all_saved_prompts = graphene.List(
+        SavedPromptType,
+        category=graphene.String(required=False),
+        is_favorite=graphene.Boolean(required=False),
+        limit=graphene.Int(default_value=50),
+        offset=graphene.Int(default_value=0),
+        description="Get all saved prompts for the authenticated user"
+    )
+    favorite_saved_prompts = graphene.List(
+        SavedPromptType,
+        limit=graphene.Int(default_value=20),
+        description="Get all favorite saved prompts"
+    )
+    search_saved_prompts = graphene.List(
+        SavedPromptType,
+        query=graphene.String(required=True),
+        category=graphene.String(required=False),
+        tags=graphene.List(graphene.String, required=False),
+        limit=graphene.Int(default_value=20),
+        description="Search saved prompts by text, category, or tags"
+    )
+    public_saved_prompts = graphene.List(
+        SavedPromptType,
+        category=graphene.String(required=False),
+        limit=graphene.Int(default_value=50),
+        description="Get public saved prompts from all users"
     )
 
     # Resolvers
@@ -270,6 +341,75 @@ class Query(graphene.ObjectType):
                 queryset = queryset.filter(tags__contains=[tag])
         
         return queryset.order_by('-created_at')[:limit]
+
+    # SavedPrompt Resolvers
+    def resolve_saved_prompt(self, info, id):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+        return SavedPrompt.objects.filter(id=id, user=user, is_deleted=False).first()
+
+    def resolve_all_saved_prompts(self, info, category=None, is_favorite=None, limit=50, offset=0):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+        
+        queryset = SavedPrompt.objects.filter(user=user, is_deleted=False)
+        
+        if category:
+            queryset = queryset.filter(category=category)
+        if is_favorite is not None:
+            queryset = queryset.filter(is_favorite=is_favorite)
+        
+        return queryset.order_by('-updated_at')[offset:offset+limit]
+
+    def resolve_favorite_saved_prompts(self, info, limit=20):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+        
+        return SavedPrompt.objects.filter(
+            user=user,
+            is_favorite=True,
+            is_deleted=False
+        ).order_by('-updated_at')[:limit]
+
+    def resolve_search_saved_prompts(self, info, query, category=None, tags=None, limit=20):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+        
+        queryset = SavedPrompt.objects.filter(user=user, is_deleted=False)
+        
+        # Text search
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(content__icontains=query) |
+                Q(description__icontains=query)
+            )
+        
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        if tags:
+            for tag in tags:
+                queryset = queryset.filter(tags__contains=[tag])
+        
+        return queryset.order_by('-updated_at')[:limit]
+
+    def resolve_public_saved_prompts(self, info, category=None, limit=50):
+        """Get public prompts - available to all authenticated users"""
+        user = info.context.user
+        if not user.is_authenticated:
+            raise Exception("Authentication required")
+        
+        queryset = SavedPrompt.objects.filter(is_public=True, is_deleted=False)
+        
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        return queryset.order_by('-use_count', '-updated_at')[:limit]
 
 
 # ==================== Mutations ====================
@@ -572,13 +712,289 @@ class AddIterationToThread(graphene.Mutation):
             )
 
 
+# ==================== SavedPrompt Mutations ====================
+
+class CreateSavedPrompt(graphene.Mutation):
+    """Create a new saved prompt"""
+    class Arguments:
+        input = CreateSavedPromptInput(required=True)
+    
+    saved_prompt = graphene.Field(SavedPromptType)
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, input):
+        user = info.context.user
+        if not user.is_authenticated:
+            return CreateSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            saved_prompt = SavedPrompt.objects.create(
+                user=user,
+                title=input.title,
+                content=input.content,
+                description=input.get('description', ''),
+                category=input.get('category', ''),
+                tags=input.get('tags', []),
+                is_favorite=input.get('is_favorite', False),
+                is_public=input.get('is_public', False),
+                metadata=input.get('metadata', {}),
+            )
+            
+            return CreateSavedPrompt(
+                saved_prompt=saved_prompt,
+                success=True,
+                message="Prompt saved successfully"
+            )
+        except Exception as e:
+            return CreateSavedPrompt(
+                success=False,
+                message=f"Error saving prompt: {str(e)}"
+            )
+
+
+class UpdateSavedPrompt(graphene.Mutation):
+    """Update an existing saved prompt"""
+    class Arguments:
+        input = UpdateSavedPromptInput(required=True)
+    
+    saved_prompt = graphene.Field(SavedPromptType)
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, input):
+        user = info.context.user
+        if not user.is_authenticated:
+            return UpdateSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            saved_prompt = SavedPrompt.objects.get(
+                id=input.prompt_id,
+                user=user,
+                is_deleted=False
+            )
+            
+            # Update fields
+            if input.get('title'):
+                saved_prompt.title = input.title
+            if input.get('content'):
+                saved_prompt.content = input.content
+            if input.get('description') is not None:
+                saved_prompt.description = input.description
+            if input.get('category') is not None:
+                saved_prompt.category = input.category
+            if input.get('tags') is not None:
+                saved_prompt.tags = input.tags
+            if input.get('is_favorite') is not None:
+                saved_prompt.is_favorite = input.is_favorite
+            if input.get('is_public') is not None:
+                saved_prompt.is_public = input.is_public
+            if input.get('metadata') is not None:
+                saved_prompt.metadata = input.metadata
+            
+            saved_prompt.save()
+            
+            return UpdateSavedPrompt(
+                saved_prompt=saved_prompt,
+                success=True,
+                message="Prompt updated successfully"
+            )
+        except SavedPrompt.DoesNotExist:
+            return UpdateSavedPrompt(
+                success=False,
+                message="Saved prompt not found"
+            )
+        except Exception as e:
+            return UpdateSavedPrompt(
+                success=False,
+                message=f"Error updating prompt: {str(e)}"
+            )
+
+
+class DeleteSavedPrompt(graphene.Mutation):
+    """Soft delete a saved prompt"""
+    class Arguments:
+        prompt_id = graphene.UUID(required=True)
+    
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, prompt_id):
+        user = info.context.user
+        if not user.is_authenticated:
+            return DeleteSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            saved_prompt = SavedPrompt.objects.get(
+                id=prompt_id,
+                user=user
+            )
+            saved_prompt.soft_delete()
+            
+            return DeleteSavedPrompt(
+                success=True,
+                message="Prompt deleted successfully"
+            )
+        except SavedPrompt.DoesNotExist:
+            return DeleteSavedPrompt(
+                success=False,
+                message="Saved prompt not found"
+            )
+
+
+class ToggleFavoriteSavedPrompt(graphene.Mutation):
+    """Toggle favorite status of a saved prompt"""
+    class Arguments:
+        prompt_id = graphene.UUID(required=True)
+    
+    saved_prompt = graphene.Field(SavedPromptType)
+    is_favorite = graphene.Boolean()
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, prompt_id):
+        user = info.context.user
+        if not user.is_authenticated:
+            return ToggleFavoriteSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            saved_prompt = SavedPrompt.objects.get(
+                id=prompt_id,
+                user=user,
+                is_deleted=False
+            )
+            new_status = saved_prompt.toggle_favorite()
+            
+            return ToggleFavoriteSavedPrompt(
+                saved_prompt=saved_prompt,
+                is_favorite=new_status,
+                success=True,
+                message=f"Prompt {'added to' if new_status else 'removed from'} favorites"
+            )
+        except SavedPrompt.DoesNotExist:
+            return ToggleFavoriteSavedPrompt(
+                success=False,
+                message="Saved prompt not found"
+            )
+
+
+class UseSavedPrompt(graphene.Mutation):
+    """Mark a saved prompt as used (increments use count)"""
+    class Arguments:
+        prompt_id = graphene.UUID(required=True)
+    
+    saved_prompt = graphene.Field(SavedPromptType)
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, prompt_id):
+        user = info.context.user
+        if not user.is_authenticated:
+            return UseSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            saved_prompt = SavedPrompt.objects.get(
+                id=prompt_id,
+                user=user,
+                is_deleted=False
+            )
+            saved_prompt.increment_use_count()
+            
+            return UseSavedPrompt(
+                saved_prompt=saved_prompt,
+                success=True,
+                message="Prompt usage recorded"
+            )
+        except SavedPrompt.DoesNotExist:
+            return UseSavedPrompt(
+                success=False,
+                message="Saved prompt not found"
+            )
+
+
+class DuplicateSavedPrompt(graphene.Mutation):
+    """Create a copy of an existing saved prompt"""
+    class Arguments:
+        prompt_id = graphene.UUID(required=True)
+        new_title = graphene.String(required=False)
+    
+    saved_prompt = graphene.Field(SavedPromptType)
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, prompt_id, new_title=None):
+        user = info.context.user
+        if not user.is_authenticated:
+            return DuplicateSavedPrompt(
+                success=False,
+                message="Authentication required"
+            )
+        
+        try:
+            original = SavedPrompt.objects.get(
+                id=prompt_id,
+                user=user,
+                is_deleted=False
+            )
+            
+            # Create a copy
+            duplicate = SavedPrompt.objects.create(
+                user=user,
+                title=new_title or f"{original.title} (Copy)",
+                content=original.content,
+                description=original.description,
+                category=original.category,
+                tags=original.tags.copy() if original.tags else [],
+                is_favorite=False,
+                is_public=False,
+                metadata=original.metadata.copy() if original.metadata else {},
+            )
+            
+            return DuplicateSavedPrompt(
+                saved_prompt=duplicate,
+                success=True,
+                message="Prompt duplicated successfully"
+            )
+        except SavedPrompt.DoesNotExist:
+            return DuplicateSavedPrompt(
+                success=False,
+                message="Saved prompt not found"
+            )
+
+
 class Mutation(graphene.ObjectType):
+    # Prompt Iteration Mutations
     create_prompt_iteration = CreatePromptIteration.Field()
     update_prompt_iteration = UpdatePromptIteration.Field()
     delete_prompt_iteration = DeletePromptIteration.Field()
     set_active_iteration = SetActiveIteration.Field()
+    
+    # Conversation Thread Mutations
     create_conversation_thread = CreateConversationThread.Field()
     add_iteration_to_thread = AddIterationToThread.Field()
+    
+    # SavedPrompt CRUD Mutations
+    create_saved_prompt = CreateSavedPrompt.Field()
+    update_saved_prompt = UpdateSavedPrompt.Field()
+    delete_saved_prompt = DeleteSavedPrompt.Field()
+    toggle_favorite_saved_prompt = ToggleFavoriteSavedPrompt.Field()
+    use_saved_prompt = UseSavedPrompt.Field()
+    duplicate_saved_prompt = DuplicateSavedPrompt.Field()
 
 
 # ==================== Schema ====================

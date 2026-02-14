@@ -338,3 +338,109 @@ class ThreadMessage(models.Model):
 
     def __str__(self):
         return f"Message {self.message_order} in {self.thread.title or self.thread.id}"
+
+
+class SavedPrompt(models.Model):
+    """
+    User-saved plain prompts for reuse and management.
+    This is a simple CRUD-enabled storage for prompts that users want to save
+    for future use - not tied to optimization history or iterations.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="saved_prompts"
+    )
+    
+    # Prompt content
+    title = models.CharField(
+        max_length=200,
+        help_text="Display title for the saved prompt"
+    )
+    content = models.TextField(
+        help_text="The actual prompt text content"
+    )
+    description = models.TextField(
+        blank=True,
+        help_text="Optional description or notes about this prompt"
+    )
+    
+    # Categorization
+    category = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Category for organizing prompts (e.g., 'coding', 'writing', 'analysis')"
+    )
+    tags = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Tags for searchability and filtering"
+    )
+    
+    # Usage tracking
+    use_count = models.IntegerField(
+        default=0,
+        help_text="Number of times this prompt has been used"
+    )
+    last_used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time this prompt was used"
+    )
+    
+    # User preferences
+    is_favorite = models.BooleanField(
+        default=False,
+        help_text="Whether this prompt is marked as favorite"
+    )
+    is_public = models.BooleanField(
+        default=False,
+        help_text="Whether this prompt is publicly visible to other users"
+    )
+    
+    # Metadata
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional flexible metadata (variables, settings, etc.)"
+    )
+    
+    # Status
+    is_deleted = models.BooleanField(default=False)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "saved_prompts"
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['user', 'category']),
+            models.Index(fields=['user', 'is_favorite']),
+            models.Index(fields=['is_public', 'is_deleted']),
+            models.Index(fields=['use_count']),
+        ]
+
+    def soft_delete(self):
+        """Soft delete the saved prompt"""
+        self.is_deleted = True
+        self.save(update_fields=['is_deleted'])
+
+    def increment_use_count(self):
+        """Increment usage counter and update last_used_at"""
+        from django.utils import timezone
+        self.use_count += 1
+        self.last_used_at = timezone.now()
+        self.save(update_fields=['use_count', 'last_used_at'])
+
+    def toggle_favorite(self):
+        """Toggle the favorite status"""
+        self.is_favorite = not self.is_favorite
+        self.save(update_fields=['is_favorite'])
+        return self.is_favorite
+
+    def __str__(self):
+        return f"SavedPrompt<{self.title}> by {self.user}"

@@ -37,7 +37,7 @@ from .serializers import (
 from .services.suggestion_service import SuggestionAPIService
 from apps.billing.models import UserSubscription
 from apps.analytics.models import AnalyticsEvent
-from apps.ai_services.services import AIService
+from apps.ai_services import AIService
 
 User = get_user_model()
 

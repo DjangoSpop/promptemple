@@ -25,7 +25,7 @@ from .serializers import (
     TemplateAnalyticsSerializer
 )
 from apps.analytics.services import AnalyticsService
-from apps.ai_services.services import AIService
+from apps.ai_services import AIService
 from apps.gamification.services import GamificationService
 
 # Set up logger first

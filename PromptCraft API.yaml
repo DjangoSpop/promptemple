@@ -1,9 +1,57 @@
 openapi: 3.0.3
 info:
   title: PromptCraft API
-  version: 1.0.0
-  description: Production API for PromptCraft - AI Prompt Management Platform
+  version: 2.0.0
+  description: |
+    Comprehensive API documentation for PromptCraft - AI Prompt Management Platform.
+
+    ## REST API Endpoints
+    All REST endpoints are documented below with full request/response schemas.
+
+    ## GraphQL API
+    A GraphQL endpoint is also available at `/api/graphql/` with the following features:
+
+    ### SavedPrompt CRUD Operations
+    - **Queries**: `savedPrompt`, `allSavedPrompts`, `favoriteSavedPrompts`, `searchSavedPrompts`, `publicSavedPrompts`
+    - **Mutations**: `createSavedPrompt`, `updateSavedPrompt`, `deleteSavedPrompt`, `toggleFavoriteSavedPrompt`, `useSavedPrompt`, `duplicateSavedPrompt`
+
+    ### PromptIteration Operations
+    - **Queries**: `promptIteration`, `allIterationsForPrompt`, `latestIteration`, `bookmarkedIterations`, `searchIterations`
+    - **Mutations**: `createPromptIteration`, `updatePromptIteration`, `deletePromptIteration`, `setActiveIteration`
+
+    ### ConversationThread Operations
+    - **Queries**: `conversationThread`, `allConversationThreads`
+    - **Mutations**: `createConversationThread`, `addIterationToThread`
+
+    Access GraphiQL (interactive GraphQL IDE) at `/api/graphql/` in development mode.
+
+    For detailed GraphQL documentation, see [SAVED_PROMPTS_GRAPHQL_API.md](https://github.com/promptcraft/docs/SAVED_PROMPTS_GRAPHQL_API.md)
 paths:
+  /health/redis/:
+    get:
+      operationId: health_redis_retrieve
+      description: Health check for Redis cache and channels
+      tags:
+      - Core
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '503':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/templates/:
     get:
       operationId: v2_templates_list
@@ -169,6 +217,76 @@ paths:
                 $ref: '#/components/schemas/TemplateDetail'
           description: ''
   /api/v2/templates/{id}/:
+    put:
+      operationId: v2_templates_update
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateCreateUpdate'
+          description: ''
+    delete:
+      operationId: v2_templates_destroy
+      description: |-
+        Complete CRUD ViewSet for templates
+
+        Features:
+        - List, create, retrieve, update, delete templates
+        - Advanced filtering and search
+        - Custom actions for usage tracking
+        - AI integration
+        - Analytics and ratings
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this template.
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
     get:
       operationId: v2_templates_retrieve
       description: |-
@@ -243,76 +361,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TemplateCreateUpdate'
           description: ''
-    put:
-      operationId: v2_templates_update
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v2
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCreateUpdate'
-          description: ''
-    delete:
-      operationId: v2_templates_destroy
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/v2/templates/{id}/analytics/:
     get:
       operationId: v2_templates_analytics_retrieve
@@ -685,6 +733,44 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v2/templates/{template_id}/validate/stream/:
+    get:
+      operationId: v2_templates_validate_stream_retrieve
+      description: Server-Sent Events endpoint for real-time AI template validation
+      parameters:
+      - in: path
+        name: template_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Templates
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/status/:
     get:
       operationId: v2_status_retrieve
@@ -701,6 +787,38 @@ paths:
   /api/v2/auth/register/:
     post:
       operationId: v2_auth_register_create
+      description: |-
+        User registration endpoint
+
+        Creates new user account and returns JWT tokens
+      tags:
+      - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v2/auth/registration/:
+    post:
+      operationId: v2_auth_registration_create
       description: |-
         User registration endpoint
 
@@ -785,43 +903,51 @@ paths:
   /api/v2/auth/check-username/:
     get:
       operationId: v2_auth_check_username_retrieve
-      description: |-
-        Check if username is available for registration
-
-        Query params:
-        - username: The username to check
-
-        Returns:
-        - available: Boolean indicating if username is available
+      description: Check if username is available for registration
+      parameters:
+      - in: query
+        name: username
+        schema:
+          type: string
+        required: true
       tags:
-      - v2
+      - Users
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/auth/check-email/:
     get:
       operationId: v2_auth_check_email_retrieve
-      description: |-
-        Check if email is available for registration
-
-        Query params:
-        - email: The email to check
-
-        Returns:
-        - available: Boolean indicating if email is available
+      description: Check if email is available for registration
+      parameters:
+      - in: query
+        name: email
+        schema:
+          type: string
+        required: true
       tags:
-      - v2
+      - Users
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/auth/social/providers/:
     get:
       operationId: v2_auth_social_providers_retrieve
@@ -1395,6 +1521,136 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v2/ai/askme/start/:
+    post:
+      operationId: v2_ai_askme_start_create
+      description: DRF API view for starting AskMe session
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/answer/:
+    post:
+      operationId: v2_ai_askme_answer_create
+      description: DRF API view for answering questions
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/finalize/:
+    post:
+      operationId: v2_ai_askme_finalize_create
+      description: DRF API view for finalizing session
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/stream/:
+    get:
+      operationId: v2_ai_askme_stream_retrieve
+      description: DRF API view for streaming updates
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/sessions/:
+    get:
+      operationId: v2_ai_askme_sessions_retrieve
+      description: List user's AskMe sessions (all sessions during development)
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/sessions/{session_id}/:
+    get:
+      operationId: v2_ai_askme_sessions_retrieve_2
+      description: Get session details
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v2/ai/askme/sessions/{session_id}/delete/:
+    delete:
+      operationId: v2_ai_askme_sessions_delete_destroy
+      description: Delete a session (no user check during development)
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v2/ai/askme/debug/:
+    post:
+      operationId: v2_ai_askme_debug_create
+      description: Debug endpoint to test if authentication is working
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    get:
+      operationId: v2_ai_askme_debug_retrieve
+      description: Debug endpoint to test if authentication is working
+      tags:
+      - v2
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
   /api/v2/chat/completions/:
     post:
       operationId: v2_chat_completions_create
@@ -1707,7 +1963,7 @@ paths:
   /api/v2/core/health/detailed/:
     get:
       operationId: v2_core_health_detailed_retrieve
-      description: Return comprehensive health status
+      description: Return comprehensive health status with all service checks
       tags:
       - v2
       security:
@@ -1720,16 +1976,21 @@ paths:
   /api/v2/core/config/:
     get:
       operationId: v2_core_config_retrieve
-      description: Public app configuration endpoint - no auth, no session, no DB
+      description: Get public app configuration
       tags:
-      - v2
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/core/configuration/:
     get:
       operationId: v2_core_configuration_retrieve
@@ -1746,16 +2007,21 @@ paths:
   /api/v2/core/rag/status/:
     get:
       operationId: v2_core_rag_status_retrieve
-      description: RAG service status endpoint - no auth required
+      description: Get RAG service status
       tags:
-      - v2
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/core/notifications/:
     get:
       operationId: v2_core_notifications_retrieve
@@ -1782,41 +2048,56 @@ paths:
   /api/v2/core/api/v2/status/:
     get:
       operationId: v2_core_api_v2_status_retrieve
-      description: System status endpoint for health checks
+      description: Get system status and configuration
       tags:
-      - v2
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/core/api/v2/cors-test/:
-    get:
-      operationId: v2_core_api_v2_cors_test_retrieve
-      description: Test CORS configuration
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
     post:
       operationId: v2_core_api_v2_cors_test_create
       description: Test CORS configuration
       tags:
-      - v2
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    get:
+      operationId: v2_core_api_v2_cors_test_retrieve
+      description: Test CORS configuration
+      tags:
+      - Core
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v2/billing/plans/:
     get:
       operationId: v2_billing_plans_retrieve
@@ -1999,11 +2280,14 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/v2/research/jobs/:
+  /api/v2/history/history/:
     get:
-      operationId: v2_research_jobs_list
-      description: ViewSet for research job management.
+      operationId: v2_history_history_list
       parameters:
+      - in: query
+        name: intent_category
+        schema:
+          type: string
       - name: ordering
         required: false
         in: query
@@ -2016,129 +2300,64 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: source
+        schema:
+          type: string
       tags:
       - v2
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedJobSummaryList'
+                $ref: '#/components/schemas/PaginatedPromptHistoryList'
           description: ''
     post:
-      operationId: v2_research_jobs_create
-      description: Create a new research job.
+      operationId: v2_history_history_create
       tags:
       - v2
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateJobRequest'
+              $ref: '#/components/schemas/PromptHistoryCreateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/CreateJobRequest'
+              $ref: '#/components/schemas/PromptHistoryCreateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CreateJobRequest'
+              $ref: '#/components/schemas/PromptHistoryCreateRequest'
         required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateJob'
+                $ref: '#/components/schemas/PromptHistoryCreate'
           description: ''
-  /api/v2/research/jobs/{id}/:
-    get:
-      operationId: v2_research_jobs_retrieve
-      description: ViewSet for research job management.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this research job.
-        required: true
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobWithAnswer'
-          description: ''
-    patch:
-      operationId: v2_research_jobs_partial_update
-      description: ViewSet for research job management.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this research job.
-        required: true
-      tags:
-      - v2
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedJobWithAnswerRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/JobWithAnswer'
-          description: ''
+  /api/v2/history/history/{id}/:
     put:
-      operationId: v2_research_jobs_update
-      description: ViewSet for research job management.
+      operationId: v2_history_history_update
       parameters:
       - in: path
         name: id
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this research job.
+        description: A UUID string identifying this prompt history.
         required: true
       tags:
       - v2
@@ -2146,218 +2365,222 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JobWithAnswerRequest'
+              $ref: '#/components/schemas/PromptHistoryUpdateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/JobWithAnswerRequest'
+              $ref: '#/components/schemas/PromptHistoryUpdateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/JobWithAnswerRequest'
-        required: true
+              $ref: '#/components/schemas/PromptHistoryUpdateRequest'
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobWithAnswer'
+                $ref: '#/components/schemas/PromptHistoryUpdate'
           description: ''
     delete:
-      operationId: v2_research_jobs_destroy
-      description: ViewSet for research job management.
+      operationId: v2_history_history_destroy
       parameters:
       - in: path
         name: id
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this research job.
+        description: A UUID string identifying this prompt history.
         required: true
       tags:
       - v2
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '204':
           description: No response body
-  /api/v2/research/jobs/{id}/chunks/:
     get:
-      operationId: v2_research_jobs_chunks_retrieve
-      description: Get chunks associated with a job.
+      operationId: v2_history_history_retrieve
       parameters:
       - in: path
         name: id
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this research job.
+        description: A UUID string identifying this prompt history.
         required: true
       tags:
       - v2
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResearchJob'
+                $ref: '#/components/schemas/PromptHistory'
           description: ''
-  /api/v2/research/jobs/{id}/docs/:
-    get:
-      operationId: v2_research_jobs_docs_retrieve
-      description: Get source documents for a job.
+    patch:
+      operationId: v2_history_history_partial_update
       parameters:
       - in: path
         name: id
         schema:
           type: string
           format: uuid
-        description: A UUID string identifying this research job.
+        description: A UUID string identifying this prompt history.
         required: true
       tags:
       - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptHistoryUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptHistoryUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptHistoryUpdateRequest'
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResearchJob'
+                $ref: '#/components/schemas/PromptHistoryUpdate'
           description: ''
-  /api/v2/research/jobs/{id}/progress/:
-    get:
-      operationId: v2_research_jobs_progress_retrieve
-      description: Get detailed progress for a specific job.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this research job.
-        required: true
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResearchJob'
-          description: ''
-  /api/v2/research/quick/:
+  /api/v2/history/history/{id}/enhance/:
     post:
-      operationId: v2_research_quick_create
-      description: |-
-        Quick research endpoint for simple queries.
-        Returns job ID immediately and processes in background.
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v2/research/batch/:
-    post:
-      operationId: v2_research_batch_create
-      description: Create multiple research jobs in batch.
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v2/research/health/:
-    get:
-      operationId: v2_research_health_retrieve
-      description: Get system health status.
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v2/research/stats/:
-    get:
-      operationId: v2_research_stats_retrieve
-      description: Get system statistics.
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v2/research/jobs/{job_id}/:
-    get:
-      operationId: v2_research_jobs_retrieve_2
-      description: Legacy endpoint for job status.
+      operationId: v2_history_history_enhance_create
+      description: Run optimization pipeline, debit credits, update optimized_prompt
       parameters:
       - in: path
-        name: job_id
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this prompt history.
         required: true
       tags:
       - v2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptHistoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PromptHistoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PromptHistoryRequest'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
-          description: No response body
-  /api/v1/templates/:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptHistory'
+          description: ''
+  /api/v2/history/saved-prompts/:
     get:
-      operationId: v1_templates_list
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
+      operationId: v2_history_saved_prompts_list
+      description: Get all saved prompts for the authenticated user with optional
+        filtering.
+      summary: List saved prompts
       parameters:
-      - in: query
-        name: author
-        schema:
-          type: string
-          format: uuid
       - in: query
         name: category
         schema:
+          type: string
+        description: Filter by category
+      - in: query
+        name: is_favorite
+        schema:
+          type: boolean
+        description: Filter by favorite status
+      - in: query
+        name: is_public
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
           type: integer
       - in: query
-        name: is_featured
+        name: search
+        schema:
+          type: string
+        description: Search in title, content, description
+      tags:
+      - Saved Prompts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSavedPromptListList'
+          description: ''
+    post:
+      operationId: v2_history_saved_prompts_create
+      description: Save a new plain prompt for future reuse.
+      summary: Create saved prompt
+      tags:
+      - Saved Prompts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedPromptCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedPromptCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedPromptCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPromptCreate'
+          description: ''
+  /api/v2/history/saved-prompts/favorites/:
+    get:
+      operationId: v2_history_saved_prompts_favorites_list
+      description: Get all prompts marked as favorite.
+      summary: Get favorite prompts
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+      - in: query
+        name: is_favorite
         schema:
           type: boolean
       - in: query
@@ -2383,482 +2606,36 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - Saved Prompts
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedTemplateListList'
+                $ref: '#/components/schemas/PaginatedSavedPromptListList'
           description: ''
-    post:
-      operationId: v1_templates_create
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCreateUpdate'
-          description: ''
-  /api/v1/templates/featured/:
+  /api/v2/history/saved-prompts/public/:
     get:
-      operationId: v1_templates_featured_retrieve
-      description: Get featured templates
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/my_templates/:
-    get:
-      operationId: v1_templates_my_templates_retrieve
-      description: Get current user's templates
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/search_suggestions/:
-    get:
-      operationId: v1_templates_search_suggestions_retrieve
-      description: Get search suggestions based on popular templates and tags
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/trending/:
-    get:
-      operationId: v1_templates_trending_retrieve
-      description: Get trending templates based on recent activity
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/:
-    get:
-      operationId: v1_templates_retrieve
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
+      operationId: v2_history_saved_prompts_public_list
+      description: Get prompts shared publicly by all users.
+      summary: Get public prompts
       parameters:
-      - in: path
-        name: id
+      - in: query
+        name: category
         schema:
           type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-    patch:
-      operationId: v1_templates_partial_update
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      parameters:
-      - in: path
-        name: id
+        description: Filter by category
+      - in: query
+        name: is_favorite
         schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTemplateCreateUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCreateUpdate'
-          description: ''
-    put:
-      operationId: v1_templates_update
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      parameters:
-      - in: path
-        name: id
+          type: boolean
+      - in: query
+        name: is_public
         schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateCreateUpdateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCreateUpdate'
-          description: ''
-    delete:
-      operationId: v1_templates_destroy
-      description: |-
-        Complete CRUD ViewSet for templates
-
-        Features:
-        - List, create, retrieve, update, delete templates
-        - Advanced filtering and search
-        - Custom actions for usage tracking
-        - AI integration
-        - Analytics and ratings
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/v1/templates/{id}/analytics/:
-    get:
-      operationId: v1_templates_analytics_retrieve
-      description: Get detailed analytics for a template (author only)
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/analyze_with_ai/:
-    post:
-      operationId: v1_templates_analyze_with_ai_create
-      description: Analyze template with AI for optimization suggestions
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/complete_usage/:
-    post:
-      operationId: v1_templates_complete_usage_create
-      description: Complete template usage and award rewards
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/duplicate/:
-    post:
-      operationId: v1_templates_duplicate_create
-      description: Create a copy of an existing template
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/rate_template/:
-    post:
-      operationId: v1_templates_rate_template_create
-      description: Rate and review a template
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/templates/{id}/start_usage/:
-    post:
-      operationId: v1_templates_start_usage_create
-      description: Start using a template - creates usage tracking record
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: string
-          format: uuid
-        description: A UUID string identifying this template.
-        required: true
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TemplateDetailRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateDetail'
-          description: ''
-  /api/v1/template-categories/:
-    get:
-      operationId: v1_template_categories_list
-      description: |-
-        ViewSet for template categories
-
-        Provides:
-        - List all categories
-        - Retrieve single category
-        - Category statistics
-      parameters:
+          type: boolean
       - name: ordering
         required: false
         in: query
@@ -2878,734 +2655,812 @@ paths:
         schema:
           type: string
       tags:
-      - v1
+      - Saved Prompts
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedTemplateCategoryList'
+                $ref: '#/components/schemas/PaginatedSavedPromptListList'
           description: ''
-  /api/v1/template-categories/{id}/:
-    get:
-      operationId: v1_template_categories_retrieve
-      description: |-
-        ViewSet for template categories
-
-        Provides:
-        - List all categories
-        - Retrieve single category
-        - Category statistics
+  /api/v2/history/saved-prompts/{id}/:
+    put:
+      operationId: v2_history_saved_prompts_update
+      description: Update an existing saved prompt.
+      summary: Update saved prompt
       parameters:
       - in: path
         name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this template category.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCategory'
-          description: ''
-  /api/v1/template-categories/{id}/templates/:
-    get:
-      operationId: v1_template_categories_templates_retrieve
-      description: Get templates in this category
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        description: A unique integer value identifying this template category.
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TemplateCategory'
-          description: ''
-  /api/v1/search/prompts/:
-    post:
-      operationId: v1_search_prompts_create
-      description: High-performance prompt search endpoint optimized for sub-50ms
-        response times
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/intent/process/:
-    post:
-      operationId: v1_intent_process_create
-      description: Process user intent for WebSocket chat optimization
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/prompts/featured/:
-    get:
-      operationId: v1_prompts_featured_retrieve
-      description: Get featured prompts from the 100K prompt library
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/prompts/{prompt_id}/similar/:
-    get:
-      operationId: v1_prompts_similar_retrieve
-      description: Get similar prompts from the library
-      parameters:
-      - in: path
-        name: prompt_id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
         required: true
       tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/metrics/performance/:
-    get:
-      operationId: v1_metrics_performance_retrieve
-      description: Get system performance metrics for admin monitoring
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/status/:
-    get:
-      operationId: v1_status_retrieve
-      description: Show current system status and available features
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/register/:
-    post:
-      operationId: v1_auth_register_create
-      description: |-
-        User registration endpoint
-
-        Creates new user account and returns JWT tokens
-      tags:
-      - v1
+      - Saved Prompts
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserRegistrationRequest'
+              $ref: '#/components/schemas/SavedPromptUpdateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/UserRegistrationRequest'
+              $ref: '#/components/schemas/SavedPromptUpdateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UserRegistrationRequest'
+              $ref: '#/components/schemas/SavedPromptUpdateRequest'
         required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
-      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPromptUpdate'
+          description: ''
+    delete:
+      operationId: v2_history_saved_prompts_destroy
+      description: Soft-delete a saved prompt (can be recovered).
+      summary: Delete saved prompt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
+        required: true
+      tags:
+      - Saved Prompts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+    get:
+      operationId: v2_history_saved_prompts_retrieve
+      description: Retrieve a specific saved prompt by ID.
+      summary: Get saved prompt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
+        required: true
+      tags:
+      - Saved Prompts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPrompt'
+          description: ''
+    patch:
+      operationId: v2_history_saved_prompts_partial_update
+      description: Partially update an existing saved prompt.
+      summary: Partial update saved prompt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
+        required: true
+      tags:
+      - Saved Prompts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSavedPromptUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSavedPromptUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSavedPromptUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPromptUpdate'
+          description: ''
+  /api/v2/history/saved-prompts/{id}/duplicate/:
+    post:
+      operationId: v2_history_saved_prompts_duplicate_create
+      description: Create a copy of an existing saved prompt.
+      summary: Duplicate a prompt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
+        required: true
+      tags:
+      - Saved Prompts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
       responses:
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserRegistration'
+                $ref: '#/components/schemas/SavedPrompt'
           description: ''
-  /api/v1/auth/login/:
+  /api/v2/history/saved-prompts/{id}/toggle-favorite/:
     post:
-      operationId: v1_auth_login_create
-      description: Handle user login
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/logout/:
-    post:
-      operationId: v1_auth_logout_create
-      description: Logout user endpoint
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/refresh/:
-    post:
-      operationId: v1_auth_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenRefreshRequest'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenRefresh'
-          description: ''
-  /api/v1/auth/check-username/:
-    get:
-      operationId: v1_auth_check_username_retrieve
-      description: |-
-        Check if username is available for registration
-
-        Query params:
-        - username: The username to check
-
-        Returns:
-        - available: Boolean indicating if username is available
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/check-email/:
-    get:
-      operationId: v1_auth_check_email_retrieve
-      description: |-
-        Check if email is available for registration
-
-        Query params:
-        - email: The email to check
-
-        Returns:
-        - available: Boolean indicating if email is available
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/social/providers/:
-    get:
-      operationId: v1_auth_social_providers_retrieve
-      description: Get provider information
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/social/{provider}/initiate/:
-    get:
-      operationId: v1_auth_social_initiate_retrieve
-      description: Get OAuth authorization URL
+      operationId: v2_history_saved_prompts_toggle_favorite_create
+      description: Add or remove a prompt from favorites.
+      summary: Toggle favorite status
       parameters:
       - in: path
-        name: provider
-        schema:
-          type: string
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/social/callback/:
-    post:
-      operationId: v1_auth_social_callback_create
-      description: Handle OAuth callback
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/social/unlink/:
-    post:
-      operationId: v1_auth_social_unlink_create
-      description: Unlink social account from user
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/social/link/:
-    post:
-      operationId: v1_auth_social_link_create
-      description: |-
-        Link social account to existing user
-
-        This endpoint allows users to link additional social providers to their account
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/profile/:
-    get:
-      operationId: v1_auth_profile_retrieve
-      description: User profile view for retrieving and updating profile
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-          description: ''
-    put:
-      operationId: v1_auth_profile_update
-      description: User profile view for retrieving and updating profile
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserUpdate'
-          description: ''
-    patch:
-      operationId: v1_auth_profile_partial_update
-      description: User profile view for retrieving and updating profile
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserUpdate'
-          description: ''
-  /api/v1/auth/profile/update/:
-    get:
-      operationId: v1_auth_profile_update_retrieve
-      description: Update user profile endpoint
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserUpdate'
-          description: ''
-    put:
-      operationId: v1_auth_profile_update_update
-      description: Update user profile endpoint
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserUpdate'
-          description: ''
-    patch:
-      operationId: v1_auth_profile_update_partial_update
-      description: Update user profile endpoint
-      tags:
-      - v1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserUpdate'
-          description: ''
-  /api/v1/auth/change-password/:
-    post:
-      operationId: v1_auth_change_password_create
-      description: Handle password change
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/auth/stats/:
-    get:
-      operationId: v1_auth_stats_retrieve
-      description: Get user statistics and gamification data
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/providers/:
-    get:
-      operationId: v1_ai_providers_retrieve
-      description: List available AI providers including DeepSeek
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/models/:
-    get:
-      operationId: v1_ai_models_retrieve
-      description: List available AI models including DeepSeek models
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/generate/:
-    post:
-      operationId: v1_ai_generate_create
-      description: AI generation endpoint with DeepSeek integration
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/usage/:
-    get:
-      operationId: v1_ai_usage_retrieve
-      description: Placeholder AI usage view
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/quotas/:
-    get:
-      operationId: v1_ai_quotas_retrieve
-      description: Placeholder AI quota view
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/suggestions/:
-    get:
-      operationId: v1_ai_suggestions_retrieve
-      description: AI-powered suggestions endpoint for autocomplete functionality
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/deepseek/chat/:
-    post:
-      operationId: v1_ai_deepseek_chat_create
-      description: DeepSeek-specific chat endpoint for real-time AI conversations
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/deepseek/test/:
-    get:
-      operationId: v1_ai_deepseek_test_retrieve
-      description: Test DeepSeek connectivity and configuration
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/deepseek/stream/:
-    post:
-      operationId: v1_ai_deepseek_stream_create
-      description: |-
-        Server-side streaming proxy for DeepSeek (SSE-like StreamingHttpResponse)
-
-        This view re-uses the SSE proxy pattern from apps.chat.views.ChatCompletionsProxyView
-        but keeps the implementation local to ai_services so frontend can call `/api/.../deepseek/stream/`.
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/assistant/:
-    get:
-      operationId: v1_ai_assistant_retrieve
-      description: Expose registered assistants to the frontend.
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/assistant/run/:
-    post:
-      operationId: v1_ai_assistant_run_create
-      description: Run an assistant synchronously via standard Django view.
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/assistant/threads/:
-    get:
-      operationId: v1_ai_assistant_threads_retrieve
-      description: Return threads created by the current user.
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/ai/assistant/threads/{thread_id}/:
-    get:
-      operationId: v1_ai_assistant_threads_retrieve_2
-      description: Return a thread with its messages.
-      parameters:
-      - in: path
-        name: thread_id
+        name: id
         schema:
           type: string
           format: uuid
+        description: A UUID string identifying this saved prompt.
         required: true
       tags:
-      - v1
+      - Saved Prompts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
-  /api/v1/ai/agent/optimize/:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPrompt'
+          description: ''
+  /api/v2/history/saved-prompts/{id}/use/:
     post:
-      operationId: v1_ai_agent_optimize_create
-      description: "\n    Optimize a prompt using Retrieval-Augmented Generation with\
-        \ internal knowledge base.\n    \n    Features:\n    - Retrieves relevant\
-        \ context from templates, docs, and usage history\n    - Budget-aware optimization\
-        \ with token/credit limits\n    - Idempotent requests based on session_id\
-        \ + content hash\n    - Trial user limitations and subscription enforcement\n\
-        \    "
-      summary: Optimize prompt using RAG agent
+      operationId: v2_history_saved_prompts_use_create
+      description: Record that a prompt was used (increments use count).
+      summary: Mark prompt as used
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this saved prompt.
+        required: true
       tags:
-      - v1
+      - Saved Prompts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedPromptRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedPrompt'
+          description: ''
+  /api/v2/history/iterations/:
+    get:
+      operationId: v2_history_iterations_list
+      description: Get all prompt iterations for the authenticated user.
+      summary: List prompt iterations
+      parameters:
+      - in: query
+        name: interaction_type
+        schema:
+          type: string
+          enum:
+          - correction
+          - experiment
+          - extension
+          - manual
+          - optimization
+          - refinement
+        description: |-
+          Type of iteration/modification
+
+          * `manual` - Manual Edit
+          * `optimization` - AI Optimization
+          * `refinement` - User Refinement
+          * `extension` - Extension/Add-on
+          * `correction` - Error Correction
+          * `experiment` - Experimental Variation
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_bookmarked
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: parent_prompt
+        schema:
+          type: string
+          format: uuid
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Prompt Iterations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPromptIterationList'
+          description: ''
+    post:
+      operationId: v2_history_iterations_create
+      description: Create a new iteration for a prompt.
+      summary: Create prompt iteration
+      tags:
+      - Prompt Iterations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptIterationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PromptIterationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PromptIterationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIterationCreate'
+          description: ''
+  /api/v2/history/iterations/bookmarked/:
+    get:
+      operationId: v2_history_iterations_bookmarked_list
+      description: Get all bookmarked iterations.
+      summary: Get bookmarked iterations
+      parameters:
+      - in: query
+        name: interaction_type
+        schema:
+          type: string
+          enum:
+          - correction
+          - experiment
+          - extension
+          - manual
+          - optimization
+          - refinement
+        description: |-
+          Type of iteration/modification
+
+          * `manual` - Manual Edit
+          * `optimization` - AI Optimization
+          * `refinement` - User Refinement
+          * `extension` - Extension/Add-on
+          * `correction` - Error Correction
+          * `experiment` - Experimental Variation
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_bookmarked
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: parent_prompt
+        schema:
+          type: string
+          format: uuid
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Prompt Iterations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPromptIterationList'
+          description: ''
+  /api/v2/history/iterations/{id}/:
+    put:
+      operationId: v2_history_iterations_update
+      description: Update an existing prompt iteration.
+      summary: Update prompt iteration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIteration'
+          description: ''
+    delete:
+      operationId: v2_history_iterations_destroy
+      description: Soft-delete a prompt iteration.
+      summary: Delete prompt iteration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+    get:
+      operationId: v2_history_iterations_retrieve
+      description: Retrieve a specific prompt iteration by ID.
+      summary: Get prompt iteration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIteration'
+          description: ''
+    patch:
+      operationId: v2_history_iterations_partial_update
+      description: Partially update an existing prompt iteration.
+      summary: Partial update prompt iteration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptIterationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptIterationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPromptIterationRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIteration'
+          description: ''
+  /api/v2/history/iterations/{id}/set-active/:
+    post:
+      operationId: v2_history_iterations_set_active_create
+      description: Mark this iteration as the active version.
+      summary: Set as active iteration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIteration'
+          description: ''
+  /api/v2/history/iterations/{id}/toggle-bookmark/:
+    post:
+      operationId: v2_history_iterations_toggle_bookmark_create
+      description: Toggle bookmark status of an iteration.
+      summary: Toggle bookmark
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this prompt iteration.
+        required: true
+      tags:
+      - Prompt Iterations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PromptIterationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromptIteration'
+          description: ''
+  /api/v2/history/threads/:
+    get:
+      operationId: v2_history_threads_list
+      description: Get all conversation threads for the authenticated user.
+      summary: List conversation threads
+      parameters:
+      - in: query
+        name: is_shared
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - archived
+          - completed
+        description: |-
+          * `active` - Active
+          * `archived` - Archived
+          * `completed` - Completed
+      tags:
+      - Conversation Threads
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedConversationThreadList'
+          description: ''
+    post:
+      operationId: v2_history_threads_create
+      description: Create a new conversation thread.
+      summary: Create conversation thread
+      tags:
+      - Conversation Threads
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadCreateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationThreadCreate'
+          description: ''
+  /api/v2/history/threads/{id}/:
+    put:
+      operationId: v2_history_threads_update
+      description: Update an existing conversation thread.
+      summary: Update conversation thread
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this conversation thread.
+        required: true
+      tags:
+      - Conversation Threads
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConversationThreadRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationThread'
+          description: ''
+    delete:
+      operationId: v2_history_threads_destroy
+      description: Soft-delete a conversation thread.
+      summary: Delete conversation thread
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this conversation thread.
+        required: true
+      tags:
+      - Conversation Threads
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+    get:
+      operationId: v2_history_threads_retrieve
+      description: Retrieve a specific conversation thread by ID.
+      summary: Get conversation thread
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this conversation thread.
+        required: true
+      tags:
+      - Conversation Threads
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationThread'
+          description: ''
+    patch:
+      operationId: v2_history_threads_partial_update
+      description: Partially update an existing conversation thread.
+      summary: Partial update conversation thread
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this conversation thread.
+        required: true
+      tags:
+      - Conversation Threads
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedConversationThreadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedConversationThreadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedConversationThreadRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationThread'
+          description: ''
+  /api/v2/history/threads/{id}/add-iteration/:
+    post:
+      operationId: v2_history_threads_add_iteration_create
+      description: Add an existing iteration to a conversation thread.
+      summary: Add iteration to thread
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this conversation thread.
+        required: true
+      tags:
+      - Conversation Threads
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                session_id:
+                iteration_id:
                   type: string
-                  description: Unique session identifier
-                original:
-                  type: string
-                  description: Original prompt to optimize
-                mode:
-                  type: string
-                  enum:
-                  - fast
-                  - deep
-                  default: fast
-                  description: Optimization mode
-                context:
-                  type: object
-                  properties:
-                    intent:
-                      type: string
-                      description: Intended use case
-                    domain:
-                      type: string
-                      description: Domain context
-                budget:
-                  type: object
-                  properties:
-                    tokens_in:
-                      type: integer
-                      default: 2000
-                    tokens_out:
-                      type: integer
-                      default: 800
-                    max_credits:
-                      type: integer
-                      default: 5
-              required:
-              - session_id
-              - original
+                  format: uuid
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -3614,561 +3469,12 @@ paths:
           content:
             application/json:
               schema:
-                description: Optimization successful
-                content:
-                  application/json:
-                    type: object
-                    properties:
-                      optimized:
-                        type: string
-                      citations:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                            title:
-                              type: string
-                            score:
-                              type: number
-                      diff_summary:
-                        type: string
-                      usage:
-                        type: object
-                        properties:
-                          tokens_in:
-                            type: integer
-                          tokens_out:
-                            type: integer
-                          credits:
-                            type: integer
+                $ref: '#/components/schemas/ConversationThread'
           description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                description: Invalid request
-          description: ''
-        '402':
-          content:
-            application/json:
-              schema:
-                description: Insufficient credits
-          description: ''
-        '429':
-          content:
-            application/json:
-              schema:
-                description: Rate limit exceeded
-          description: ''
-  /api/v1/ai/agent/stats/:
-    get:
-      operationId: v1_ai_agent_stats_retrieve
-      description: Get usage statistics and performance metrics for the RAG agent
-      summary: Get RAG agent statistics
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                description: Statistics retrieved
-                content:
-                  application/json:
-                    type: object
-                    properties:
-                      index_status:
-                        type: object
-                      user_usage:
-                        type: object
-                      system_metrics:
-                        type: object
-          description: ''
-  /api/v1/ai/rag/retrieve/:
-    post:
-      operationId: v1_ai_rag_retrieve_create
-      description: Return top-k retrieved documents from the RAG index
-      summary: Retrieve documents for a query
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-  /api/v1/ai/rag/answer/:
-    post:
-      operationId: v1_ai_rag_answer_create
-      description: Run retrieval and generate an answer (non-streaming).
-      summary: RAG answer endpoint
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-  /api/v1/gamification/achievements/:
-    get:
-      operationId: v1_gamification_achievements_retrieve
-      description: Get all achievements with user progress
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/gamification/badges/:
-    get:
-      operationId: v1_gamification_badges_retrieve
-      description: Get user's badges
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/gamification/leaderboard/:
-    get:
-      operationId: v1_gamification_leaderboard_retrieve
-      description: Get leaderboard data
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/gamification/daily-challenges/:
-    get:
-      operationId: v1_gamification_daily_challenges_retrieve
-      description: Get today's challenges
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/gamification/user-level/:
-    get:
-      operationId: v1_gamification_user_level_retrieve
-      description: Get user level information
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/gamification/streak/:
-    get:
-      operationId: v1_gamification_streak_retrieve
-      description: Get user streak data
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/dashboard/:
-    get:
-      operationId: v1_analytics_dashboard_retrieve
-      description: Return dashboard analytics
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/user-insights/:
-    get:
-      operationId: v1_analytics_user_insights_retrieve
-      description: Return user insights
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/template-analytics/:
-    get:
-      operationId: v1_analytics_template_analytics_retrieve
-      description: Return template analytics
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/ab-tests/:
-    get:
-      operationId: v1_analytics_ab_tests_retrieve
-      description: Return A/B test results
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/recommendations/:
-    get:
-      operationId: v1_analytics_recommendations_retrieve
-      description: Return personalized recommendations
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/analytics/track/:
-    post:
-      operationId: v1_analytics_track_create
-      description: Track an analytics event
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/health/detailed/:
-    get:
-      operationId: v1_core_health_detailed_retrieve
-      description: Return comprehensive health status
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/config/:
-    get:
-      operationId: v1_core_config_retrieve
-      description: Public app configuration endpoint - no auth, no session, no DB
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/configuration/:
-    get:
-      operationId: v1_core_configuration_retrieve
-      description: Return app configuration
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/rag/status/:
-    get:
-      operationId: v1_core_rag_status_retrieve
-      description: RAG service status endpoint - no auth required
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/notifications/:
-    get:
-      operationId: v1_core_notifications_retrieve
-      description: Get user notifications
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: v1_core_notifications_create
-      description: Mark notification as read
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/api/v2/status/:
-    get:
-      operationId: v1_core_api_v2_status_retrieve
-      description: System status endpoint for health checks
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/core/api/v2/cors-test/:
-    get:
-      operationId: v1_core_api_v2_cors_test_retrieve
-      description: Test CORS configuration
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: v1_core_api_v2_cors_test_create
-      description: Test CORS configuration
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/plans/:
-    get:
-      operationId: v1_billing_plans_retrieve
-      description: List all available billing plans
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/plans/{id}/:
-    get:
-      operationId: v1_billing_plans_retrieve_2
-      description: Get details of a specific billing plan
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/me/subscription/:
-    get:
-      operationId: v1_billing_me_subscription_retrieve
-      description: Get user's current subscription
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/me/entitlements/:
-    get:
-      operationId: v1_billing_me_entitlements_retrieve
-      description: Get user's entitlements based on their subscription
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/me/usage/:
-    get:
-      operationId: v1_billing_me_usage_retrieve
-      description: Get user's usage statistics
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/checkout/:
-    post:
-      operationId: v1_billing_checkout_create
-      description: Create a Stripe checkout session
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/portal/:
-    post:
-      operationId: v1_billing_portal_create
-      description: Create a Stripe customer portal session
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/billing/webhooks/stripe/:
-    post:
-      operationId: v1_billing_webhooks_stripe_create
-      description: Handle Stripe webhooks
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/intent/:
-    post:
-      operationId: v1_orchestrator_intent_create
-      description: Detect user intent from prompt
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/assess/:
-    post:
-      operationId: v1_orchestrator_assess_create
-      description: Assess prompt quality and provide suggestions
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/render/:
-    post:
-      operationId: v1_orchestrator_render_create
-      description: Render a template with provided variables
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/search/:
-    get:
-      operationId: v1_orchestrator_search_retrieve
-      description: Search for templates in the library
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/template/{template_id}/:
-    get:
-      operationId: v1_orchestrator_template_retrieve_2
-      description: Get a specific template by ID or name
-      parameters:
-      - in: path
-        name: template_id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/v1/orchestrator/template/:
-    get:
-      operationId: v1_orchestrator_template_retrieve
-      description: Get a specific template by ID or name
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
   /health/detailed/:
     get:
       operationId: health_detailed_retrieve
-      description: Return comprehensive health status
+      description: Return comprehensive health status with all service checks
       tags:
       - health
       security:
@@ -4181,16 +3487,21 @@ paths:
   /config/:
     get:
       operationId: config_retrieve
-      description: Public app configuration endpoint - no auth, no session, no DB
+      description: Get public app configuration
       tags:
-      - config
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /configuration/:
     get:
       operationId: configuration_retrieve
@@ -4207,16 +3518,21 @@ paths:
   /rag/status/:
     get:
       operationId: rag_status_retrieve
-      description: RAG service status endpoint - no auth required
+      description: Get RAG service status
       tags:
-      - rag
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /notifications/:
     get:
       operationId: notifications_retrieve
@@ -4241,111 +3557,145 @@ paths:
         '200':
           description: No response body
   /api/v2/cors-test/:
-    get:
-      operationId: v2_cors_test_retrieve
-      description: Test CORS configuration
-      tags:
-      - v2
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
     post:
       operationId: v2_cors_test_create
       description: Test CORS configuration
       tags:
-      - v2
+      - Core
       security:
       - jwtAuth: []
       - cookieAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    get:
+      operationId: v2_cors_test_retrieve
+      description: Test CORS configuration
+      tags:
+      - Core
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
 components:
   schemas:
-    Citation:
+    ConversationThread:
       type: object
-      description: Serializer for answer citations.
+      description: Full serializer for ConversationThread model
       properties:
-        n:
-          type: integer
-          description: Citation number
-        url:
+        id:
           type: string
-          format: uri
-          description: Source URL
+          format: uuid
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
         title:
           type: string
-          description: Source title
-        score:
-          type: number
-          format: double
-          description: Relevance score
-      required:
-      - n
-      - title
-      - url
-    CitationRequest:
-      type: object
-      description: Serializer for answer citations.
-      properties:
-        n:
-          type: integer
-          description: Citation number
-        url:
+          description: Conversation title/summary
+          maxLength: 200
+        description:
           type: string
-          format: uri
-          minLength: 1
-          description: Source URL
+          description: Detailed description of conversation purpose
+        total_iterations:
+          type: integer
+          readOnly: true
+          description: Total number of iterations in this thread
+        total_tokens:
+          type: integer
+          readOnly: true
+          description: Total tokens consumed in this thread
+        total_credits:
+          type: integer
+          readOnly: true
+          description: Total credits spent on this thread
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        is_shared:
+          type: boolean
+          description: Whether this thread is shared with others
+        is_deleted:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_activity_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_deleted
+      - last_activity_at
+      - total_credits
+      - total_iterations
+      - total_tokens
+      - updated_at
+      - user
+    ConversationThreadCreate:
+      type: object
+      description: Serializer for creating a new ConversationThread
+      properties:
         title:
           type: string
-          minLength: 1
-          description: Source title
-        score:
-          type: number
-          format: double
-          description: Relevance score
-      required:
-      - n
-      - title
-      - url
-    CreateJob:
-      type: object
-      description: Serializer for creating new research jobs.
-      properties:
-        query:
+          description: Conversation title/summary
+          maxLength: 200
+        description:
           type: string
-          description: Research query to investigate
-          maxLength: 1000
-        top_k:
-          type: integer
-          maximum: 20
-          minimum: 1
-          default: 6
-          description: Number of search results to process
-      required:
-      - query
-    CreateJobRequest:
+          description: Detailed description of conversation purpose
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+    ConversationThreadCreateRequest:
       type: object
-      description: Serializer for creating new research jobs.
+      description: Serializer for creating a new ConversationThread
       properties:
-        query:
+        title:
           type: string
-          minLength: 1
-          description: Research query to investigate
-          maxLength: 1000
-        top_k:
-          type: integer
-          maximum: 20
-          minimum: 1
-          default: 6
-          description: Number of search results to process
-      required:
-      - query
+          description: Conversation title/summary
+          maxLength: 200
+        description:
+          type: string
+          description: Detailed description of conversation purpose
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+    ConversationThreadRequest:
+      type: object
+      description: Full serializer for ConversationThread model
+      properties:
+        title:
+          type: string
+          description: Conversation title/summary
+          maxLength: 200
+        description:
+          type: string
+          description: Detailed description of conversation purpose
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        is_shared:
+          type: boolean
+          description: Whether this thread is shared with others
     FieldTypeEnum:
       enum:
       - text
@@ -4362,90 +3712,23 @@ components:
         * `checkbox` - Checkbox List
         * `radio` - Radio Buttons
         * `number` - Number Input
-    JobSummary:
-      type: object
-      description: Lightweight serializer for job lists.
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        query:
-          type: string
-        status:
-          $ref: '#/components/schemas/StatusEnum'
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        finished_at:
-          type: string
-          format: date-time
-          nullable: true
-      required:
-      - created_at
-      - id
-      - query
-    JobWithAnswer:
-      type: object
-      description: Extended job serializer that includes the answer when available.
-      properties:
-        id:
-          type: string
-          format: uuid
-          readOnly: true
-        query:
-          type: string
-        top_k:
-          type: integer
-        status:
-          allOf:
-          - $ref: '#/components/schemas/StatusEnum'
-          readOnly: true
-        error:
-          type: string
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        finished_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        answer:
-          allOf:
-          - $ref: '#/components/schemas/ResearchAnswer'
-          readOnly: true
-        docs_count:
-          type: integer
-          readOnly: true
-        chunks_count:
-          type: integer
-          readOnly: true
-      required:
-      - answer
-      - chunks_count
-      - created_at
-      - docs_count
-      - error
-      - finished_at
-      - id
-      - query
-      - status
-    JobWithAnswerRequest:
-      type: object
-      description: Extended job serializer that includes the answer when available.
-      properties:
-        query:
-          type: string
-          minLength: 1
-        top_k:
-          type: integer
-      required:
-      - query
-    PaginatedJobSummaryList:
+    InteractionTypeEnum:
+      enum:
+      - manual
+      - optimization
+      - refinement
+      - extension
+      - correction
+      - experiment
+      type: string
+      description: |-
+        * `manual` - Manual Edit
+        * `optimization` - AI Optimization
+        * `refinement` - User Refinement
+        * `extension` - Extension/Add-on
+        * `correction` - Error Correction
+        * `experiment` - Experimental Variation
+    PaginatedConversationThreadList:
       type: object
       properties:
         count:
@@ -4464,7 +3747,67 @@ components:
         results:
           type: array
           items:
-            $ref: '#/components/schemas/JobSummary'
+            $ref: '#/components/schemas/ConversationThread'
+    PaginatedPromptHistoryList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromptHistory'
+    PaginatedPromptIterationList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromptIteration'
+    PaginatedSavedPromptListList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SavedPromptList'
     PaginatedTemplateCategoryList:
       type: object
       properties:
@@ -4505,15 +3848,143 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TemplateList'
-    PatchedJobWithAnswerRequest:
+    PatchedConversationThreadRequest:
       type: object
-      description: Extended job serializer that includes the answer when available.
+      description: Full serializer for ConversationThread model
       properties:
-        query:
+        title:
+          type: string
+          description: Conversation title/summary
+          maxLength: 200
+        description:
+          type: string
+          description: Detailed description of conversation purpose
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        is_shared:
+          type: boolean
+          description: Whether this thread is shared with others
+    PatchedPromptHistoryUpdateRequest:
+      type: object
+      properties:
+        optimized_prompt:
+          type: string
+        model_used:
+          type: string
+          maxLength: 100
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        credits_spent:
+          type: integer
+        tags: {}
+        meta: {}
+    PatchedPromptIterationRequest:
+      type: object
+      description: Full serializer for PromptIteration model
+      properties:
+        parent_prompt:
+          type: string
+          format: uuid
+          description: The original prompt this iteration is based on
+        previous_iteration:
+          type: string
+          format: uuid
+          nullable: true
+          description: The previous version in the iteration chain
+        version_tag:
+          type: string
+          description: Optional semantic version tag (e.g., 'v1.0', 'draft-2')
+          maxLength: 50
+        prompt_text:
           type: string
           minLength: 1
-        top_k:
+          description: The current iteration of the prompt
+        system_message:
+          type: string
+          description: Optional system message for this iteration
+        ai_response:
+          type: string
+          description: AI generated response for this iteration
+        response_model:
+          type: string
+          description: AI model used for this response
+          maxLength: 100
+        interaction_type:
+          allOf:
+          - $ref: '#/components/schemas/InteractionTypeEnum'
+          description: |-
+            Type of iteration/modification
+
+            * `manual` - Manual Edit
+            * `optimization` - AI Optimization
+            * `refinement` - User Refinement
+            * `extension` - Extension/Add-on
+            * `correction` - Error Correction
+            * `experiment` - Experimental Variation
+        tokens_input:
           type: integer
+        tokens_output:
+          type: integer
+        response_time_ms:
+          type: integer
+          description: Response time in milliseconds
+        credits_spent:
+          type: integer
+        user_rating:
+          type: integer
+          nullable: true
+          description: User rating (1-5) for this iteration
+        feedback_notes:
+          type: string
+          description: User notes about this iteration
+        changes_summary:
+          type: string
+          description: Summary of changes from previous iteration
+        parameters:
+          description: Model parameters used (temperature, max_tokens, etc.)
+        tags:
+          description: Tags for categorization and search
+        metadata:
+          description: Additional flexible metadata
+        is_active:
+          type: boolean
+          description: Whether this is the active/current iteration
+        is_bookmarked:
+          type: boolean
+          description: User bookmark for important iterations
+    PatchedSavedPromptUpdateRequest:
+      type: object
+      description: Serializer for updating an existing SavedPrompt
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          minLength: 1
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
     PatchedTemplateCreateUpdateRequest:
       type: object
       description: |-
@@ -4696,81 +4167,774 @@ components:
           description: Display order within template
       required:
       - label
-    ResearchAnswer:
+    PromptHistory:
       type: object
-      description: Serializer for research answers.
-      properties:
-        answer_md:
-          type: string
-        citations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Citation'
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - answer_md
-      - citations
-      - created_at
-    ResearchAnswerRequest:
-      type: object
-      description: Serializer for research answers.
-      properties:
-        answer_md:
-          type: string
-          minLength: 1
-      required:
-      - answer_md
-    ResearchJob:
-      type: object
-      description: Serializer for research job details.
       properties:
         id:
           type: string
           format: uuid
           readOnly: true
-        query:
+        user:
           type: string
-        top_k:
-          type: integer
-        status:
-          allOf:
-          - $ref: '#/components/schemas/StatusEnum'
+          format: uuid
           readOnly: true
-        error:
+        source:
           type: string
+          maxLength: 50
+        original_prompt:
+          type: string
+        optimized_prompt:
+          type: string
+        model_used:
+          type: string
+          maxLength: 100
+        tokens_input:
+          type: integer
+          readOnly: true
+        tokens_output:
+          type: integer
+          readOnly: true
+        credits_spent:
+          type: integer
+          readOnly: true
+        intent_category:
+          type: string
+          maxLength: 100
+        tags: {}
+        meta: {}
+        is_deleted:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - credits_spent
+      - id
+      - original_prompt
+      - tokens_input
+      - tokens_output
+      - updated_at
+      - user
+    PromptHistoryCreate:
+      type: object
+      properties:
+        source:
+          type: string
+          maxLength: 50
+        original_prompt:
+          type: string
+        intent_category:
+          type: string
+          maxLength: 100
+        tags: {}
+        meta: {}
+      required:
+      - original_prompt
+    PromptHistoryCreateRequest:
+      type: object
+      properties:
+        source:
+          type: string
+          maxLength: 50
+        original_prompt:
+          type: string
+          minLength: 1
+        intent_category:
+          type: string
+          maxLength: 100
+        tags: {}
+        meta: {}
+      required:
+      - original_prompt
+    PromptHistoryRequest:
+      type: object
+      properties:
+        source:
+          type: string
+          maxLength: 50
+        original_prompt:
+          type: string
+          minLength: 1
+        optimized_prompt:
+          type: string
+        model_used:
+          type: string
+          maxLength: 100
+        intent_category:
+          type: string
+          maxLength: 100
+        tags: {}
+        meta: {}
+        is_deleted:
+          type: boolean
+      required:
+      - original_prompt
+    PromptHistoryUpdate:
+      type: object
+      properties:
+        optimized_prompt:
+          type: string
+        model_used:
+          type: string
+          maxLength: 100
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        credits_spent:
+          type: integer
+        tags: {}
+        meta: {}
+    PromptHistoryUpdateRequest:
+      type: object
+      properties:
+        optimized_prompt:
+          type: string
+        model_used:
+          type: string
+          maxLength: 100
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        credits_spent:
+          type: integer
+        tags: {}
+        meta: {}
+    PromptIteration:
+      type: object
+      description: Full serializer for PromptIteration model
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+        parent_prompt:
+          type: string
+          format: uuid
+          description: The original prompt this iteration is based on
+        previous_iteration:
+          type: string
+          format: uuid
+          nullable: true
+          description: The previous version in the iteration chain
+        iteration_number:
+          type: integer
+          readOnly: true
+          default: 1
+          description: Sequential iteration number for this prompt chain
+        version_tag:
+          type: string
+          description: Optional semantic version tag (e.g., 'v1.0', 'draft-2')
+          maxLength: 50
+        prompt_text:
+          type: string
+          description: The current iteration of the prompt
+        system_message:
+          type: string
+          description: Optional system message for this iteration
+        ai_response:
+          type: string
+          description: AI generated response for this iteration
+        response_model:
+          type: string
+          description: AI model used for this response
+          maxLength: 100
+        interaction_type:
+          allOf:
+          - $ref: '#/components/schemas/InteractionTypeEnum'
+          description: |-
+            Type of iteration/modification
+
+            * `manual` - Manual Edit
+            * `optimization` - AI Optimization
+            * `refinement` - User Refinement
+            * `extension` - Extension/Add-on
+            * `correction` - Error Correction
+            * `experiment` - Experimental Variation
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        response_time_ms:
+          type: integer
+          description: Response time in milliseconds
+        credits_spent:
+          type: integer
+        user_rating:
+          type: integer
+          nullable: true
+          description: User rating (1-5) for this iteration
+        feedback_notes:
+          type: string
+          description: User notes about this iteration
+        changes_summary:
+          type: string
+          description: Summary of changes from previous iteration
+        diff_size:
+          type: integer
+          readOnly: true
+          description: Character difference from previous iteration
+        parameters:
+          description: Model parameters used (temperature, max_tokens, etc.)
+        tags:
+          description: Tags for categorization and search
+        metadata:
+          description: Additional flexible metadata
+        is_active:
+          type: boolean
+          description: Whether this is the active/current iteration
+        is_bookmarked:
+          type: boolean
+          description: User bookmark for important iterations
+        is_deleted:
+          type: boolean
           readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
-        finished_at:
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        iteration_chain_length:
+          type: integer
+          readOnly: true
+        has_next_iteration:
+          type: boolean
+          readOnly: true
+      required:
+      - created_at
+      - diff_size
+      - has_next_iteration
+      - id
+      - is_deleted
+      - iteration_chain_length
+      - iteration_number
+      - parent_prompt
+      - prompt_text
+      - updated_at
+      - user
+    PromptIterationCreate:
+      type: object
+      description: Serializer for creating a new PromptIteration
+      properties:
+        parent_prompt:
+          type: string
+          format: uuid
+          description: The original prompt this iteration is based on
+        previous_iteration:
+          type: string
+          format: uuid
+          nullable: true
+          description: The previous version in the iteration chain
+        prompt_text:
+          type: string
+          description: The current iteration of the prompt
+        system_message:
+          type: string
+          description: Optional system message for this iteration
+        ai_response:
+          type: string
+          description: AI generated response for this iteration
+        response_model:
+          type: string
+          description: AI model used for this response
+          maxLength: 100
+        interaction_type:
+          allOf:
+          - $ref: '#/components/schemas/InteractionTypeEnum'
+          description: |-
+            Type of iteration/modification
+
+            * `manual` - Manual Edit
+            * `optimization` - AI Optimization
+            * `refinement` - User Refinement
+            * `extension` - Extension/Add-on
+            * `correction` - Error Correction
+            * `experiment` - Experimental Variation
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        response_time_ms:
+          type: integer
+          description: Response time in milliseconds
+        credits_spent:
+          type: integer
+        user_rating:
+          type: integer
+          nullable: true
+          description: User rating (1-5) for this iteration
+        feedback_notes:
+          type: string
+          description: User notes about this iteration
+        changes_summary:
+          type: string
+          description: Summary of changes from previous iteration
+        parameters:
+          description: Model parameters used (temperature, max_tokens, etc.)
+        tags:
+          description: Tags for categorization and search
+        metadata:
+          description: Additional flexible metadata
+        version_tag:
+          type: string
+          description: Optional semantic version tag (e.g., 'v1.0', 'draft-2')
+          maxLength: 50
+      required:
+      - parent_prompt
+      - prompt_text
+    PromptIterationCreateRequest:
+      type: object
+      description: Serializer for creating a new PromptIteration
+      properties:
+        parent_prompt:
+          type: string
+          format: uuid
+          description: The original prompt this iteration is based on
+        previous_iteration:
+          type: string
+          format: uuid
+          nullable: true
+          description: The previous version in the iteration chain
+        prompt_text:
+          type: string
+          minLength: 1
+          description: The current iteration of the prompt
+        system_message:
+          type: string
+          description: Optional system message for this iteration
+        ai_response:
+          type: string
+          description: AI generated response for this iteration
+        response_model:
+          type: string
+          description: AI model used for this response
+          maxLength: 100
+        interaction_type:
+          allOf:
+          - $ref: '#/components/schemas/InteractionTypeEnum'
+          description: |-
+            Type of iteration/modification
+
+            * `manual` - Manual Edit
+            * `optimization` - AI Optimization
+            * `refinement` - User Refinement
+            * `extension` - Extension/Add-on
+            * `correction` - Error Correction
+            * `experiment` - Experimental Variation
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        response_time_ms:
+          type: integer
+          description: Response time in milliseconds
+        credits_spent:
+          type: integer
+        user_rating:
+          type: integer
+          nullable: true
+          description: User rating (1-5) for this iteration
+        feedback_notes:
+          type: string
+          description: User notes about this iteration
+        changes_summary:
+          type: string
+          description: Summary of changes from previous iteration
+        parameters:
+          description: Model parameters used (temperature, max_tokens, etc.)
+        tags:
+          description: Tags for categorization and search
+        metadata:
+          description: Additional flexible metadata
+        version_tag:
+          type: string
+          description: Optional semantic version tag (e.g., 'v1.0', 'draft-2')
+          maxLength: 50
+      required:
+      - parent_prompt
+      - prompt_text
+    PromptIterationRequest:
+      type: object
+      description: Full serializer for PromptIteration model
+      properties:
+        parent_prompt:
+          type: string
+          format: uuid
+          description: The original prompt this iteration is based on
+        previous_iteration:
+          type: string
+          format: uuid
+          nullable: true
+          description: The previous version in the iteration chain
+        version_tag:
+          type: string
+          description: Optional semantic version tag (e.g., 'v1.0', 'draft-2')
+          maxLength: 50
+        prompt_text:
+          type: string
+          minLength: 1
+          description: The current iteration of the prompt
+        system_message:
+          type: string
+          description: Optional system message for this iteration
+        ai_response:
+          type: string
+          description: AI generated response for this iteration
+        response_model:
+          type: string
+          description: AI model used for this response
+          maxLength: 100
+        interaction_type:
+          allOf:
+          - $ref: '#/components/schemas/InteractionTypeEnum'
+          description: |-
+            Type of iteration/modification
+
+            * `manual` - Manual Edit
+            * `optimization` - AI Optimization
+            * `refinement` - User Refinement
+            * `extension` - Extension/Add-on
+            * `correction` - Error Correction
+            * `experiment` - Experimental Variation
+        tokens_input:
+          type: integer
+        tokens_output:
+          type: integer
+        response_time_ms:
+          type: integer
+          description: Response time in milliseconds
+        credits_spent:
+          type: integer
+        user_rating:
+          type: integer
+          nullable: true
+          description: User rating (1-5) for this iteration
+        feedback_notes:
+          type: string
+          description: User notes about this iteration
+        changes_summary:
+          type: string
+          description: Summary of changes from previous iteration
+        parameters:
+          description: Model parameters used (temperature, max_tokens, etc.)
+        tags:
+          description: Tags for categorization and search
+        metadata:
+          description: Additional flexible metadata
+        is_active:
+          type: boolean
+          description: Whether this is the active/current iteration
+        is_bookmarked:
+          type: boolean
+          description: User bookmark for important iterations
+      required:
+      - parent_prompt
+      - prompt_text
+    SavedPrompt:
+      type: object
+      description: Full serializer for SavedPrompt model
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        use_count:
+          type: integer
+          readOnly: true
+          description: Number of times this prompt has been used
+        last_used_at:
           type: string
           format: date-time
           readOnly: true
           nullable: true
+          description: Last time this prompt was used
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+        is_deleted:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
       required:
+      - content
       - created_at
-      - error
-      - finished_at
       - id
-      - query
-      - status
+      - is_deleted
+      - last_used_at
+      - title
+      - updated_at
+      - use_count
+      - user
+    SavedPromptCreate:
+      type: object
+      description: Serializer for creating a new SavedPrompt
+      properties:
+        title:
+          type: string
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+      required:
+      - content
+      - title
+    SavedPromptCreateRequest:
+      type: object
+      description: Serializer for creating a new SavedPrompt
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          minLength: 1
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+      required:
+      - content
+      - title
+    SavedPromptList:
+      type: object
+      description: Lightweight serializer for listing SavedPrompts
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        use_count:
+          type: integer
+          readOnly: true
+          description: Number of times this prompt has been used
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content
+      - created_at
+      - id
+      - title
+      - updated_at
+      - use_count
+    SavedPromptRequest:
+      type: object
+      description: Full serializer for SavedPrompt model
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          minLength: 1
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+      required:
+      - content
+      - title
+    SavedPromptUpdate:
+      type: object
+      description: Serializer for updating an existing SavedPrompt
+      properties:
+        title:
+          type: string
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+      required:
+      - content
+      - title
+    SavedPromptUpdateRequest:
+      type: object
+      description: Serializer for updating an existing SavedPrompt
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Display title for the saved prompt
+          maxLength: 200
+        content:
+          type: string
+          minLength: 1
+          description: The actual prompt text content
+        description:
+          type: string
+          description: Optional description or notes about this prompt
+        category:
+          type: string
+          description: Category for organizing prompts (e.g., 'coding', 'writing',
+            'analysis')
+          maxLength: 100
+        tags:
+          description: Tags for searchability and filtering
+        is_favorite:
+          type: boolean
+          description: Whether this prompt is marked as favorite
+        is_public:
+          type: boolean
+          description: Whether this prompt is publicly visible to other users
+        metadata:
+          description: Additional flexible metadata (variables, settings, etc.)
+      required:
+      - content
+      - title
     StatusEnum:
       enum:
-      - queued
-      - running
-      - done
-      - error
+      - active
+      - archived
+      - completed
       type: string
       description: |-
-        * `queued` - Queued
-        * `running` - Running
-        * `done` - Done
-        * `error` - Error
+        * `active` - Active
+        * `archived` - Archived
+        * `completed` - Completed
     TemplateCategory:
       type: object
       description: Serializer for template categories
@@ -5407,7 +5571,11 @@ components:
         Serializer for user registration
 
         Handles user creation with password confirmation
-        and input validation
+        and input validation.
+
+        Supports both naming conventions:
+        - password/password_confirm (preferred)
+        - password1/password2 (Django allauth compatibility)
       properties:
         username:
           type: string
@@ -5451,7 +5619,11 @@ components:
         Serializer for user registration
 
         Handles user creation with password confirmation
-        and input validation
+        and input validation.
+
+        Supports both naming conventions:
+        - password/password_confirm (preferred)
+        - password1/password2 (Django allauth compatibility)
       properties:
         username:
           type: string
@@ -5481,6 +5653,16 @@ components:
           writeOnly: true
           minLength: 1
           description: Confirm your password
+        password1:
+          type: string
+          writeOnly: true
+          minLength: 8
+          description: Password must be at least 8 characters long
+        password2:
+          type: string
+          writeOnly: true
+          minLength: 1
+          description: Confirm your password
         bio:
           type: string
           maxLength: 500
@@ -5500,8 +5682,6 @@ components:
           maxLength: 10
       required:
       - email
-      - password
-      - password_confirm
       - username
     UserUpdate:
       type: object
@@ -5591,3 +5771,25 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+tags:
+- name: Saved Prompts
+  description: CRUD operations for user-saved plain prompts. Also available via GraphQL.
+- name: Prompt Iterations
+  description: Version control and iteration tracking for prompts. Also available
+    via GraphQL.
+- name: Conversation Threads
+  description: Multi-turn conversation management. Also available via GraphQL.
+- name: Prompt History
+  description: Prompt optimization history and tracking.
+- name: Authentication
+  description: User authentication and authorization.
+- name: Templates
+  description: Prompt template management.
+- name: Chat
+  description: AI chat completions and streaming.
+- name: Gamification
+  description: Achievements, levels, and rewards.
+- name: Analytics
+  description: Usage analytics and insights.
+- name: Billing
+  description: Subscription and payment management.
