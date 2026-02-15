@@ -149,24 +149,35 @@ elif DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
     # Validate PostgreSQL connection or fallback to SQLite
     print(f"🐘 Using PostgreSQL: {DATABASES['default'].get('HOST', 'localhost')}:{DATABASES['default'].get('PORT', '5432')}/{DATABASES['default'].get('NAME', 'promptcraft_db')}", file=sys.stderr)
 
-# Security Headers and HTTPS (relaxed for local development)
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+# Security Headers and HTTPS
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_HSTS_SECONDS = 0  # Disabled for local development
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_HSTS_PRELOAD = False
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'SAMEORIGIN'  # Less restrictive for local development
+X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
-# Session Security (relaxed for local development)
-SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+# Session Security
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # Less restrictive
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'  # Less restrictive
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://www.prompt-temple.com',
+    'https://prompt-temple.com',
+    'https://api.prompt-temple.com',
+    'https://prompt-temple-2777469a4e35.herokuapp.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+]
 
 # ============================================================================
 # CORS SETTINGS - Production Configuration
@@ -183,7 +194,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3001",   # REMOVE in final production!
     "http://10.0.2.2:8000",    # Android AVD emulator
     "http://10.0.2.2:3000",    # Android AVD emulator frontend
-    "chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp/",
+    "chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp",
 ]
 
 # Allow credentials (cookies, authorization headers)

@@ -147,10 +147,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.prompt-temple.com',
     'https://prompt-temple.com',
     'https://api.prompt-temple.com',
-    'https://prompt-temple-mvp-2eac79cfc23e.herokuapp.com',
     'https://prompt-temple-2777469a4e35.herokuapp.com',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
 ]
 
 # ============================================
@@ -163,6 +163,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://prompt-temple-2777469a4e35.herokuapp.com',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
 ]
 
 # Allow credentials for authentication
@@ -179,8 +180,39 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-client-version',  # Custom header for client version tracking
+    'x-client-version',
+    'x-request-id',
+    'x-operation-id',
+    'x-timestamp',
+    'x-correlation-id',
+    'cache-control',
+    'pragma',
 ]
+
+# Expose headers to the frontend
+CORS_EXPOSE_HEADERS = [
+    'x-request-id',
+    'x-correlation-id',
+    'x-client-version',
+    'x-ratelimit-limit',
+    'x-ratelimit-remaining',
+    'x-ratelimit-reset',
+    'content-type',
+    'content-length',
+]
+
+# Allowed HTTP methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Preflight request cache duration (24 hours)
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # ============================================
 # LOGGING

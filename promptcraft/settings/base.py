@@ -227,21 +227,19 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
         '10.0.2.2',  # Android AVD emulator
     ]
 
-# CORS settings (only if installed)
-
-    CORS_ALLOWED_ORIGINS = [
-        'http://localhost:3000', 
-        'http://127.0.0.1:3000', 
-        'http://localhost', 
-        'http://127.0.0.1',
-        'http://10.0.2.2:8000',  # Android AVD emulator
-        'http://10.0.2.2',  
-        "http://127.0.0.1:3000", 
-        "http://www.prompt-temple.com",
-        "http://api.prompt-temple.com"    # Android AVD emulator
-    ]
-    CORS_ALLOW_CREDENTIALS = True
-    CORS_ALLOWED_HEADERS = [
+# CORS settings - base defaults (overridden by production/heroku settings)
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://10.0.2.2:8000',  # Android AVD emulator
+    'http://10.0.2.2',
+    'http://www.prompt-temple.com',
+    'http://api.prompt-temple.com',
+]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_HEADERS = [
     'accept',
     'accept-encoding',
     'authorization',
@@ -251,17 +249,14 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-request-id',          # ADD THIS
-    'x-client-version',
     'x-request-id',
-    'x-client-version',      # ADD THIS
+    'x-client-version',
+    'x-correlation-id',
+    'x-operation-id',
+    'x-timestamp',
+    'cache-control',
+    'pragma',
 ]
-    # Ensure both modern and legacy setting names are present so every
-    # environment and any code referencing the older name works.
-    # CORS_ALLOW_ALL_ORIGINS = True  # Only for development
-    # CORS_ALLOW_HEADERS = ['*'] 
-
-    # Backwards-compatible alias for older code that expects CORS_ALLOWED_HEADERS
 
 
 # JWT Settings - Basic configuration
