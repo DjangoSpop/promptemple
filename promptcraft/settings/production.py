@@ -183,6 +183,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3001",   # REMOVE in final production!
     "http://10.0.2.2:8000",    # Android AVD emulator
     "http://10.0.2.2:3000",    # Android AVD emulator frontend
+    "chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp/",
 ]
 
 # Allow credentials (cookies, authorization headers)
@@ -465,7 +466,36 @@ SPECTACULAR_SETTINGS = {
         'displayRequestDuration': True,
     },
 }
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    },
+    'github': {
+        'SCOPE': [
+            'user:email',
+        ],
+    },
+}
 
+# Social account settings
+SOCIALACCOUNT_LOGIN_ON_GET = False
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # For development
+
+# Result backend configuration
+CELERY_RESULT_EXPIRES = 3600  # 1 hour
+
+# Beat schedule configuration
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+print(f"Using settings: {__file__}", file=sys.stderr)
 # JWT Settings for Production
 from datetime import timedelta
 
