@@ -46,7 +46,7 @@ class SocialAuthInitiateView(APIView):
 
             # Get redirect URI from query params or use environment-based default
             from decouple import config as env_config
-            frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+            frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
             redirect_uri = request.GET.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
 
             # Get authorization URL
@@ -107,7 +107,7 @@ class SocialAuthCallbackView(APIView):
 
             # Get redirect URI from request - MUST match what was used in initiation
             from decouple import config as env_config
-            frontend_url = env_config('FRONTEND_URL', default='http://localhost:3000')
+            frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
             redirect_uri = request.data.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
             logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
             logger.debug(f"Frontend URL from env: {frontend_url}")

@@ -182,7 +182,23 @@ CSRF_TRUSTED_ORIGINS = [
 # ============================================================================
 # CORS SETTINGS - Production Configuration
 # ============================================================================
+ALLOWED_REDIRECT_URI_PATTERNS = [
+    # Website
+    r'^https?://localhost:\d+/auth/callback/(google|github)$',
+    r'^https://www\.prompt-temple\.com/auth/callback/(google|github)$',
+    r'^https://prompt-temple\.com/auth/callback/(google|github)$',
+    # Chrome extension (any extension ID)
+    r'^https://[a-z]+\.chromiumapp\.org/callback$',
+]
 
+import re
+
+def is_valid_redirect_uri(uri):
+    """Validate redirect URI against whitelist patterns"""
+    for pattern in ALLOWED_REDIRECT_URI_PATTERNS:
+        if re.match(pattern, uri):
+            return True
+    return False
 # Production Origins - HTTPS only for security
 CORS_ALLOWED_ORIGINS = [
     "https://prompt-temple.com",
