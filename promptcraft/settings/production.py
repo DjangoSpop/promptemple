@@ -188,25 +188,25 @@ CSRF_TRUSTED_ORIGINS = [
 # ============================================================================
 # CORS SETTINGS - Production Configuration
 # ============================================================================
-ALLOWED_REDIRECT_URI_PATTERNS = [
-    # Website production domains
-    r'^https://www\.prompt-temple\.com/auth/callback/(google|github)$',
-    r'^https://prompt-temple\.com/auth/callback/(google|github)$',
-    # Chrome extension - matches any extension ID with chromiumapp.org redirect
-    r'^https://[a-z]+\.chromiumapp\.org/callback$',
-    # Local development (for testing only - comment out in strict production)
-    r'^https?://localhost:\d+/auth/callback/(google|github)$',
-    r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',
-]
+# ALLOWED_REDIRECT_URI_PATTERNS = [
+#     # Website production domains
+#     r'^https://www\.prompt-temple\.com/auth/callback/(google|github)$',
+#     r'^https://prompt-temple\.com/auth/callback/(google|github)$',
+#     # Chrome extension - matches any extension ID with chromiumapp.org redirect
+#     r'^https://[a-z]+\.chromiumapp\.org/callback$',
+#     # Local development (for testing only - comment out in strict production)
+#     r'^https?://localhost:\d+/auth/callback/(google|github)$',
+#     r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',
+# ]
 
-import re
+# import re
 
-def is_valid_redirect_uri(uri):
-    """Validate redirect URI against whitelist patterns"""
-    for pattern in ALLOWED_REDIRECT_URI_PATTERNS:
-        if re.match(pattern, uri):
-            return True
-    return False
+# def is_valid_redirect_uri(uri):
+#     """Validate redirect URI against whitelist patterns"""
+#     for pattern in ALLOWED_REDIRECT_URI_PATTERNS:
+#         if re.match(pattern, uri):
+#             return True
+#     return False
 
 # Production Origins - HTTPS only for security (+ extension and local testing)
 CORS_ALLOWED_ORIGINS = [
