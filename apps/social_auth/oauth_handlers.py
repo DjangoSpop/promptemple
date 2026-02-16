@@ -94,6 +94,10 @@ class GoogleOAuthHandler(BaseOAuthHandler):
                 frontend_url = config('FRONTEND_URL', default='http://localhost:3000')
                 redirect_uri = f'{frontend_url}/auth/callback/google'
             
+            # Validate the redirect_uri format matches what was used in authorization
+            if not redirect_uri:
+                raise ValidationError("redirect_uri is required for token exchange")
+            
             data = {
                 'client_id': self.client_id,
                 'client_secret': self.client_secret,
@@ -103,7 +107,7 @@ class GoogleOAuthHandler(BaseOAuthHandler):
             }
 
             logger.info(f"Exchanging Google code for token with redirect_uri: {redirect_uri}")
-            logger.debug(f"Token exchange request data: client_id={self.client_id[:20]}..., code_length={len(code)}")
+            logger.debug(f"Token exchange request data: client_id={self.client_id[:20]}..., code_length={len(code)}, redirect_uri={redirect_uri}")
             
             response = requests.post(self.token_url, data=data, timeout=10)
             
@@ -120,10 +124,22 @@ class GoogleOAuthHandler(BaseOAuthHandler):
                 try:
                     error_data = response.json()
                     error_desc = error_data.get('error_description', error_data.get('error', 'Unknown error'))
-                    raise ValidationError(
-                        f"Google OAuth failed: {error_desc}. "
-                        f"Ensure the redirect_uri '{redirect_uri}' is registered in your Google OAuth Console."
-                    )
+                    
+                    # Check if it's a redirect_uri_mismatch error (common with extensions)
+                    if 'redirect_uri_mismatch' in error_desc.lower() or error_desc == 'redirect_uri_mismatch':
+                        raise ValidationError(
+                            f"OAuth redirect_uri mismatch. The redirect_uri '{redirect_uri}' "
+                            f"does not match one registered in Google Console. "
+                            f"For Chrome extensions, ensure the extension ID's chromiumapp.org URI is registered. "
+                            f"For web apps, ensure {redirect_uri} is registered in the OAuth app settings."
+                        )
+                    else:
+                        raise ValidationError(
+                            f"Google OAuth failed: {error_desc}. "
+                            f"Ensure the redirect_uri '{redirect_uri}' is registered in your Google OAuth Console."
+                        )
+                except ValidationError:
+                    raise
                 except:
                     raise ValidationError(
                         f"Google OAuth failed with status {response.status_code}. "

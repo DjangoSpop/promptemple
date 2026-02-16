@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from .models import AssistantMessage, AssistantThread
 from apps.templates.deepseek_integration import create_deepseek_llm
+from apps.templates.openrouter_integration import create_openrouter_llm
 try:
     from tavily import TavilyClient
 except ImportError:  # pragma: no cover
@@ -230,7 +231,7 @@ class BaseAIAssistant:
 
     async def _call_model(self, messages: List[Dict[str, Any]]) -> Dict[str, Any]:
         llm = await self._get_llm()
-        logger.debug("Calling DeepSeek LLM '%s' with %d messages", self.model, len(messages))
+        logger.debug("Calling LLM '%s' with %d messages", self.model, len(messages))
         response = await llm.ainvoke(messages)
 
         if hasattr(response, "content"):
@@ -246,12 +247,30 @@ class BaseAIAssistant:
         if self._llm is None:
             llm_settings = getattr(settings, "AI_ASSISTANT_SETTINGS", {})
             llm_overrides = llm_settings.get("LLM_KWARGS", {})
-            self._llm = create_deepseek_llm(
-                task_type=self.get_task_type(),
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                **llm_overrides,
+            
+            # Check if it's an OpenRouter model
+            is_openrouter_model = any(
+                self.model.startswith(prefix) 
+                for prefix in ['nvidia/', 'qwen/', 'ai/', 'deepseek/', 'nousresearch/']
             )
+            
+            if is_openrouter_model:
+                # Use OpenRouter LLM
+                self._llm = create_openrouter_llm(
+                    model=self.model,
+                    task_type=self.get_task_type(),
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    **llm_overrides,
+                )
+            else:
+                # Use DeepSeek LLM (default)
+                self._llm = create_deepseek_llm(
+                    task_type=self.get_task_type(),
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    **llm_overrides,
+                )
         return self._llm
 
     def _generate_default_title(self, metadata: Dict[str, Any]) -> str:

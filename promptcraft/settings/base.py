@@ -447,6 +447,31 @@ DEEPSEEK_CONFIG = {
     'TIMEOUT': int(config('DEEPSEEK_TIMEOUT', default='30')),
 }
 
+# ==================================================
+# OPENROUTER CONFIGURATION (FREE MODELS)
+# ==================================================
+
+OPENROUTER_CONFIG = {
+    'API_KEY': config('OPENROUTER_API_KEY', default=''),
+    'BASE_URL': config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1'),
+    'DEFAULT_MODEL': config('OPENROUTER_DEFAULT_MODEL', default='nvidia/nemotron-3-nano-30b-a3b:free'),
+    'MAX_TOKENS': int(config('OPENROUTER_MAX_TOKENS', default='4096')),
+    'TEMPERATURE': float(config('OPENROUTER_TEMPERATURE', default='0.7')),
+    'TIMEOUT': int(config('OPENROUTER_TIMEOUT', default='30')),
+    # Free models list (all with :free suffix from OpenRouter)
+    'FREE_MODELS': [
+        'nvidia/nemotron-3-nano-30b-a3b:free',
+        'qwen/qwen3-next-80b-a3b-instruct:free',
+        'ai/glm-4.5-air:free',
+        'deepseek/deepseek-r1-0528:free',
+        'nousresearch/hermes-3-llama-3.1-405b:free',
+    ],
+    'HEADERS': {
+        'HTTP-Referer': config('HTTP_REFERER', default='https://promptcraft.local'),
+        'X-Title': config('X_TITLE', default='PromptCraft AI'),
+    }
+}
+
 # Research Agent Configuration
 RESEARCH = {
     'EMBED_MODEL': config('RESEARCH_EMBED_MODEL', default='sentence-transformers/all-MiniLM-L6-v2'),

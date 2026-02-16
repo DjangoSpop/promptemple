@@ -170,25 +170,33 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 
 # CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
+    # Production domains
     'https://www.prompt-temple.com',
     'https://prompt-temple.com',
     'https://api.prompt-temple.com',
-    'https://prompt-temple-2777469a4e35.herokuapp.com',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    # Chrome extension
     'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+    # Local development (for testing)
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    # Heroku deployment
+    'https://prompt-temple-2777469a4e35.herokuapp.com',
 ]
 
 # ============================================================================
 # CORS SETTINGS - Production Configuration
 # ============================================================================
 ALLOWED_REDIRECT_URI_PATTERNS = [
-    # Website
-    r'^https?://localhost:\d+/auth/callback/(google|github)$',
+    # Website production domains
     r'^https://www\.prompt-temple\.com/auth/callback/(google|github)$',
     r'^https://prompt-temple\.com/auth/callback/(google|github)$',
-    # Chrome extension (any extension ID)
+    # Chrome extension - matches any extension ID with chromiumapp.org redirect
     r'^https://[a-z]+\.chromiumapp\.org/callback$',
+    # Local development (for testing only - comment out in strict production)
+    r'^https?://localhost:\d+/auth/callback/(google|github)$',
+    r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',
 ]
 
 import re
@@ -199,18 +207,23 @@ def is_valid_redirect_uri(uri):
         if re.match(pattern, uri):
             return True
     return False
-# Production Origins - HTTPS only for security
+
+# Production Origins - HTTPS only for security (+ extension and local testing)
 CORS_ALLOWED_ORIGINS = [
+    # Production domains (HTTPS required)
     "https://prompt-temple.com",
     "https://www.prompt-temple.com",
     "https://api.prompt-temple.com",
-    "http://localhost:3000",   # For local testing - REMOVE in final production!
-    "http://localhost:3001",   # Alternative port - REMOVE in final production!
-    "http://127.0.0.1:3000",   # REMOVE in final production!
-    "http://127.0.0.1:3001",   # REMOVE in final production!
-    "http://10.0.2.2:8000",    # Android AVD emulator
-    "http://10.0.2.2:3000",    # Android AVD emulator frontend
+    # Chrome extension
     "chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp",
+    # Local development (for testing - REMOVE in strict production!)
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    # Android AVD emulator (for mobile app testing)
+    "http://10.0.2.2:8000",
+    "http://10.0.2.2:3000",
 ]
 
 # Allow credentials (cookies, authorization headers)

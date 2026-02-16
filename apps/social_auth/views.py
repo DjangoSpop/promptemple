@@ -25,11 +25,19 @@ class SocialAuthInitiateView(APIView):
     Initiate social authentication flow
 
     Returns the OAuth provider's authorization URL for the frontend to redirect to
+    Supports both web app and Chrome extension authentication
     """
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, provider):
-        """Get OAuth authorization URL"""
+        """
+        Get OAuth authorization URL
+        
+        Query Parameters:
+        - provider: 'google' or 'github'
+        - redirect_uri: (optional) Custom redirect URI for extension/webapp
+        - client_type: (optional) 'extension' or 'web' to help with URI resolution
+        """
         try:
             # Validate provider
             if provider not in ['google', 'github']:
@@ -44,26 +52,65 @@ class SocialAuthInitiateView(APIView):
             # Generate state for CSRF protection
             state = oauth_handler.generate_state()
 
-            # Get redirect URI from query params or use environment-based default
+            # Determine redirect URI based on client type or explicit parameter
             from decouple import config as env_config
-            frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
-            redirect_uri = request.GET.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
+            from promptcraft.settings.production import is_valid_redirect_uri
+            
+            client_type = request.GET.get('client_type', 'web')  # 'web' or 'extension'
+            explicit_redirect_uri = request.GET.get('redirect_uri')
+            
+            # If extension is requesting, look for chromiumapp.org redirect URI
+            if client_type == 'extension':
+                if explicit_redirect_uri:
+                    # Use the provided extension redirect URI
+                    redirect_uri = explicit_redirect_uri
+                    logger.info(f"Extension auth initiated with explicit redirect_uri: {redirect_uri}")
+                else:
+                    # Extension without explicit redirect URI - return error
+                    return Response({
+                        'error': 'Extension redirect_uri required',
+                        'message': 'Chrome extension must provide ?redirect_uri=https://EXTENSION_ID.chromiumapp.org/ parameter'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # Web app - use provided URI or default to environment FRONTEND_URL
+                if explicit_redirect_uri:
+                    redirect_uri = explicit_redirect_uri
+                    logger.info(f"Web auth initiated with explicit redirect_uri: {redirect_uri}")
+                else:
+                    frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
+                    redirect_uri = f'{frontend_url}/auth/callback/{provider}'
+                    logger.info(f"Web auth initiated with default FRONTEND_URL: {redirect_uri}")
+            
+            # Validate redirect URI against whitelist
+            if not is_valid_redirect_uri(redirect_uri):
+                logger.warning(f"Invalid redirect_uri attempted: {redirect_uri} (client_type={client_type})")
+                return Response({
+                    'error': 'Invalid redirect_uri',
+                    'message': f'The redirect_uri "{redirect_uri}" is not registered. '
+                               f'For extensions, ensure the URI is registered in Google/GitHub OAuth console. '
+                               f'For web, check FRONTEND_URL environment variable.'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Get authorization URL
+            # Get authorization URL with validated redirect URI
             auth_url = oauth_handler.get_auth_url(redirect_uri, state)
+            
+            logger.info(f"Auth URL generated for {provider} (client_type={client_type}), redirect_uri={redirect_uri}")
 
             # Store state in session for verification (optional - frontend can handle this)
             request.session[f'{provider}_oauth_state'] = state
+            request.session[f'{provider}_redirect_uri'] = redirect_uri  # Store for callback validation
 
             return Response({
                 'auth_url': auth_url,
                 'state': state,
+                'redirect_uri': redirect_uri,
                 'provider': provider,
-                'message': f'Redirect user to {provider.title()} for authorization'
+                'client_type': client_type,
+                'message': f'Redirect to {provider.title()} for authorization'
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Social auth initiation failed for {provider}: {e}")
+            logger.error(f"Social auth initiation failed for {provider}: {e}", exc_info=True)
             return Response({
                 'error': 'Failed to initiate authentication',
                 'message': str(e)
@@ -107,23 +154,45 @@ class SocialAuthCallbackView(APIView):
 
             # Get redirect URI from request - MUST match what was used in initiation
             from decouple import config as env_config
+            from promptcraft.settings.production import is_valid_redirect_uri
+            
             frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
-            redirect_uri = request.data.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
+            
+            # First try to get stored redirect_uri from session (set during initiation)
+            redirect_uri = request.session.get(f'{provider}_redirect_uri')
+            
+            # If not in session, check request data (for stateless clients like extensions)
+            if not redirect_uri:
+                redirect_uri = request.data.get('redirect_uri', f'{frontend_url}/auth/callback/{provider}')
+            
             logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
-            logger.debug(f"Frontend URL from env: {frontend_url}")
+            
+            # Validate redirect URI
+            if not is_valid_redirect_uri(redirect_uri):
+                logger.error(f"Invalid redirect_uri in callback: {redirect_uri}")
+                return Response({
+                    'error': 'Invalid redirect_uri',
+                    'message': f'The redirect_uri "{redirect_uri}" is not registered. '
+                               f'Verify it matches the URI used during authentication initiation.',
+                    'provider': provider,
+                    'received_redirect_uri': redirect_uri
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Exchange code for access token
             try:
                 token_data = oauth_handler.exchange_code_for_token(code, redirect_uri)
+                logger.info(f"Successfully exchanged code for {provider} token")
             except ValidationError as ve:
-                logger.error(f"Token exchange validation error: {ve}")
+                logger.error(f"Token exchange validation error for {provider}: {ve}")
+                logger.error(f"Attempted redirect_uri: {redirect_uri}")
                 return Response({
                     'error': 'OAuth token exchange failed',
                     'message': str(ve),
                     'provider': provider,
                     'redirect_uri_used': redirect_uri,
-                    'help': f'Ensure {redirect_uri} is added to authorized redirect URIs in your {provider.title()} OAuth Console'
+                    'help': f'Ensure the redirect_uri "{redirect_uri}" is registered in {provider.title()} OAuth Console'
                 }, status=status.HTTP_401_UNAUTHORIZED)
+            
             access_token = token_data['access_token']
 
             # Get user info from provider

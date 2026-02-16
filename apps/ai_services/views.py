@@ -36,11 +36,33 @@ except ImportError as e:
     DEEPSEEK_AVAILABLE = False
     logging.warning(f"DeepSeek services not available: {e}")
 
+# Import OpenRouter services
+try:
+    from apps.templates.openrouter_integration import (
+        OpenRouterLangChainWrapper, 
+        create_openrouter_llm,
+        get_openrouter_models
+    )
+    OPENROUTER_AVAILABLE = True
+except ImportError as e:
+    OPENROUTER_AVAILABLE = False
+    logging.warning(f"OpenRouter services not available: {e}")
+    
+    # Provide fallback function
+    def get_openrouter_models():
+        return [
+            'nvidia/nemotron-3-nano-30b-a3b:free',
+            'qwen/qwen3-next-80b-a3b-instruct:free',
+            'ai/glm-4.5-air:free',
+            'deepseek/deepseek-r1-0528:free',
+            'nousresearch/hermes-3-llama-3.1-405b:free',
+        ]
+
 logger = logging.getLogger(__name__)
 
 
 class AIProviderListView(APIView):
-    """List available AI providers including DeepSeek"""
+    """List available AI providers including DeepSeek and OpenRouter"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
@@ -76,10 +98,28 @@ class AIProviderListView(APIView):
                 'max_tokens': 4000
             })
         
+        # Add OpenRouter if available
+        if OPENROUTER_AVAILABLE:
+            openrouter_config = getattr(settings, 'OPENROUTER_CONFIG', {})
+            openrouter_api_key = openrouter_config.get('API_KEY', '')
+            openrouter_status = 'available' if openrouter_api_key else 'disabled'
+            
+            providers.append({
+                'id': 'openrouter',
+                'name': 'OpenRouter',
+                'status': openrouter_status,
+                'models': get_openrouter_models(),
+                'features': ['chat', 'free_tier', 'multiple_models'],
+                'cost_per_1k_tokens': 0,  # Free models
+                'max_tokens': 4096,
+                'description': 'Free tier models from multiple providers'
+            })
+        
         return Response({
             'providers': providers,
             'total_providers': len(providers),
-            'deepseek_available': DEEPSEEK_AVAILABLE
+            'deepseek_available': DEEPSEEK_AVAILABLE,
+            'openrouter_available': OPENROUTER_AVAILABLE
         })
 
 class DeepSeekStreamView(APIView):
@@ -189,7 +229,7 @@ class DeepSeekStreamView(APIView):
             return Response({"error": "internal_error", "details": str(e)}, status=500)
 
 class AIModelListView(APIView):
-    """List available AI models including DeepSeek models"""
+    """List available AI models including DeepSeek and OpenRouter models"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
@@ -247,15 +287,71 @@ class AIModelListView(APIView):
                 ]
                 models.extend(deepseek_models)
         
+        # Add OpenRouter free models if available
+        if OPENROUTER_AVAILABLE:
+            openrouter_config = getattr(settings, 'OPENROUTER_CONFIG', {})
+            openrouter_api_key = openrouter_config.get('API_KEY', '')
+            
+            if openrouter_api_key:
+                openrouter_models = [
+                    {
+                        'id': 'nvidia/nemotron-3-nano-30b-a3b:free',
+                        'name': 'NVIDIA Nemotron 3 Nano (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'lightweight'],
+                        'description': 'Lightweight and fast free model'
+                    },
+                    {
+                        'id': 'qwen/qwen3-next-80b-a3b-instruct:free',
+                        'name': 'Qwen 3 Next 80B (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'powerful'],
+                        'description': 'Powerful free model from Alibaba'
+                    },
+                    {
+                        'id': 'ai/glm-4.5-air:free',
+                        'name': 'GLM-4.5 Air (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'multilingual'],
+                        'description': 'Free multilingual model'
+                    },
+                    {
+                        'id': 'deepseek/deepseek-r1-0528:free',
+                        'name': 'DeepSeek R1 (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'reasoning'],
+                        'description': 'DeepSeek R1 reasoning model free tier'
+                    },
+                    {
+                        'id': 'nousresearch/hermes-3-llama-3.1-405b:free',
+                        'name': 'Hermes 3 Llama 3.1 405B (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'large'],
+                        'description': 'Large free model from NousResearch'
+                    }
+                ]
+                models.extend(openrouter_models)
+        
         return Response({
             'models': models,
             'total_models': len(models),
-            'deepseek_available': DEEPSEEK_AVAILABLE
+            'deepseek_available': DEEPSEEK_AVAILABLE,
+            'openrouter_available': OPENROUTER_AVAILABLE
         })
 
 
 class AIGenerateView(APIView):
-    """AI generation endpoint with DeepSeek integration"""
+    """AI generation endpoint with DeepSeek and OpenRouter integration"""
     permission_classes = [permissions.IsAuthenticated]
     
     async def _generate_with_deepseek(self, prompt: str, model: str, **kwargs) -> Dict[str, Any]:
@@ -317,6 +413,52 @@ class AIGenerateView(APIView):
                 'provider': 'deepseek'
             }
     
+    async def _generate_with_openrouter(self, prompt: str, model: str, **kwargs) -> Dict[str, Any]:
+        """Generate content using OpenRouter"""
+        try:
+            if not OPENROUTER_AVAILABLE:
+                raise Exception("OpenRouter service not available")
+            
+            start_time = time.time()
+            
+            # Create messages format
+            messages = [{"role": "user", "content": prompt}]
+            
+            # Create OpenRouter LLM instance
+            llm = create_openrouter_llm(
+                model=model,
+                temperature=kwargs.get('temperature', 0.7),
+                max_tokens=kwargs.get('max_tokens', 1000),
+                task_type=kwargs.get('task_type', 'chat')
+            )
+            
+            # Generate response
+            response = await llm.ainvoke(messages)
+            
+            processing_time = int((time.time() - start_time) * 1000)
+            
+            # Parse usage from response
+            tokens_used = response.usage.get('total_tokens', 0) if hasattr(response, 'usage') else 0
+            
+            return {
+                'content': response.content,
+                'model': model,
+                'tokens_used': tokens_used,
+                'processing_time_ms': processing_time,
+                'cost_estimate': 0,  # OpenRouter free models
+                'success': True,
+                'provider': 'openrouter'
+            }
+                
+        except Exception as e:
+            logger.error(f"OpenRouter generation error: {e}")
+            return {
+                'content': '',
+                'error': str(e),
+                'success': False,
+                'provider': 'openrouter'
+            }
+    
     def post(self, request):
         prompt = request.data.get('prompt', '').strip()
         model = request.data.get('model', 'deepseek-chat')
@@ -368,6 +510,49 @@ class AIGenerateView(APIView):
                 return Response({
                     'error': f'DeepSeek generation failed: {str(e)}',
                     'provider': 'deepseek',
+                    'success': False
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        # Check if it's an OpenRouter model
+        elif any(model.startswith(prefix) for prefix in ['nvidia/', 'qwen/', 'ai/', 'deepseek/', 'nousresearch/']) and OPENROUTER_AVAILABLE:
+            try:
+                # Run async function in event loop
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                result = loop.run_until_complete(
+                    self._generate_with_openrouter(
+                        prompt=prompt,
+                        model=model,
+                        temperature=temperature,
+                        max_tokens=max_tokens
+                    )
+                )
+                
+                loop.close()
+                
+                if result['success']:
+                    return Response({
+                        'result': result['content'],
+                        'model': result['model'],
+                        'tokens_used': result['tokens_used'],
+                        'processing_time_ms': result['processing_time_ms'],
+                        'cost_estimate': result['cost_estimate'],
+                        'provider': 'openrouter',
+                        'success': True
+                    })
+                else:
+                    return Response({
+                        'error': result['error'],
+                        'provider': 'openrouter',
+                        'success': False
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+            except Exception as e:
+                logger.error(f"OpenRouter generation error: {e}")
+                return Response({
+                    'error': f'OpenRouter generation failed: {str(e)}',
+                    'provider': 'openrouter',
                     'success': False
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
