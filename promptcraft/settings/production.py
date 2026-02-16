@@ -199,14 +199,25 @@ CSRF_TRUSTED_ORIGINS = [
 #     r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',
 # ]
 
-# import re
+import re
 
-# def is_valid_redirect_uri(uri):
-#     """Validate redirect URI against whitelist patterns"""
-#     for pattern in ALLOWED_REDIRECT_URI_PATTERNS:
-#         if re.match(pattern, uri):
-#             return True
-#     return False
+# Allowed redirect URI patterns for OAuth callbacks
+ALLOWED_REDIRECT_URI_PATTERNS = [
+    # Production web app
+    r'^https://(www\.)?prompt-temple\.com/auth/callback/(google|github)$',
+    # Chrome extension
+    r'^https://[a-z]+\.chromiumapp\.org/callback$',
+    # Local development
+    r'^https?://localhost:\d+/auth/callback/(google|github)$',
+    r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',
+]
+
+def is_valid_redirect_uri(uri):
+    """Validate redirect URI against whitelist patterns"""
+    for pattern in ALLOWED_REDIRECT_URI_PATTERNS:
+        if re.match(pattern, uri):
+            return True
+    return False
 
 # Production Origins - HTTPS only for security (+ extension and local testing)
 CORS_ALLOWED_ORIGINS = [
@@ -244,6 +255,7 @@ CORS_ALLOWED_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
     # ===== Custom Frontend Headers =====
+    'x-client-name',        # Frontend client name identifier
     'x-client-version',     # Frontend version tracking
     'x-request-id',         # Request tracing and debugging
     'x-operation-id',       # Operation correlation
