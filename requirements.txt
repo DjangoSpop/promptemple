@@ -26,16 +26,18 @@ django-redis==5.4.0
 gunicorn==23.0.0
 whitenoise==6.8.1
 
-# ===== AI API Clients (Lightweight, no models) (~30MB) =====
-openai==1.12.0
+# ===== AI API Clients (~30MB) =====
+openai>=1.12.0
 anthropic==0.18.1
 httpx==0.26.0
 httpx-sse==0.4.0
 
-# ===== Minimal LangChain (no heavy dependencies) (~20MB) =====
-langchain==0.1.9
-langchain-community==0.0.24
-langchain-openai==0.0.7
+# ===== LangChain 0.3.x (compatible package set) (~20MB) =====
+langchain>=0.3.0,<0.4.0
+langchain-core>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-openai>=0.3.0,<0.4.0
+langchain-text-splitters>=0.3.0,<0.4.0
 
 # ===== GraphQL Support (~15MB) =====
 graphene-django==3.2.0

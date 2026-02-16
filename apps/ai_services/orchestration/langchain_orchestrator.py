@@ -16,13 +16,12 @@ from typing import Dict, Any, Optional, AsyncGenerator, List
 from dataclasses import dataclass
 from datetime import datetime
 
-# LangChain imports
+# LangChain imports (updated for LangChain 0.3.x)
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser, BaseOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain.chains import LLMChain
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 

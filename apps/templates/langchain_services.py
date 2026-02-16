@@ -42,33 +42,17 @@ except ImportError as e:
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-# Enable LangChain with modern split package architecture (Pydantic 2.11.7 + LangChain 0.3.27 compatible)
+# Enable LangChain with modern split package architecture (LangChain 0.3.x compatible)
 try:
-    # Try newer langchain versions with direct imports (recommended approach)
+    # Use the canonical import paths for LangChain 0.3.x
     from langchain_openai import ChatOpenAI
     from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
     from langchain_core.messages import HumanMessage, SystemMessage
     LANGCHAIN_AVAILABLE = True
-    logger.info("LangChain new version loaded (langchain-openai)")
-except ImportError:
-    try:
-        # Fallback to community versions
-        from langchain_community.chat_models import ChatOpenAI
-        from langchain.prompts import PromptTemplate, ChatPromptTemplate
-        from langchain.schema import HumanMessage, SystemMessage
-        LANGCHAIN_AVAILABLE = True
-        logger.info("LangChain community version loaded")
-    except (ImportError, Exception) as e:
-        try:
-            # Last resort - basic langchain
-            from langchain.chat_models import ChatOpenAI
-            from langchain.prompts import PromptTemplate, ChatPromptTemplate
-            from langchain.schema import HumanMessage, SystemMessage
-            LANGCHAIN_AVAILABLE = True
-            logger.info("LangChain legacy version loaded")
-        except (ImportError, Exception):
-            LANGCHAIN_AVAILABLE = False
-            logger.warning("LangChain not available - using fallback implementations")
+    logger.info("LangChain 0.3.x loaded (langchain-openai + langchain-core)")
+except ImportError as e:
+    LANGCHAIN_AVAILABLE = False
+    logger.warning(f"LangChain not available: {e} - using fallback implementations")
 
 from .models import UserIntent, PromptLibrary
 

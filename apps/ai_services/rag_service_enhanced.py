@@ -20,10 +20,10 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-# LangChain imports with fallback
+# LangChain imports (updated for LangChain 0.3.x)
 try:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
-    from langchain.docstore.document import Document
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_core.documents import Document
     from langchain_community.vectorstores import FAISS
     LANGCHAIN_AVAILABLE = True
 except ImportError:

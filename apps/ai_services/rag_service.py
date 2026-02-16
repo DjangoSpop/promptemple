@@ -19,22 +19,16 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-# LangChain imports
+# LangChain imports (updated for LangChain 0.3.x)
 try:
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
-    try:
-        from langchain_core.documents import Document
-    except ImportError:  # fallback for older LangChain versions
-        from langchain.docstore.document import Document  # type: ignore
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_core.documents import Document
     from langchain_community.vectorstores import FAISS
     from langchain_huggingface import HuggingFaceEmbeddings
-    from langchain.schema.runnable import RunnableSequence
-    from langchain.schema import BaseRetriever
+    from langchain_core.runnables import RunnableSequence
+    from langchain_core.retrievers import BaseRetriever
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_core.output_parsers import StrOutputParser
-    # Removed ContextualCompressionRetriever due to pydantic pickle issues
-    # from langchain.retrievers import ContextualCompressionRetriever
-    # from langchain.retrievers.document_compressors import LLMChainExtractor
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -136,7 +130,7 @@ class DocumentIndexer:
         # Second try: sentence-transformers directly
         try:
             from sentence_transformers import SentenceTransformer
-            from langchain.embeddings.base import Embeddings
+            from langchain_core.embeddings import Embeddings
             
             class SimpleSentenceTransformerEmbeddings(Embeddings):
                 def __init__(self, model_name="all-MiniLM-L6-v2"):

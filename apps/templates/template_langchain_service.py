@@ -12,17 +12,14 @@ import json
 from django.conf import settings
 from django.core.cache import cache
 
-# LangChain imports
+# LangChain imports (updated for LangChain 0.3.x)
 try:
-    from langchain.llms import OpenAI
-    from langchain.chat_models import ChatOpenAI
-    from langchain.schema import HumanMessage, SystemMessage, AIMessage
-    from langchain.prompts import ChatPromptTemplate, PromptTemplate
-    from langchain.chains import LLMChain, ConversationChain
-    from langchain.memory import ConversationBufferMemory
-    from langchain.text_splitter import RecursiveCharacterTextSplitter
-    from langchain.embeddings import OpenAIEmbeddings
-    from langchain.vectorstores import FAISS
+    from langchain_openai import OpenAI, ChatOpenAI, OpenAIEmbeddings
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+    from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from langchain_community.vectorstores import FAISS
     from langchain.agents import initialize_agent, AgentType
     from langchain.tools import Tool
     LANGCHAIN_AVAILABLE = True
@@ -207,15 +204,16 @@ class TemplateAwareLangChainService:
             # Format conversation for analysis
             conversation_text = self._format_conversation_for_analysis(conversation)
             
-            # Run analysis
-            chain = LLMChain(llm=self.llm, prompt=self.template_analysis_prompt)
+            # Use LCEL (LangChain Expression Language) instead of deprecated LLMChain
+            chain = self.template_analysis_prompt | self.llm | StrOutputParser()
             result = await asyncio.get_event_loop().run_in_executor(
                 None, 
-                chain.run, 
-                {
-                    "conversation": conversation_text,
-                    "user_intent": user_intent
-                }
+                lambda: chain.invoke(
+                    {
+                        "conversation": conversation_text,
+                        "user_intent": user_intent
+                    }
+                )
             )
             
             # Parse JSON response
@@ -238,15 +236,17 @@ class TemplateAwareLangChainService:
             
             conversation_text = self._format_conversation_for_analysis(conversation)
             
-            chain = LLMChain(llm=self.llm, prompt=self.template_generation_prompt)
+            # Use LCEL instead of deprecated LLMChain
+            chain = self.template_generation_prompt | self.llm | StrOutputParser()
             result = await asyncio.get_event_loop().run_in_executor(
                 None,
-                chain.run,
-                {
-                    "conversation": conversation_text,
-                    "title": title,
-                    "category": category
-                }
+                lambda: chain.invoke(
+                    {
+                        "conversation": conversation_text,
+                        "title": title,
+                        "category": category
+                    }
+                )
             )
             
             try:
@@ -268,15 +268,17 @@ class TemplateAwareLangChainService:
             
             context_str = json.dumps(context) if context else "No additional context"
             
-            chain = LLMChain(llm=self.llm, prompt=self.prompt_optimization_prompt)
+            # Use LCEL instead of deprecated LLMChain
+            chain = self.prompt_optimization_prompt | self.llm | StrOutputParser()
             result = await asyncio.get_event_loop().run_in_executor(
                 None,
-                chain.run,
-                {
-                    "original_prompt": original_prompt,
-                    "context": context_str,
-                    "goal": goal or "General improvement"
-                }
+                lambda: chain.invoke(
+                    {
+                        "original_prompt": original_prompt,
+                        "context": context_str,
+                        "goal": goal or "General improvement"
+                    }
+                )
             )
             
             try:

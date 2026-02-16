@@ -259,3 +259,14 @@ def create_openrouter_llm(
         max_tokens=max_tokens,
         **kwargs,
     )
+
+
+def get_openrouter_models() -> List[str]:
+    """Return list of available free OpenRouter models."""
+    return [
+        "nvidia/nemotron-3-nano-30b-a3b:free",
+        "qwen/qwen3-next-80b-a3b-instruct:free",
+        "ai/glm-4.5-air:free",
+        "deepseek/deepseek-r1-0528:free",
+        "nousresearch/hermes-3-llama-3.1-405b:free",
+    ]

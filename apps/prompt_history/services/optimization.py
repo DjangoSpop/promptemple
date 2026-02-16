@@ -7,9 +7,8 @@ logger = logging.getLogger(__name__)
 
 # Try to import LangChain and LangSmith; graceful fallback
 try:
-    from langchain import LLMChain, PromptTemplate
-    from langchain.llms import OpenAI
-    from langchain import tracing
+    from langchain_core.prompts import PromptTemplate
+    from langchain_openai import OpenAI
     LANGCHAIN_AVAILABLE = True
 except Exception:
     LANGCHAIN_AVAILABLE = False
@@ -45,28 +44,20 @@ def enhance_prompt(prompt: str, meta: Dict[str, Any], model: str = None, style: 
         result['meta']['latency_ms'] = int((time.time() - start) * 1000)
         return result
 
-    # Setup tracing if configured
-    tracing_enabled = os.environ.get('LANGCHAIN_TRACING_V2', 'false').lower() in ('1', 'true', 'yes')
-    if tracing_enabled:
-        try:
-            tracing.configure_trace_v2(
-                project=os.environ.get('LANGSMITH_PROJECT'),
-                api_key=os.environ.get('LANGCHAIN_API_KEY'),
-                endpoint=os.environ.get('LANGCHAIN_ENDPOINT')
-            )
-        except Exception as e:
-            logger.debug('LangSmith tracing setup failed: %s', e)
+    # Setup tracing via environment variables (LANGCHAIN_TRACING_V2, LANGCHAIN_API_KEY, etc.)
+    # LangSmith tracing is auto-configured when env vars are set in LangChain 0.3+
 
     try:
-        llm = OpenAI(temperature=0.2, model_name=result['model_used'])
+        llm = OpenAI(temperature=0.2, model=result['model_used'])
         template_text = """You are a prompt optimizer. Improve the user prompt for clarity and brevity.
         Style: {style}
         Original:
         {original}
         """
         prompt_template = PromptTemplate(input_variables=['original', 'style'], template=template_text)
-        chain = LLMChain(llm=llm, prompt=prompt_template)
-        optimized = chain.run({'original': prompt, 'style': style or 'concise'})
+        # Use LCEL (LangChain Expression Language) instead of deprecated LLMChain
+        chain = prompt_template | llm
+        optimized = chain.invoke({'original': prompt, 'style': style or 'concise'})
 
         latency = int((time.time() - start) * 1000)
         # Best-effort tokens (LangChain/OpenAI client may provide exact counts)
