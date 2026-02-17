@@ -205,8 +205,10 @@ import re
 ALLOWED_REDIRECT_URI_PATTERNS = [
     # Production web app
     r'^https://(www\.)?prompt-temple\.com/auth/callback/(google|github)$',
-    # Chrome extension
-    r'^https://[a-z]+\.chromiumapp\.org/callback$',
+    # Chrome extension - accepts /callback, /, or no trailing path
+    r'^https://[a-z]+\.chromiumapp\.org(/callback)?/?$',
+    # API backend callback (for server-side OAuth flows)
+    r'^https://api\.prompt-temple\.com/auth/callback/(google|github)$',
     # Local development
     r'^https?://localhost:\d+/auth/callback/(google|github)$',
     r'^https?://127\.0\.0\.1:\d+/auth/callback/(google|github)$',

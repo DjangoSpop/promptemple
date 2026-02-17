@@ -73,17 +73,18 @@ class GoogleOAuthHandler(BaseOAuthHandler):
 
     def get_auth_url(self, redirect_uri, state):
         """Get Google OAuth authorization URL"""
+        from urllib.parse import quote, urlencode
         # Include openid scope to ensure we get the 'sub' field
         scope = 'openid email profile'
-        return (
-            f"https://accounts.google.com/o/oauth2/v2/auth?"
-            f"client_id={self.client_id}&"
-            f"redirect_uri={redirect_uri}&"
-            f"scope={scope}&"
-            f"response_type=code&"
-            f"state={state}&"
-            f"access_type=online"
-        )
+        params = {
+            'client_id': self.client_id,
+            'redirect_uri': redirect_uri,
+            'scope': scope,
+            'response_type': 'code',
+            'state': state,
+            'access_type': 'online',
+        }
+        return f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
 
     def exchange_code_for_token(self, code, redirect_uri=None):
         """Exchange authorization code for access token"""
