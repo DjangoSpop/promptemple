@@ -164,26 +164,26 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'
+# CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
+# CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_SAMESITE = 'Lax'
 
-# CSRF Trusted Origins
-CSRF_TRUSTED_ORIGINS = [
-    # Production domains
-    'https://www.prompt-temple.com',
-    'https://prompt-temple.com',
-    'https://api.prompt-temple.com',
-    # Chrome extension
-    'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
-    # Local development (for testing)
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    # Heroku deployment
-    'https://prompt-temple-2777469a4e35.herokuapp.com',
-]
+# # CSRF Trusted Origins
+# CSRF_TRUSTED_ORIGINS = [
+#     # Production domains
+#     'https://www.prompt-temple.com',
+#     'https://prompt-temple.com',
+#     'https://api.prompt-temple.com',
+#     # Chrome extension
+#     'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+#     # Local development (for testing)
+#     'http://localhost:3000',
+#     'http://localhost:3001',
+#     'http://127.0.0.1:3000',
+#     'http://127.0.0.1:3001',
+#     # Heroku deployment
+#     'https://prompt-temple-2777469a4e35.herokuapp.com',
+# ]
 
 # ============================================================================
 # CORS SETTINGS - Production Configuration

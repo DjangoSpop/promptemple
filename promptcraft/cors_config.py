@@ -19,7 +19,10 @@ DEV_ORIGINS = [
     'http://127.0.0.1:3001',
     'http://127.0.0.1:8000',
     'http://10.0.2.2:8000',  # Android emulator
-    'http://10.0.3.2:8000',  # Alternative Android emulator
+    'http://10.0.3.2:8000',
+    'https://www.prompt-temple.com',
+    'https://prompt-temple.com',
+    'https://app.prompt-temple.com',# Alternative Android emulator
 ]
 
 # Production Origins

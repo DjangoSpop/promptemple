@@ -241,6 +241,8 @@ if 'debug_toolbar' in THIRD_PARTY_APPS:
 
 # CORS settings for development and production
 CORS_ALLOWED_ORIGINS = [
+    "https://www.prompt-temple.com",
+    "https://prompt-temple.com",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://localhost:8000",

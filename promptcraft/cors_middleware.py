@@ -40,6 +40,8 @@ class CorsMiddleware:
             'http://localhost:3001',
             'http://127.0.0.1:3000',
             'http://127.0.0.1:3001',
+            "https://www.prompt-temple.com",
+            "https://prompt-temple.com",
         ])
 
     def is_origin_allowed(self, origin):
