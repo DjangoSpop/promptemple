@@ -59,12 +59,17 @@ class SocialAuthInitiateView(APIView):
             client_type = request.GET.get('client_type', 'web')  # 'web' or 'extension'
             explicit_redirect_uri = request.GET.get('redirect_uri')
             
-            # If extension is requesting, look for chromiumapp.org redirect URI
+            # Auto-detect extension client from redirect_uri (extension may not send client_type)
+            if explicit_redirect_uri and 'chromiumapp.org' in explicit_redirect_uri:
+                client_type = 'extension'
+                logger.info(f"Auto-detected extension client from redirect_uri: {explicit_redirect_uri}")
+            
+            # If extension is requesting, use its chromiumapp.org redirect URI
             if client_type == 'extension':
                 if explicit_redirect_uri:
                     # Use the provided extension redirect URI
                     redirect_uri = explicit_redirect_uri
-                    logger.info(f"Extension auth initiated with explicit redirect_uri: {redirect_uri}")
+                    logger.info(f"Extension auth initiated with redirect_uri: {redirect_uri}")
                 else:
                     # Extension without explicit redirect URI - return error
                     return Response({
@@ -75,8 +80,6 @@ class SocialAuthInitiateView(APIView):
                 # Web app - ALWAYS use the canonical FRONTEND_URL for redirect_uri
                 # This ensures the redirect_uri exactly matches what's registered in
                 # the OAuth provider console (Google/GitHub), preventing redirect_uri_mismatch.
-                # The frontend may send prompt-temple.com (non-www) but Google Console
-                # requires an exact match, so we normalize to the canonical URL.
                 frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
                 redirect_uri = f'{frontend_url}/auth/callback/{provider}'
                 if explicit_redirect_uri and explicit_redirect_uri != redirect_uri:
