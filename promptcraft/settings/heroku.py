@@ -100,12 +100,23 @@ INSTALLED_APPS = [
 ]
 
 # ============================================
-# MIDDLEWARE - Add WhiteNoise
+# MIDDLEWARE - Explicit correct ordering for Heroku
 # ============================================
-# Insert WhiteNoise middleware right after SecurityMiddleware
-if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
-    security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
-    MIDDLEWARE.insert(security_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# CorsMiddleware MUST come before CommonMiddleware for CORS to work.
+# WhiteNoise MUST come right after SecurityMiddleware for static files.
+# We rebuild the order explicitly to avoid insert/append ordering issues.
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',           # CORS - must be before CommonMiddleware
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.DebugAuthLoggingMiddleware',  # Auth debug logging
+]
 
 # ============================================
 # DISABLE FEATURES NOT NEEDED FOR MVP
@@ -154,22 +165,55 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ============================================
-# CORS SETTINGS
+# CORS SETTINGS - Cross-Origin Resource Sharing
 # ============================================
+# Handles CORS between:
+#   - Web app:   https://www.prompt-temple.com  ->  https://api.prompt-temple.com
+#   - Extension: chrome-extension://bcopclpof... ->  https://api.prompt-temple.com
+#   - Dev:       http://localhost:3000           ->  http://localhost:8000
+# ============================================
+
+# NEVER allow all origins in production (incompatible with credentials)
+CORS_ALLOW_ALL_ORIGINS = False
+
+# Whitelist of allowed origins (exact match)
 CORS_ALLOWED_ORIGINS = [
+    # --- Production web app ---
     'https://www.prompt-temple.com',
     'https://prompt-temple.com',
     'https://api.prompt-temple.com',
+    # --- Heroku direct access ---
     'https://prompt-temple-2777469a4e35.herokuapp.com',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    # --- Chrome Extension (Manifest V3) ---
     'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+    # --- Local development ---
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
 ]
 
-# Allow credentials for authentication
+# Regex patterns for dynamic origin matching (e.g., preview deploys)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    # Any Heroku review app for this project
+    r'^https://prompt-temple.*\.herokuapp\.com$',
+    # Any Chrome extension using chromiumapp.org for OAuth redirects
+    r'^chrome-extension://[a-z]+$',
+]
+
+# Allow credentials (cookies, Authorization header) in cross-origin requests
+# Required for JWT Bearer token authentication from the frontend
 CORS_ALLOW_CREDENTIALS = True
 
-# Allow custom headers
+# Allow Chrome extension Private Network Access (Chromium feature)
+# This adds Access-Control-Allow-Private-Network header for preflight requests
+# from extensions that access the public API
+try:
+    CORS_ALLOW_PRIVATE_NETWORK = True
+except Exception:
+    pass  # Older django-cors-headers versions may not support this
+
+# Custom headers the frontend/extension sends
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -180,17 +224,18 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'x-client-name',
-    'x-client-version',
-    'x-request-id',
-    'x-operation-id',
-    'x-timestamp',
-    'x-correlation-id',
-    'cache-control',
-    'pragma',
+    # ---------- App-specific headers ----------
+    'x-client-name',        # Identifies client (web / extension / mobile)
+    'x-client-version',     # Client version for compatibility tracking
+    'x-request-id',         # Unique request ID for tracing
+    'x-operation-id',       # Operation correlation in multi-step flows
+    'x-timestamp',          # Client-side timestamp
+    'x-correlation-id',     # Distributed tracing correlation
+    'cache-control',        # Cache directives
+    'pragma',               # Legacy cache control
 ]
 
-# Expose headers to the frontend
+# Headers exposed to frontend JavaScript (visible via response.headers)
 CORS_EXPOSE_HEADERS = [
     'x-request-id',
     'x-correlation-id',
@@ -200,9 +245,10 @@ CORS_EXPOSE_HEADERS = [
     'x-ratelimit-reset',
     'content-type',
     'content-length',
+    'retry-after',           # Rate-limit retry timing
 ]
 
-# Allowed HTTP methods
+# Allowed HTTP methods for cross-origin requests
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -212,8 +258,13 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Preflight request cache duration (24 hours)
+# Preflight response cache duration (24 hours)
+# Browser caches OPTIONS preflight result to avoid repeated preflight requests
 CORS_PREFLIGHT_MAX_AGE = 86400
+
+# Apply CORS to all URL paths (API, health-check, static, etc.)
+# Setting this explicitly prevents accidental scope-outs
+CORS_URLS_REGEX = r'^.*$'
 
 # ============================================
 # LOGGING
