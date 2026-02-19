@@ -42,7 +42,7 @@ def api_root(request):
         'version': '2.0.0',
         'api_versions': {
             'v1': 'Legacy API endpoints',
-            'v2': 'Current API endpoints (recommended)'
+            'v2': 'Current API endpoints (recommended)' 
         },
         'endpoints': {
             'health': '/health/',

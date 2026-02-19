@@ -6,6 +6,7 @@ Integrates with existing credit system and provides budget-aware optimization
 import time
 import hashlib
 import logging
+import asyncio
 from typing import Dict, Any
 from datetime import datetime, timedelta
 import uuid
@@ -213,7 +214,7 @@ def generate_idempotency_key(session_id: str, content: str) -> str:
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-async def optimize_prompt(request):
+def optimize_prompt(request):
     """RAG-powered prompt optimization endpoint"""
     start_time = time.time()
     
@@ -293,7 +294,12 @@ async def optimize_prompt(request):
         rag_agent = get_rag_agent()
         
         try:
-            result = await rag_agent.optimize_prompt(opt_request)
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(rag_agent.optimize_prompt(opt_request))
+            finally:
+                loop.close()
         except Exception as e:
             logger.error(f"RAG optimization failed: {e}")
             return Response(
@@ -431,26 +437,6 @@ def agent_stats(request):
             {"error": "Failed to retrieve stats"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
-# Async wrapper for Django views
-import asyncio
-from functools import wraps
-
-def async_api_view(func):
-    """Decorator to run async functions in Django views"""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            return loop.run_until_complete(func(*args, **kwargs))
-        finally:
-            loop.close()
-    return wrapper
-
-# Apply async wrapper to the optimize function
-optimize_prompt = async_api_view(optimize_prompt)
 
 
 @extend_schema(

@@ -515,7 +515,13 @@ EXPLANATION:
         ])
         
         # Generate optimization
-        if self.service_available and self.langchain_service.get("enabled"):
+        _svc_enabled = False
+        if self.service_available:
+            if isinstance(self.langchain_service, dict):
+                _svc_enabled = self.langchain_service.get("enabled", False)
+            else:
+                _svc_enabled = getattr(self.langchain_service, 'enabled', True)
+        if self.service_available and _svc_enabled:
             try:
                 result = await self._optimize_with_langchain(request, context)
             except Exception as e:

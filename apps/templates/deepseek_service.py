@@ -146,44 +146,48 @@ class DeepSeekService:
                 payload[key] = value
         
         try:
-            if not self.session:
-                connector = aiohttp.TCPConnector(limit=100, ttl_dns_cache=300)
-                timeout = aiohttp.ClientTimeout(total=self.config.timeout)
-                self.session = aiohttp.ClientSession(
-                    connector=connector,
-                    timeout=timeout,
-                    headers=self.headers
-                )
+            # Always create a fresh session per request to avoid
+            # "Event loop is closed" errors when Django creates a new loop.
+            connector = aiohttp.TCPConnector(limit=100, ttl_dns_cache=300)
+            timeout = aiohttp.ClientTimeout(total=self.config.timeout)
+            session = aiohttp.ClientSession(
+                connector=connector,
+                timeout=timeout,
+                headers=self.headers
+            )
             
-            async with self.session.post(
-                f"{self.config.base_url}/chat/completions",
-                json=payload
-            ) as response:
-                response_time_ms = int((time.time() - start_time) * 1000)
-                
-                if response.status == 200:
-                    data = await response.json()
-                    choice = data['choices'][0]
+            try:
+                async with session.post(
+                    f"{self.config.base_url}/chat/completions",
+                    json=payload
+                ) as response:
+                    response_time_ms = int((time.time() - start_time) * 1000)
                     
-                    return DeepSeekResponse(
-                        content=choice['message']['content'],
-                        model=data['model'],
-                        tokens_used=data['usage']['total_tokens'],
-                        response_time_ms=response_time_ms,
-                        success=True
-                    )
-                else:
-                    error_text = await response.text()
-                    logger.error(f"DeepSeek API error {response.status}: {error_text}")
-                    
-                    return DeepSeekResponse(
-                        content="",
-                        model=model or self.config.model_chat,
-                        tokens_used=0,
-                        response_time_ms=response_time_ms,
-                        success=False,
-                        error=f"API Error {response.status}: {error_text}"
-                    )
+                    if response.status == 200:
+                        data = await response.json()
+                        choice = data['choices'][0]
+                        
+                        return DeepSeekResponse(
+                            content=choice['message']['content'],
+                            model=data['model'],
+                            tokens_used=data['usage']['total_tokens'],
+                            response_time_ms=response_time_ms,
+                            success=True
+                        )
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"DeepSeek API error {response.status}: {error_text}")
+                        
+                        return DeepSeekResponse(
+                            content="",
+                            model=model or self.config.model_chat,
+                            tokens_used=0,
+                            response_time_ms=response_time_ms,
+                            success=False,
+                            error=f"API Error {response.status}: {error_text}"
+                        )
+            finally:
+                await session.close()
                     
         except asyncio.TimeoutError:
             response_time_ms = int((time.time() - start_time) * 1000)

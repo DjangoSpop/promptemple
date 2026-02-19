@@ -168,7 +168,8 @@ class ChatCompletionsProxyView(APIView):
             
             # Additional SSE headers
             response['Access-Control-Allow-Origin'] = '*'
-            response['Connection'] = 'keep-alive'
+            # NOTE: 'Connection' is a hop-by-hop header forbidden by WSGI; omit it.
+            response['X-Accel-Buffering'] = 'no'
             
             logger.info(f"SSE Proxy: Starting stream for request {request_id}")
             return response

@@ -18,6 +18,7 @@ from django.http import JsonResponse, StreamingHttpResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.core.cache import cache
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -334,7 +335,7 @@ class AskMeFinalizeView(View):
             # Update session
             session.final_prompt = composer_result.prompt
             session.is_complete = True
-            session.completed_at = datetime.now()
+            session.completed_at = timezone.now()
             session.save()
 
             logger.info(f"Finalized session {session_id}")
@@ -413,7 +414,9 @@ class AskMeStreamView(View):
             content_type='text/event-stream'
         )
         response['Cache-Control'] = 'no-cache'
-        response['Connection'] = 'keep-alive'
+        # NOTE: 'Connection' is a hop-by-hop header forbidden by WSGI spec;
+        # omit it so the dev server (and gunicorn) don't raise AssertionError.
+        response['X-Accel-Buffering'] = 'no'  # Nginx: prevent proxy buffering
         response['Access-Control-Allow-Origin'] = '*'
         response['Access-Control-Allow-Headers'] = 'Cache-Control'
 

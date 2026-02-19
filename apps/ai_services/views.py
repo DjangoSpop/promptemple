@@ -137,8 +137,18 @@ class DeepSeekStreamView(APIView):
         import httpx
 
         try:
-            base_url = getattr(settings, 'DEEPSEEK_BASE_URL', '').rstrip('/') or getattr(settings, 'ZAI_API_BASE', '').rstrip('/')
-            api_key = getattr(settings, 'DEEPSEEK_API_KEY', '') or getattr(settings, 'ZAI_API_TOKEN', '')
+            # Read from DEEPSEEK_CONFIG dict first, then top-level settings
+            _ds_cfg = getattr(settings, 'DEEPSEEK_CONFIG', {})
+            base_url = (
+                _ds_cfg.get('BASE_URL', '')
+                or getattr(settings, 'DEEPSEEK_BASE_URL', '')
+                or getattr(settings, 'ZAI_API_BASE', '')
+            ).rstrip('/')
+            api_key = (
+                _ds_cfg.get('API_KEY', '')
+                or getattr(settings, 'DEEPSEEK_API_KEY', '')
+                or getattr(settings, 'ZAI_API_TOKEN', '')
+            )
 
             if not base_url or not api_key:
                 return Response({"detail": "DeepSeek upstream not configured"}, status=503)
@@ -172,7 +182,7 @@ class DeepSeekStreamView(APIView):
                     'Content-Type': 'application/json'
                 }
 
-                timeout = httpx.Timeout(connect=10.0, read=None, write=30.0)
+                timeout = httpx.Timeout(connect=10.0, read=None, write=30.0, pool=None)
 
                 yield f"event: meta\n"
                 yield f"data: {{\"request_id\":\"{request_id}\", \"status\":\"connected\"}}\n\n"
@@ -221,7 +231,9 @@ class DeepSeekStreamView(APIView):
 
             response = StreamingHttpResponse(generator(), content_type='text/event-stream')
             response['Access-Control-Allow-Origin'] = '*'
-            response['Connection'] = 'keep-alive'
+            # NOTE: 'Connection' is a hop-by-hop header forbidden by WSGI;
+            # omit it so the dev server (and gunicorn) don't fail.
+            response['X-Accel-Buffering'] = 'no'
             return response
 
         except Exception as e:
@@ -473,20 +485,20 @@ class AIGenerateView(APIView):
         # Check if it's a DeepSeek model
         if model.startswith('deepseek-') and DEEPSEEK_AVAILABLE:
             try:
-                # Run async function in event loop
+                # Run async function in a NEW event loop (avoids "Event loop is closed")
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                
-                result = loop.run_until_complete(
-                    self._generate_with_deepseek(
-                        prompt=prompt,
-                        model=model,
-                        temperature=temperature,
-                        max_tokens=max_tokens
+                try:
+                    result = loop.run_until_complete(
+                        self._generate_with_deepseek(
+                            prompt=prompt,
+                            model=model,
+                            temperature=temperature,
+                            max_tokens=max_tokens
+                        )
                     )
-                )
-                
-                loop.close()
+                finally:
+                    loop.close()
                 
                 if result['success']:
                     return Response({

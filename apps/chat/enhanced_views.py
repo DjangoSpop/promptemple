@@ -27,13 +27,24 @@ from typing import Generator, Dict, Any, Optional
 # Import our models and services
 try:
     from apps.chat.models import ChatSession, ChatMessage
-    from chat_template_service import chat_template_service, process_chat_message_templates
-    from django_models import User
 except ImportError:
-    # Fallback for imports
     ChatSession = None
     ChatMessage = None
-    chat_template_service = None
+
+try:
+    from apps.chat.chat_template_service import chat_template_service, process_chat_message_templates
+except ImportError:
+    try:
+        from chat_template_service import chat_template_service, process_chat_message_templates
+    except ImportError:
+        chat_template_service = None
+        process_chat_message_templates = None
+
+try:
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+except Exception:
+    User = None
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +136,8 @@ class EnhancedChatCompletionsProxyView(APIView):
                 response[header] = value
             
             response['Access-Control-Allow-Origin'] = '*'
-            response['Connection'] = 'keep-alive'
+            # NOTE: 'Connection' is a hop-by-hop header forbidden by WSGI; omit it.
+            response['X-Accel-Buffering'] = 'no'
             
             logger.info(f"Enhanced SSE Proxy: Starting stream for request {request_id}")
             return response

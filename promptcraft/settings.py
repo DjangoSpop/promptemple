@@ -33,7 +33,7 @@ except ImportError:
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-APPEND_SLASH=False
+APPEND_SLASH=True
 # Basic development settings
 SECRET_KEY = config('SECRET_KEY', default="django-insecure-=$&0cpo9(=xihchk^!6p&#um-7icn@#u4ut)04sqcxs6__i+gd")
 DEBUG = config('DEBUG', default=True, cast=bool)
