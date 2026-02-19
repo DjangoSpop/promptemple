@@ -145,9 +145,12 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+# Disable APPEND_SLASH to prevent redirects that break CORS preflight
+APPEND_SLASH = False
+
 # SSL/TLS Settings for Custom Domain
 SECURE_SSL_HOST = None  # Allow all HTTPS hosts in ALLOWED_HOSTS
-SECURE_REDIRECT_EXEMPT = []  # No exemptions from SSL redirect
+SECURE_REDIRECT_EXEMPT = [r'^api/']  # Exempt API from SSL redirect so CORS preflight OPTIONS work
 
 # Cookie Settings for Custom Domain
 SESSION_COOKIE_DOMAIN = None  # Allow cookies across subdomains
