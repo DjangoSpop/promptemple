@@ -55,15 +55,15 @@ class SocialAuthInitiateView(APIView):
             # Determine redirect URI based on client type or explicit parameter
             from decouple import config as env_config
             from promptcraft.settings.production import is_valid_redirect_uri
-            
+
             client_type = request.GET.get('client_type', 'web')  # 'web' or 'extension'
             explicit_redirect_uri = request.GET.get('redirect_uri')
-            
+
             # Auto-detect extension client from redirect_uri (extension may not send client_type)
             if explicit_redirect_uri and 'chromiumapp.org' in explicit_redirect_uri:
                 client_type = 'extension'
                 logger.info(f"Auto-detected extension client from redirect_uri: {explicit_redirect_uri}")
-            
+
             # If extension is requesting, use its chromiumapp.org redirect URI
             if client_type == 'extension':
                 if explicit_redirect_uri:
@@ -77,15 +77,20 @@ class SocialAuthInitiateView(APIView):
                         'message': 'Chrome extension must provide ?redirect_uri=https://EXTENSION_ID.chromiumapp.org/ parameter'
                     }, status=status.HTTP_400_BAD_REQUEST)
             else:
-                # Web app - ALWAYS use the canonical FRONTEND_URL for redirect_uri
-                # This ensures the redirect_uri exactly matches what's registered in
-                # the OAuth provider console (Google/GitHub), preventing redirect_uri_mismatch.
-                frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
-                redirect_uri = f'{frontend_url}/auth/callback/{provider}'
-                if explicit_redirect_uri and explicit_redirect_uri != redirect_uri:
-                    logger.info(f"Web auth: overriding frontend redirect_uri '{explicit_redirect_uri}' with canonical '{redirect_uri}'")
+                # Web app - use the frontend-provided redirect_uri if valid,
+                # otherwise fall back to FRONTEND_URL. This avoids overriding
+                # a valid URI that matches what's registered in Google/GitHub
+                # OAuth console, preventing redirect_uri_mismatch errors.
+                if explicit_redirect_uri and is_valid_redirect_uri(explicit_redirect_uri):
+                    redirect_uri = explicit_redirect_uri
+                    logger.info(f"Web auth: using frontend-provided redirect_uri: {redirect_uri}")
                 else:
-                    logger.info(f"Web auth initiated with canonical redirect_uri: {redirect_uri}")
+                    frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
+                    redirect_uri = f'{frontend_url}/auth/callback/{provider}'
+                    if explicit_redirect_uri:
+                        logger.info(f"Web auth: frontend redirect_uri '{explicit_redirect_uri}' invalid, using canonical '{redirect_uri}'")
+                    else:
+                        logger.info(f"Web auth: no redirect_uri provided, using canonical '{redirect_uri}'")
             
             # Validate redirect URI against whitelist
             if not is_valid_redirect_uri(redirect_uri):
@@ -161,20 +166,20 @@ class SocialAuthCallbackView(APIView):
             # Get redirect URI - MUST match what was used in initiation
             from decouple import config as env_config
             from promptcraft.settings.production import is_valid_redirect_uri
-            
+
             frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
-            
+
             # First try to get stored redirect_uri from session (set during initiation)
             redirect_uri = request.session.get(f'{provider}_redirect_uri')
-            
+
             # If not in session, check request data (for stateless clients like extensions)
             if not redirect_uri:
                 request_redirect_uri = request.data.get('redirect_uri')
-                # For extension clients, use their provided redirect_uri
-                if request_redirect_uri and 'chromiumapp.org' in request_redirect_uri:
+                if request_redirect_uri and is_valid_redirect_uri(request_redirect_uri):
+                    # Use the frontend-provided redirect_uri if it passes validation
                     redirect_uri = request_redirect_uri
                 else:
-                    # For web clients, always use canonical FRONTEND_URL
+                    # Fall back to canonical FRONTEND_URL
                     redirect_uri = f'{frontend_url}/auth/callback/{provider}'
             
             logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
