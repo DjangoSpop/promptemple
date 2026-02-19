@@ -77,20 +77,16 @@ class SocialAuthInitiateView(APIView):
                         'message': 'Chrome extension must provide ?redirect_uri=https://EXTENSION_ID.chromiumapp.org/ parameter'
                     }, status=status.HTTP_400_BAD_REQUEST)
             else:
-                # Web app - use the frontend-provided redirect_uri if valid,
-                # otherwise fall back to FRONTEND_URL. This avoids overriding
-                # a valid URI that matches what's registered in Google/GitHub
-                # OAuth console, preventing redirect_uri_mismatch errors.
-                if explicit_redirect_uri and is_valid_redirect_uri(explicit_redirect_uri):
-                    redirect_uri = explicit_redirect_uri
-                    logger.info(f"Web auth: using frontend-provided redirect_uri: {redirect_uri}")
+                # Web app - ALWAYS use canonical FRONTEND_URL to construct
+                # the redirect_uri. This prevents www/non-www mismatch errors
+                # when the frontend sends a slightly different domain variant
+                # than what's registered in the Google/GitHub OAuth console.
+                frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
+                redirect_uri = f'{frontend_url}/auth/callback/{provider}'
+                if explicit_redirect_uri and explicit_redirect_uri != redirect_uri:
+                    logger.info(f"Web auth: normalized frontend redirect_uri '{explicit_redirect_uri}' -> canonical '{redirect_uri}'")
                 else:
-                    frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
-                    redirect_uri = f'{frontend_url}/auth/callback/{provider}'
-                    if explicit_redirect_uri:
-                        logger.info(f"Web auth: frontend redirect_uri '{explicit_redirect_uri}' invalid, using canonical '{redirect_uri}'")
-                    else:
-                        logger.info(f"Web auth: no redirect_uri provided, using canonical '{redirect_uri}'")
+                    logger.info(f"Web auth: using canonical redirect_uri: {redirect_uri}")
             
             # Validate redirect URI against whitelist
             if not is_valid_redirect_uri(redirect_uri):
@@ -169,18 +165,30 @@ class SocialAuthCallbackView(APIView):
 
             frontend_url = env_config('FRONTEND_URL', default='https://www.prompt-temple.com')
 
-            # First try to get stored redirect_uri from session (set during initiation)
-            redirect_uri = request.session.get(f'{provider}_redirect_uri')
+            # Determine redirect_uri - MUST exactly match what was sent to Google/GitHub
+            request_redirect_uri = request.data.get('redirect_uri')
 
-            # If not in session, check request data (for stateless clients like extensions)
-            if not redirect_uri:
-                request_redirect_uri = request.data.get('redirect_uri')
+            # Detect extension client by chromiumapp.org in redirect_uri
+            is_extension = request_redirect_uri and 'chromiumapp.org' in request_redirect_uri
+
+            if is_extension:
+                # Extension: use the provided chromiumapp.org redirect_uri
                 if request_redirect_uri and is_valid_redirect_uri(request_redirect_uri):
-                    # Use the frontend-provided redirect_uri if it passes validation
                     redirect_uri = request_redirect_uri
                 else:
-                    # Fall back to canonical FRONTEND_URL
-                    redirect_uri = f'{frontend_url}/auth/callback/{provider}'
+                    # Try session fallback
+                    redirect_uri = request.session.get(f'{provider}_redirect_uri')
+                    if not redirect_uri:
+                        redirect_uri = request_redirect_uri  # Use as-is, will be validated below
+                logger.info(f"Extension callback with redirect_uri: {redirect_uri}")
+            else:
+                # Web app: ALWAYS use canonical FRONTEND_URL (same as initiate)
+                # This prevents www/non-www mismatch that caused redirect_uri_mismatch
+                redirect_uri = f'{frontend_url}/auth/callback/{provider}'
+                if request_redirect_uri and request_redirect_uri != redirect_uri:
+                    logger.info(f"Web callback: normalized '{request_redirect_uri}' -> canonical '{redirect_uri}'")
+                else:
+                    logger.info(f"Web callback: using canonical redirect_uri: {redirect_uri}")
             
             logger.info(f"Using redirect_uri for token exchange: {redirect_uri}")
             
