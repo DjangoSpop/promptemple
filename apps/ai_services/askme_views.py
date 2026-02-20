@@ -70,7 +70,11 @@ class AskMeStartView(View):
                     'details': str(json_error)
                 }, status=400)
 
-            intent = data.get('intent', '')
+            # Accept 'goal' (frontend field) or 'intent' (legacy field)
+            intent = data.get('intent') or data.get('goal', '')
+            context = data.get('context', '')
+            if context:
+                intent = f"{intent}\nContext: {context}"
             logger.info(f"Intent: {intent}")
 
             if not intent:

@@ -153,10 +153,18 @@ class EnhancedChatCompletionsProxyView(APIView):
         """Get or create chat session for history tracking"""
         if not ChatSession:
             return None
-        
+
         session_id = request_data.get('session_id')
         model_name = request_data.get('model', 'deepseek-chat')
-        
+
+        if session_id:
+            # Validate that session_id is a proper UUID before querying
+            try:
+                uuid.UUID(str(session_id))
+            except (ValueError, AttributeError):
+                logger.info(f"session_id '{session_id}' is not a valid UUID — creating a new session")
+                session_id = None
+
         if session_id:
             try:
                 # Try to get existing session
