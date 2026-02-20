@@ -3,7 +3,7 @@ from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
@@ -293,13 +293,104 @@ class SavedPromptViewSet(viewsets.ModelViewSet):
         if category:
             queryset = queryset.filter(category=category)
         queryset = queryset.order_by('-use_count', '-updated_at')
-        
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = SavedPromptListSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
         serializer = SavedPromptListSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='stats')
+    def stats(self, request):
+        """Get summary statistics for the user's saved prompts"""
+        qs = self.get_queryset()
+        total = qs.count()
+        favorites = qs.filter(is_favorite=True).count()
+        public = qs.filter(is_public=True).count()
+        total_uses = qs.aggregate(total=Sum('use_count'))['total'] or 0
+
+        # Most-used categories (top 5)
+        categories = (
+            qs.exclude(category='')
+            .values('category')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:5]
+        )
+
+        return Response({
+            'total': total,
+            'favorites': favorites,
+            'public': public,
+            'total_uses': total_uses,
+            'top_categories': list(categories),
+        })
+
+    @action(detail=True, methods=['get', 'post'], url_path='iterations')
+    def iterations(self, request, pk=None):
+        """
+        List or create prompt iterations for a specific saved prompt.
+
+        GET  /saved-prompts/{id}/iterations/  → list all iterations
+        POST /saved-prompts/{id}/iterations/  → create a new iteration
+
+        Bridges SavedPrompt → PromptHistory → PromptIteration by
+        auto-creating a PromptHistory entry the first time and caching its
+        id in saved_prompt.metadata['history_id'].
+        """
+        saved_prompt = self.get_object()
+
+        # ── GET ──────────────────────────────────────────────────────────────
+        if request.method == 'GET':
+            history_id = (saved_prompt.metadata or {}).get('history_id')
+            if not history_id:
+                return Response({'iterations': [], 'count': 0})
+            try:
+                history = PromptHistory.objects.get(id=history_id, user=request.user)
+            except PromptHistory.DoesNotExist:
+                return Response({'iterations': [], 'count': 0})
+
+            qs = PromptIteration.objects.filter(
+                parent_prompt=history, is_deleted=False
+            ).order_by('iteration_number')
+            serializer = PromptIterationSerializer(qs, many=True)
+            return Response({'iterations': serializer.data, 'count': qs.count()})
+
+        # ── POST ─────────────────────────────────────────────────────────────
+        # Get or create the PromptHistory anchor for this saved prompt
+        history_id = (saved_prompt.metadata or {}).get('history_id')
+        history = None
+        if history_id:
+            try:
+                history = PromptHistory.objects.get(id=history_id, user=request.user)
+            except PromptHistory.DoesNotExist:
+                history = None
+
+        if not history:
+            history = PromptHistory.objects.create(
+                user=request.user,
+                original_prompt=saved_prompt.content,
+                source='saved_prompt',
+                meta={'saved_prompt_id': str(saved_prompt.id)},
+            )
+            metadata = saved_prompt.metadata or {}
+            metadata['history_id'] = str(history.id)
+            saved_prompt.metadata = metadata
+            saved_prompt.save(update_fields=['metadata', 'updated_at'])
+
+        # Inject parent_prompt so the serializer doesn't need it from the client
+        data = {**request.data, 'parent_prompt': str(history.id)}
+
+        serializer = PromptIterationCreateSerializer(
+            data=data, context={'request': request}
+        )
+        if serializer.is_valid():
+            iteration = serializer.save()
+            return Response(
+                PromptIterationSerializer(iteration).data,
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ==================== PromptIteration ViewSet ====================

@@ -85,6 +85,7 @@ def health_simple(request):
 
 
 class HealthCheckView(APIView):
+
     """
     Comprehensive health check endpoint for monitoring service status
     Tests: Database, Redis, Celery, AI Services

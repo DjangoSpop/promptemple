@@ -22,14 +22,14 @@ urlpatterns = [
     path('deepseek/stream/', views.DeepSeekStreamView.as_view(), name='deepseek-stream'),
     
     # AI Assistant endpoints (with and without trailing slash for frontend compat)
-    path('assistant/', views.AssistantListView.as_view(), name='assistant-list'),
-    path('assistant', views.AssistantListView.as_view(), name='assistant-list-noslash'),
-    path('assistant/run/', views.AssistantRunView.as_view(), name='assistant-run'),
-    path('assistant/run', views.AssistantRunView.as_view(), name='assistant-run-noslash'),
-    path('assistant/threads/', views.AssistantThreadListView.as_view(), name='assistant-thread-list'),
-    path('assistant/threads', views.AssistantThreadListView.as_view(), name='assistant-thread-list-noslash'),
-    path('assistant/threads/<uuid:thread_id>/', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail'),
-    path('assistant/threads/<uuid:thread_id>', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail-noslash'),
+    # path('assistant/', views.AssistantListView.as_view(), name='assistant-list'),
+    # path('assistant', views.AssistantListView.as_view(), name='assistant-list-noslash'),
+    # path('assistant/run/', views.AssistantRunView.as_view(), name='assistant-run'),
+    # path('assistant/run', views.AssistantRunView.as_view(), name='assistant-run-noslash'),
+    # path('assistant/threads/', views.AssistantThreadListView.as_view(), name='assistant-thread-list'),
+    # path('assistant/threads', views.AssistantThreadListView.as_view(), name='assistant-thread-list-noslash'),
+    # path('assistant/threads/<uuid:thread_id>/', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail'),
+    # path('assistant/threads/<uuid:thread_id>', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail-noslash'),
 
     # RAG Agent endpoints
     path('agent/optimize/', agent_views.optimize_prompt, name='agent-optimize'),

@@ -181,12 +181,14 @@ class AskMeAnswerView(View):
                 }, status=400)
             
             session_id = data.get('session_id')
-            qid = data.get('qid')
-            value = data.get('value')
+            # Accept common frontend field-name aliases
+            qid = data.get('qid') or data.get('question_id') or data.get('id')
+            value = data.get('value') or data.get('answer')
 
-            if not all([session_id, qid, value]):
+            if not all([session_id, qid, value is not None]):
+                missing = [f for f, v in [('session_id', session_id), ('qid', qid), ('value', value)] if not v and v is not False]
                 return JsonResponse({
-                    'error': 'session_id, qid, and value are required'
+                    'error': f"Required fields missing: {', '.join(missing)}"
                 }, status=400)
 
             # Get the session
