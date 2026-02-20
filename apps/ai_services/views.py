@@ -4,13 +4,29 @@ from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from django.db.models import Q
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from dataclasses import asdict
 import logging
 import asyncio
 import json
 import time
 from typing import Dict, Any, Optional
 
+# Import drf-spectacular decorators
+try:
+    from drf_spectacular.utils import extend_schema
+    DRF_SPECTACULAR_AVAILABLE = True
+except ImportError:
+    # Fallback decorator that does nothing if drf-spectacular is not installed
+    def extend_schema(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    DRF_SPECTACULAR_AVAILABLE = False
+
+from .models import AssistantThread, AssistantMessage
+from .ai_assistants import AssistantRegistry
 # Import DeepSeek services
 try:
     from apps.templates.deepseek_service import get_deepseek_service, DeepSeekService
@@ -20,11 +36,33 @@ except ImportError as e:
     DEEPSEEK_AVAILABLE = False
     logging.warning(f"DeepSeek services not available: {e}")
 
+# Import OpenRouter services
+try:
+    from apps.templates.openrouter_integration import (
+        OpenRouterLangChainWrapper, 
+        create_openrouter_llm,
+        get_openrouter_models
+    )
+    OPENROUTER_AVAILABLE = True
+except ImportError as e:
+    OPENROUTER_AVAILABLE = False
+    logging.warning(f"OpenRouter services not available: {e}")
+    
+    # Provide fallback function
+    def get_openrouter_models():
+        return [
+            'nvidia/nemotron-3-nano-30b-a3b:free',
+            'qwen/qwen3-next-80b-a3b-instruct:free',
+            'ai/glm-4.5-air:free',
+            'deepseek/deepseek-r1-0528:free',
+            'nousresearch/hermes-3-llama-3.1-405b:free',
+        ]
+
 logger = logging.getLogger(__name__)
 
 
 class AIProviderListView(APIView):
-    """List available AI providers including DeepSeek"""
+    """List available AI providers including DeepSeek and OpenRouter"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
@@ -60,10 +98,28 @@ class AIProviderListView(APIView):
                 'max_tokens': 4000
             })
         
+        # Add OpenRouter if available
+        if OPENROUTER_AVAILABLE:
+            openrouter_config = getattr(settings, 'OPENROUTER_CONFIG', {})
+            openrouter_api_key = openrouter_config.get('API_KEY', '')
+            openrouter_status = 'available' if openrouter_api_key else 'disabled'
+            
+            providers.append({
+                'id': 'openrouter',
+                'name': 'OpenRouter',
+                'status': openrouter_status,
+                'models': get_openrouter_models(),
+                'features': ['chat', 'free_tier', 'multiple_models'],
+                'cost_per_1k_tokens': 0,  # Free models
+                'max_tokens': 4096,
+                'description': 'Free tier models from multiple providers'
+            })
+        
         return Response({
             'providers': providers,
             'total_providers': len(providers),
-            'deepseek_available': DEEPSEEK_AVAILABLE
+            'deepseek_available': DEEPSEEK_AVAILABLE,
+            'openrouter_available': OPENROUTER_AVAILABLE
         })
 
 class DeepSeekStreamView(APIView):
@@ -81,8 +137,18 @@ class DeepSeekStreamView(APIView):
         import httpx
 
         try:
-            base_url = getattr(settings, 'DEEPSEEK_BASE_URL', '').rstrip('/') or getattr(settings, 'ZAI_API_BASE', '').rstrip('/')
-            api_key = getattr(settings, 'DEEPSEEK_API_KEY', '') or getattr(settings, 'ZAI_API_TOKEN', '')
+            # Read from DEEPSEEK_CONFIG dict first, then top-level settings
+            _ds_cfg = getattr(settings, 'DEEPSEEK_CONFIG', {})
+            base_url = (
+                _ds_cfg.get('BASE_URL', '')
+                or getattr(settings, 'DEEPSEEK_BASE_URL', '')
+                or getattr(settings, 'ZAI_API_BASE', '')
+            ).rstrip('/')
+            api_key = (
+                _ds_cfg.get('API_KEY', '')
+                or getattr(settings, 'DEEPSEEK_API_KEY', '')
+                or getattr(settings, 'ZAI_API_TOKEN', '')
+            )
 
             if not base_url or not api_key:
                 return Response({"detail": "DeepSeek upstream not configured"}, status=503)
@@ -116,7 +182,7 @@ class DeepSeekStreamView(APIView):
                     'Content-Type': 'application/json'
                 }
 
-                timeout = httpx.Timeout(connect=10.0, read=None, write=30.0)
+                timeout = httpx.Timeout(connect=10.0, read=None, write=30.0, pool=None)
 
                 yield f"event: meta\n"
                 yield f"data: {{\"request_id\":\"{request_id}\", \"status\":\"connected\"}}\n\n"
@@ -165,7 +231,9 @@ class DeepSeekStreamView(APIView):
 
             response = StreamingHttpResponse(generator(), content_type='text/event-stream')
             response['Access-Control-Allow-Origin'] = '*'
-            response['Connection'] = 'keep-alive'
+            # NOTE: 'Connection' is a hop-by-hop header forbidden by WSGI;
+            # omit it so the dev server (and gunicorn) don't fail.
+            response['X-Accel-Buffering'] = 'no'
             return response
 
         except Exception as e:
@@ -173,7 +241,7 @@ class DeepSeekStreamView(APIView):
             return Response({"error": "internal_error", "details": str(e)}, status=500)
 
 class AIModelListView(APIView):
-    """List available AI models including DeepSeek models"""
+    """List available AI models including DeepSeek and OpenRouter models"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
@@ -231,15 +299,71 @@ class AIModelListView(APIView):
                 ]
                 models.extend(deepseek_models)
         
+        # Add OpenRouter free models if available
+        if OPENROUTER_AVAILABLE:
+            openrouter_config = getattr(settings, 'OPENROUTER_CONFIG', {})
+            openrouter_api_key = openrouter_config.get('API_KEY', '')
+            
+            if openrouter_api_key:
+                openrouter_models = [
+                    {
+                        'id': 'nvidia/nemotron-3-nano-30b-a3b:free',
+                        'name': 'NVIDIA Nemotron 3 Nano (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'lightweight'],
+                        'description': 'Lightweight and fast free model'
+                    },
+                    {
+                        'id': 'qwen/qwen3-next-80b-a3b-instruct:free',
+                        'name': 'Qwen 3 Next 80B (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'powerful'],
+                        'description': 'Powerful free model from Alibaba'
+                    },
+                    {
+                        'id': 'ai/glm-4.5-air:free',
+                        'name': 'GLM-4.5 Air (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'multilingual'],
+                        'description': 'Free multilingual model'
+                    },
+                    {
+                        'id': 'deepseek/deepseek-r1-0528:free',
+                        'name': 'DeepSeek R1 (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'reasoning'],
+                        'description': 'DeepSeek R1 reasoning model free tier'
+                    },
+                    {
+                        'id': 'nousresearch/hermes-3-llama-3.1-405b:free',
+                        'name': 'Hermes 3 Llama 3.1 405B (Free)',
+                        'provider': 'openrouter',
+                        'cost_per_token': 0,
+                        'max_tokens': 4096,
+                        'features': ['chat', 'free', 'large'],
+                        'description': 'Large free model from NousResearch'
+                    }
+                ]
+                models.extend(openrouter_models)
+        
         return Response({
             'models': models,
             'total_models': len(models),
-            'deepseek_available': DEEPSEEK_AVAILABLE
+            'deepseek_available': DEEPSEEK_AVAILABLE,
+            'openrouter_available': OPENROUTER_AVAILABLE
         })
 
 
 class AIGenerateView(APIView):
-    """AI generation endpoint with DeepSeek integration"""
+    """AI generation endpoint with DeepSeek and OpenRouter integration"""
     permission_classes = [permissions.IsAuthenticated]
     
     async def _generate_with_deepseek(self, prompt: str, model: str, **kwargs) -> Dict[str, Any]:
@@ -301,6 +425,52 @@ class AIGenerateView(APIView):
                 'provider': 'deepseek'
             }
     
+    async def _generate_with_openrouter(self, prompt: str, model: str, **kwargs) -> Dict[str, Any]:
+        """Generate content using OpenRouter"""
+        try:
+            if not OPENROUTER_AVAILABLE:
+                raise Exception("OpenRouter service not available")
+            
+            start_time = time.time()
+            
+            # Create messages format
+            messages = [{"role": "user", "content": prompt}]
+            
+            # Create OpenRouter LLM instance
+            llm = create_openrouter_llm(
+                model=model,
+                temperature=kwargs.get('temperature', 0.7),
+                max_tokens=kwargs.get('max_tokens', 1000),
+                task_type=kwargs.get('task_type', 'chat')
+            )
+            
+            # Generate response
+            response = await llm.ainvoke(messages)
+            
+            processing_time = int((time.time() - start_time) * 1000)
+            
+            # Parse usage from response
+            tokens_used = response.usage.get('total_tokens', 0) if hasattr(response, 'usage') else 0
+            
+            return {
+                'content': response.content,
+                'model': model,
+                'tokens_used': tokens_used,
+                'processing_time_ms': processing_time,
+                'cost_estimate': 0,  # OpenRouter free models
+                'success': True,
+                'provider': 'openrouter'
+            }
+                
+        except Exception as e:
+            logger.error(f"OpenRouter generation error: {e}")
+            return {
+                'content': '',
+                'error': str(e),
+                'success': False,
+                'provider': 'openrouter'
+            }
+    
     def post(self, request):
         prompt = request.data.get('prompt', '').strip()
         model = request.data.get('model', 'deepseek-chat')
@@ -315,20 +485,20 @@ class AIGenerateView(APIView):
         # Check if it's a DeepSeek model
         if model.startswith('deepseek-') and DEEPSEEK_AVAILABLE:
             try:
-                # Run async function in event loop
+                # Run async function in a NEW event loop (avoids "Event loop is closed")
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                
-                result = loop.run_until_complete(
-                    self._generate_with_deepseek(
-                        prompt=prompt,
-                        model=model,
-                        temperature=temperature,
-                        max_tokens=max_tokens
+                try:
+                    result = loop.run_until_complete(
+                        self._generate_with_deepseek(
+                            prompt=prompt,
+                            model=model,
+                            temperature=temperature,
+                            max_tokens=max_tokens
+                        )
                     )
-                )
-                
-                loop.close()
+                finally:
+                    loop.close()
                 
                 if result['success']:
                     return Response({
@@ -352,6 +522,49 @@ class AIGenerateView(APIView):
                 return Response({
                     'error': f'DeepSeek generation failed: {str(e)}',
                     'provider': 'deepseek',
+                    'success': False
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        # Check if it's an OpenRouter model
+        elif any(model.startswith(prefix) for prefix in ['nvidia/', 'qwen/', 'ai/', 'deepseek/', 'nousresearch/']) and OPENROUTER_AVAILABLE:
+            try:
+                # Run async function in event loop
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                result = loop.run_until_complete(
+                    self._generate_with_openrouter(
+                        prompt=prompt,
+                        model=model,
+                        temperature=temperature,
+                        max_tokens=max_tokens
+                    )
+                )
+                
+                loop.close()
+                
+                if result['success']:
+                    return Response({
+                        'result': result['content'],
+                        'model': result['model'],
+                        'tokens_used': result['tokens_used'],
+                        'processing_time_ms': result['processing_time_ms'],
+                        'cost_estimate': result['cost_estimate'],
+                        'provider': 'openrouter',
+                        'success': True
+                    })
+                else:
+                    return Response({
+                        'error': result['error'],
+                        'provider': 'openrouter',
+                        'success': False
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+            except Exception as e:
+                logger.error(f"OpenRouter generation error: {e}")
+                return Response({
+                    'error': f'OpenRouter generation failed: {str(e)}',
+                    'provider': 'openrouter',
                     'success': False
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
@@ -656,3 +869,121 @@ def deepseek_test(request):
             'available': False,
             'error_details': str(e)
         })
+
+class AssistantListView(APIView):
+    """Expose registered assistants to the frontend."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        descriptions = [asdict(desc) for desc in AssistantRegistry.list_descriptions()]
+        default_assistant = getattr(
+            settings,
+            "AI_ASSISTANT_SETTINGS",
+            {},
+        ).get("DEFAULT_ASSISTANT", "deepseek_chat")
+        return Response(
+            {
+                "assistants": descriptions,
+                "default_assistant": default_assistant,
+                "total": len(descriptions),
+            }
+        )
+
+
+class AssistantRunView(APIView):
+    """Run an assistant synchronously via standard Django view."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        payload = request.data or {}
+        assistant_id = payload.get("assistant_id") or getattr(
+            settings,
+            "AI_ASSISTANT_SETTINGS",
+            {},
+        ).get("DEFAULT_ASSISTANT", "deepseek_chat")
+        message = payload.get("message")
+        thread_id = payload.get("thread_id")
+        metadata = payload.get("metadata") or {}
+
+        if not message:
+            return Response(
+                {"detail": "Request must include a non-empty 'message'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            assistant = AssistantRegistry.create(
+                assistant_id,
+                user=request.user,
+                request=request,
+                view=self,
+            )
+        except KeyError:
+            return Response(
+                {"detail": f"Assistant '{assistant_id}' is not available."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        result = assistant.run(message, thread_id=thread_id, metadata=metadata)
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class AssistantThreadListView(APIView):
+    """Return threads created by the current user."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        threads = AssistantThread.objects.filter(user=request.user).order_by("-last_interaction_at")
+        serialized = [
+            {
+                "id": str(thread.id),
+                "assistant_id": thread.assistant_id,
+                "title": thread.title,
+                "metadata": thread.metadata,
+                "last_interaction_at": thread.last_interaction_at,
+                "created_at": thread.created_at,
+            }
+            for thread in threads
+        ]
+        return Response({"threads": serialized, "total": len(serialized)})
+
+
+class AssistantThreadDetailView(APIView):
+    """Return a thread with its messages."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, thread_id: str):
+        thread = get_object_or_404(AssistantThread, id=thread_id)
+        if thread.user and thread.user != request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        messages = thread.messages.order_by("created_at")
+        serialized_messages = [
+            {
+                "id": str(message.id),
+                "role": message.role,
+                "content": message.content,
+                "created_at": message.created_at,
+                "tool_name": message.tool_name or None,
+                "tool_result": message.tool_result or None,
+            }
+            for message in messages
+        ]
+
+        return Response(
+            {
+                "thread": {
+                    "id": str(thread.id),
+                    "assistant_id": thread.assistant_id,
+                    "title": thread.title,
+                    "metadata": thread.metadata,
+                    "created_at": thread.created_at,
+                    "last_interaction_at": thread.last_interaction_at,
+                },
+                "messages": serialized_messages,
+            }
+        )
