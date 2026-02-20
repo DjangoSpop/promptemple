@@ -31,6 +31,10 @@ urlpatterns = [
     path('assistant/threads/<uuid:thread_id>/', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail'),
     path('assistant/threads/<uuid:thread_id>', views.AssistantThreadDetailView.as_view(), name='assistant-thread-detail-noslash'),
 
+    # Prompt optimization (SSE streaming + JSON fallback) — replaces /ws/optimization/
+    path('optimization/stream/', views.PromptOptimizationSSEView.as_view(), name='optimization-stream'),
+    path('optimization/', views.PromptOptimizationView.as_view(), name='optimization'),
+
     # RAG Agent endpoints
     path('agent/optimize/', agent_views.optimize_prompt, name='agent-optimize'),
     path('agent/stats/', agent_views.agent_stats, name='agent-stats'),

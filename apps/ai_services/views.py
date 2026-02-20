@@ -951,6 +951,190 @@ class AssistantThreadListView(APIView):
         return Response({"threads": serialized, "total": len(serialized)})
 
 
+class PromptOptimizationSSEView(APIView):
+    """SSE streaming endpoint for prompt optimization.
+
+    Replaces the defunct /ws/optimization/ WebSocket route.
+    Works with Gunicorn (WSGI) on Heroku – no ASGI or Channels required.
+
+    Frontend should use:
+        POST /api/v2/ai/optimization/stream/
+        Accept: text/event-stream
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from django.http import StreamingHttpResponse
+        import uuid as _uuid
+
+        data = request.data or {}
+        original = data.get('original', data.get('prompt', '')).strip()
+        mode = data.get('mode', 'fast')
+        session_id = data.get('session_id', str(_uuid.uuid4()))
+        context = data.get('context', {})
+        budget = data.get('budget', {})
+
+        if not original:
+            return Response(
+                {'error': 'original (or prompt) field is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        request_id = str(_uuid.uuid4())[:8]
+
+        def sse_generator():
+            """Yield SSE events while performing RAG-powered optimisation."""
+            import time as _time
+
+            # --- connected -------------------------------------------------
+            yield f"event: meta\ndata: {{\"request_id\":\"{request_id}\", \"status\":\"connected\"}}\n\n"
+            yield f"event: progress\ndata: {{\"step\":\"init\", \"message\":\"Initialising optimisation…\"}}\n\n"
+
+            start = _time.time()
+
+            try:
+                from apps.ai_services.rag_service import get_rag_agent, OptimizationRequest
+
+                opt_request = OptimizationRequest(
+                    session_id=session_id,
+                    original=original,
+                    mode=mode,
+                    context=context,
+                    budget={
+                        'tokens_in': min(budget.get('tokens_in', 2000), 5000),
+                        'tokens_out': min(budget.get('tokens_out', 800), 2000),
+                        'max_credits': min(budget.get('max_credits', 5), 10),
+                    },
+                )
+
+                yield f"event: progress\ndata: {{\"step\":\"retrieval\", \"message\":\"Retrieving relevant context…\"}}\n\n"
+
+                rag_agent = get_rag_agent()
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    result = loop.run_until_complete(rag_agent.optimize_prompt(opt_request))
+                finally:
+                    loop.close()
+
+                yield f"event: progress\ndata: {{\"step\":\"optimizing\", \"message\":\"Generating optimised prompt…\"}}\n\n"
+
+                # Build citations list
+                citations = []
+                for c in getattr(result, 'citations', []):
+                    citations.append({
+                        'id': getattr(c, 'id', ''),
+                        'title': getattr(c, 'title', ''),
+                        'source': getattr(c, 'source', ''),
+                        'score': getattr(c, 'score', 0),
+                    })
+
+                processing_ms = int((_time.time() - start) * 1000)
+
+                payload = json.dumps({
+                    'optimized': result.optimized,
+                    'citations': citations,
+                    'diff_summary': getattr(result, 'diff_summary', ''),
+                    'usage': getattr(result, 'usage', {}),
+                    'run_id': getattr(result, 'run_id', ''),
+                    'processing_time_ms': processing_ms,
+                    'success': True,
+                })
+
+                yield f"event: result\ndata: {payload}\n\n"
+                yield f"event: stream_complete\ndata: {{\"request_id\":\"{request_id}\", \"processing_time_ms\":{processing_ms}}}\n\n"
+
+            except Exception as exc:
+                logger.error(f"SSE optimization error: {exc}")
+                yield f"event: error\ndata: {{\"error\": \"{str(exc)}\"}}\n\n"
+            finally:
+                yield f"event: stream_end\ndata: {{\"request_id\":\"{request_id}\"}}\n\n"
+
+        response = StreamingHttpResponse(sse_generator(), content_type='text/event-stream')
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'
+        return response
+
+
+class PromptOptimizationView(APIView):
+    """Non-streaming prompt optimization (JSON response).
+
+    Convenient fallback when SSE is not wanted.
+    POST /api/v2/ai/optimization/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        import uuid as _uuid
+
+        data = request.data or {}
+        original = data.get('original', data.get('prompt', '')).strip()
+        mode = data.get('mode', 'fast')
+        session_id = data.get('session_id', str(_uuid.uuid4()))
+        context = data.get('context', {})
+        budget = data.get('budget', {})
+
+        if not original:
+            return Response(
+                {'error': 'original (or prompt) field is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            from apps.ai_services.rag_service import get_rag_agent, OptimizationRequest
+
+            opt_request = OptimizationRequest(
+                session_id=session_id,
+                original=original,
+                mode=mode,
+                context=context,
+                budget={
+                    'tokens_in': min(budget.get('tokens_in', 2000), 5000),
+                    'tokens_out': min(budget.get('tokens_out', 800), 2000),
+                    'max_credits': min(budget.get('max_credits', 5), 10),
+                },
+            )
+
+            rag_agent = get_rag_agent()
+            start = time.time()
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(rag_agent.optimize_prompt(opt_request))
+            finally:
+                loop.close()
+
+            citations = []
+            for c in getattr(result, 'citations', []):
+                citations.append({
+                    'id': getattr(c, 'id', ''),
+                    'title': getattr(c, 'title', ''),
+                    'source': getattr(c, 'source', ''),
+                    'score': getattr(c, 'score', 0),
+                })
+
+            return Response({
+                'optimized': result.optimized,
+                'citations': citations,
+                'diff_summary': getattr(result, 'diff_summary', ''),
+                'usage': getattr(result, 'usage', {}),
+                'run_id': getattr(result, 'run_id', ''),
+                'processing_time_ms': int((time.time() - start) * 1000),
+                'success': True,
+            })
+
+        except Exception as exc:
+            logger.error(f"Optimization error: {exc}")
+            return Response(
+                {'error': str(exc), 'success': False},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class AssistantThreadDetailView(APIView):
     """Return a thread with its messages."""
 

@@ -2,7 +2,7 @@
 URL configuration for promptcraft project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.decorators.csrf import csrf_exempt
@@ -114,6 +114,19 @@ urlpatterns = [
     # Socket.IO compatibility endpoints (to handle frontend Socket.IO requests gracefully)
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
     path('ws/info/', WebSocketInfoView.as_view(), name='websocket-info'),
+
+    # Catch-all /ws/ routes — Heroku uses Gunicorn (WSGI), WebSockets are not
+    # supported.  Return a helpful JSON response directing the frontend to SSE.
+    re_path(r'^ws/(?P<path>.*)$', lambda request, path='': JsonResponse({
+        'error': 'WebSocket endpoints are not available on this deployment',
+        'message': 'This server uses HTTP/SSE. Use the REST API instead.',
+        'sse_endpoints': {
+            'optimization_stream': '/api/v2/ai/optimization/stream/',
+            'optimization': '/api/v2/ai/optimization/',
+            'deepseek_stream': '/api/v2/ai/deepseek/stream/',
+            'agent_optimize': '/api/v2/ai/agent/optimize/',
+        },
+    }, status=426)),  # 426 Upgrade Required
     
     # API root
     path('api/', api_root, name='api-root'),
