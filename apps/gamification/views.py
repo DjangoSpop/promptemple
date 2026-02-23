@@ -204,34 +204,97 @@ class AchievementListView(APIView):
 
 class BadgeListView(APIView):
     """
-    List user badges
+    List user badges — derived from unlocked achievements (rarity: rare/epic/legendary).
     """
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
-        """Get user's badges"""
-        # Placeholder - implement badge system later
+        # Treat high-rarity unlocked achievements as badges
+        badge_rarities = ('rare', 'epic', 'legendary')
+        user_achievements = UserAchievement.objects.filter(
+            user=request.user,
+            is_unlocked=True,
+            achievement__rarity__in=badge_rarities,
+        ).select_related('achievement').order_by('-unlocked_at')
+
+        badges = []
+        for ua in user_achievements:
+            a = ua.achievement
+            badges.append({
+                'id': str(a.id),
+                'name': a.name,
+                'description': a.description,
+                'icon': a.icon,
+                'rarity': a.rarity,
+                'earned_at': ua.unlocked_at.isoformat() if ua.unlocked_at else None,
+                'category': a.category,
+            })
+
+        recent = badges[:5]
         return Response({
-            'badges': [],
-            'total_badges': 0,
-            'recent_badges': []
+            'badges': badges,
+            'total_badges': len(badges),
+            'recent_badges': recent,
         })
 
 
 class LeaderboardView(APIView):
     """
-    Leaderboard view
+    Leaderboard — top users by experience points from the User model.
     """
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
-        """Get leaderboard data"""
-        # Placeholder - implement leaderboard later
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        limit = int(request.query_params.get('limit', 50))
+
+        def build_leaderboard(qs, requesting_user):
+            entries = []
+            for rank, user in enumerate(qs, start=1):
+                entries.append({
+                    'rank': rank,
+                    'user_id': str(user.id),
+                    'username': user.username,
+                    'level': getattr(user, 'level', 1),
+                    'experience_points': getattr(user, 'experience_points', 0),
+                    'daily_streak': getattr(user, 'daily_streak', 0),
+                    'is_current_user': user.id == requesting_user.id,
+                })
+            return entries
+
+        # All-time: top by XP
+        all_time_qs = User.objects.filter(
+            is_active=True
+        ).order_by('-experience_points')[:limit]
+        all_time = build_leaderboard(all_time_qs, request.user)
+
+        # Weekly: users active in last 7 days (last_login approximation)
+        week_ago = timezone.now() - timezone.timedelta(days=7)
+        weekly_qs = User.objects.filter(
+            is_active=True,
+            last_login__gte=week_ago,
+        ).order_by('-experience_points')[:limit]
+        weekly = build_leaderboard(weekly_qs, request.user)
+
+        # User's own rank in all-time
+        user_rank = 0
+        for entry in all_time:
+            if entry['is_current_user']:
+                user_rank = entry['rank']
+                break
+
         return Response({
-            'weekly_leaders': [],
-            'monthly_leaders': [],
-            'all_time_leaders': [],
-            'user_rank': 0
+            'weekly_leaders': weekly,
+            'monthly_leaders': all_time,  # monthly approximation
+            'all_time_leaders': all_time,
+            'user_rank': user_rank,
+            'current_user': {
+                'level': getattr(request.user, 'level', 1),
+                'experience_points': getattr(request.user, 'experience_points', 0),
+                'rank': user_rank,
+            },
         })
 
 

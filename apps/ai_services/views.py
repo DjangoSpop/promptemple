@@ -580,34 +580,63 @@ class AIGenerateView(APIView):
 
 
 class AIUsageView(APIView):
-    """Placeholder AI usage view"""
+    """Real AI usage from AIUsageQuota model."""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
+        from apps.ai_services.models import AIUsageQuota
+        from django.utils import timezone
+
+        quota, _ = AIUsageQuota.objects.get_or_create(user=request.user)
+
+        # Reset daily counters if needed
+        today = timezone.now().date()
+        if hasattr(quota, 'last_reset_date') and quota.last_reset_date != today:
+            quota.daily_tokens_used = 0
+            quota.last_reset_date = today
+            quota.save(update_fields=['daily_tokens_used', 'last_reset_date'])
+
+        remaining_daily = max(0, quota.daily_tokens_limit - quota.daily_tokens_used)
+        remaining_monthly = max(0, quota.monthly_tokens_limit - quota.monthly_tokens_used)
+
+        # Approximate cost: DeepSeek ~$0.0014 per 1K tokens
+        cost_today = round((quota.daily_tokens_used / 1000) * 0.0014, 4)
+
         return Response({
-            'message': 'AI Usage endpoint - Coming soon!',
             'usage': {
-                'tokens_used_today': 1250,
-                'tokens_remaining': 8750,
-                'cost_today': 2.50,
-                'monthly_limit': 10000
+                'tokens_used_today': quota.daily_tokens_used,
+                'tokens_remaining_today': remaining_daily,
+                'tokens_used_monthly': quota.monthly_tokens_used,
+                'tokens_remaining_monthly': remaining_monthly,
+                'daily_limit': quota.daily_tokens_limit,
+                'monthly_limit': quota.monthly_tokens_limit,
+                'cost_today': cost_today,
             }
         })
 
 
 class AIQuotaView(APIView):
-    """Placeholder AI quota view"""
+    """Real AI quota limits from AIUsageQuota model."""
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
+        from apps.ai_services.models import AIUsageQuota
+        from django.utils import timezone
+
+        quota, _ = AIUsageQuota.objects.get_or_create(user=request.user)
+        reset_time = (timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+                      + timezone.timedelta(days=1)).isoformat()
+
         return Response({
-            'message': 'AI Quota endpoint - Coming soon!',
             'quotas': {
-                'daily_limit': 1000,
-                'monthly_limit': 10000,
-                'used_today': 125,
-                'used_monthly': 3450,
-                'reset_time': '2025-06-21T00:00:00Z'
+                'daily_limit': quota.daily_tokens_limit,
+                'monthly_limit': quota.monthly_tokens_limit,
+                'used_today': quota.daily_tokens_used,
+                'used_monthly': quota.monthly_tokens_used,
+                'remaining_today': max(0, quota.daily_tokens_limit - quota.daily_tokens_used),
+                'remaining_monthly': max(0, quota.monthly_tokens_limit - quota.monthly_tokens_used),
+                'reset_time': reset_time,
+                'can_use_ai': quota.can_use_ai(0) if hasattr(quota, 'can_use_ai') else True,
             }
         })
 
