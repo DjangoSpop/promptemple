@@ -209,14 +209,25 @@ class DeepSeekStreamView(APIView):
                                 line = line.strip()
                                 if not line:
                                     continue
-                                if line == '[DONE]':
-                                    yield f"data: [DONE]\n\n"
+                                # DeepSeek sends SSE lines already prefixed with "data: "
+                                # Extract the content to avoid double-prefixing
+                                if line.startswith('data: '):
+                                    content = line[6:]
+                                elif line.startswith('data:'):
+                                    content = line[5:]
+                                else:
+                                    continue  # skip event:, id:, retry: control lines
+                                if content == '[DONE]':
+                                    yield "data: [DONE]\n\n"
                                     return
-                                # forward as data lines
-                                yield f"data: {line}\n\n"
+                                yield f"data: {content}\n\n"
 
                         if buffer.strip():
-                            yield f"data: {buffer.strip()}\n\n"
+                            line = buffer.strip()
+                            if line.startswith('data: '):
+                                yield f"data: {line[6:]}\n\n"
+                            elif line.startswith('data:'):
+                                yield f"data: {line[5:]}\n\n"
 
                         processing_time = int((time.time() - start) * 1000)
                         yield f"event: stream_complete\n"
@@ -537,18 +548,18 @@ class AIGenerateView(APIView):
                 # Run async function in event loop
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                
-                result = loop.run_until_complete(
-                    self._generate_with_openrouter(
-                        prompt=prompt,
-                        model=model,
-                        temperature=temperature,
-                        max_tokens=max_tokens
+                try:
+                    result = loop.run_until_complete(
+                        self._generate_with_openrouter(
+                            prompt=prompt,
+                            model=model,
+                            temperature=temperature,
+                            max_tokens=max_tokens
+                        )
                     )
-                )
-                
-                loop.close()
-                
+                finally:
+                    loop.close()
+
                 if result['success']:
                     return Response({
                         'result': result['content'],

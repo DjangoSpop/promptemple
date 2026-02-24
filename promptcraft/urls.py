@@ -115,7 +115,17 @@ urlpatterns = [
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
     path('ws/info/', WebSocketInfoView.as_view(), name='websocket-info'),
 
-    # WebSocket routes are now handled by Daphne/ASGI (see asgi.py routing)
+    # WebSocket not supported — Gunicorn/WSGI server. Frontend must use SSE endpoints instead.
+    re_path(r'^ws/(?P<path>.*)$', lambda request, path='': JsonResponse({
+        'error': 'WebSocket endpoints are not available on this deployment',
+        'message': 'This server uses HTTP/SSE. Use the REST API instead.',
+        'sse_endpoints': {
+            'optimization_stream': '/api/v2/ai/optimization/stream/',
+            'optimization': '/api/v2/ai/optimization/',
+            'deepseek_stream': '/api/v2/ai/deepseek/stream/',
+            'agent_optimize': '/api/v2/ai/agent/optimize/',
+        },
+    }, status=200)),
     
     # API root
     path('api/', api_root, name='api-root'),

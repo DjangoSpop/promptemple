@@ -253,11 +253,16 @@ class AskMeAnswerView(View):
             preview_prompt = None
             if len(planner_result.questions) < 3:  # Getting close to done
                 try:
-                    composer_result = loop.run_until_complete(
-                        service.compose_prompt(session.spec)
-                    )
-                    preview_prompt = composer_result.prompt
-                    session.preview_prompt = preview_prompt
+                    preview_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(preview_loop)
+                    try:
+                        composer_result = preview_loop.run_until_complete(
+                            service.compose_prompt(session.spec)
+                        )
+                        preview_prompt = composer_result.prompt
+                        session.preview_prompt = preview_prompt
+                    finally:
+                        preview_loop.close()
                 except Exception as e:
                     logger.warning(f"Failed to generate preview: {e}")
 

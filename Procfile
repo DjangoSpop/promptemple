@@ -1,7 +1,4 @@
-# Heroku Procfile - Daphne ASGI server with WebSocket support
+# Heroku Procfile - Gunicorn WSGI (HTTP + SSE only, no WebSocket)
+# Reverted from Daphne: async thread pool was exhausting Postgres connections
 
-# Web dyno: Daphne serves HTTP + WebSocket via ASGI
-web: daphne -b 0.0.0.0 -p $PORT promptcraft.asgi:application
-
-# Optional: Release phase (runs before web dyno starts)
-# release: python manage.py migrate --noinput
+web: gunicorn promptcraft.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-file -
