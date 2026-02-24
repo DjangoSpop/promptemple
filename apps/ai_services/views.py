@@ -245,24 +245,30 @@ class AIModelListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request):
-        models = [
-            {
-                'id': 'gpt-3.5-turbo',
-                'name': 'GPT-3.5 Turbo',
-                'provider': 'openai',
-                'cost_per_token': 0.002,
-                'max_tokens': 4096,
-                'features': ['chat', 'completion']
-            },
-            {
-                'id': 'gpt-4',
-                'name': 'GPT-4',
-                'provider': 'openai',
-                'cost_per_token': 0.03,
-                'max_tokens': 8192,
-                'features': ['chat', 'completion', 'analysis']
-            }
-        ]
+        models = []
+
+        # Add OpenAI models only when an API key is configured
+        openai_config = getattr(settings, 'OPENAI_CONFIG', {})
+        openai_key = openai_config.get('API_KEY') or openai_config.get('api_key') or getattr(settings, 'OPENAI_API_KEY', '')
+        if openai_key:
+            models.extend([
+                {
+                    'id': 'gpt-3.5-turbo',
+                    'name': 'GPT-3.5 Turbo',
+                    'provider': 'openai',
+                    'cost_per_token': 0.002,
+                    'max_tokens': 4096,
+                    'features': ['chat', 'completion']
+                },
+                {
+                    'id': 'gpt-4',
+                    'name': 'GPT-4',
+                    'provider': 'openai',
+                    'cost_per_token': 0.03,
+                    'max_tokens': 8192,
+                    'features': ['chat', 'completion', 'analysis']
+                },
+            ])
         
         # Add DeepSeek models if available
         if DEEPSEEK_AVAILABLE:

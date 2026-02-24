@@ -15,8 +15,8 @@ import time
 import logging
 
 from .models import (
-    Template, TemplateCategory, PromptLibrary, UserIntent, 
-    ChatMessage, PerformanceMetrics
+    Template, TemplateCategory, PromptLibrary, UserIntent,
+    ChatMessage, PerformanceMetrics, TemplateUsage
 )
 from .serializers import (
     TemplateListSerializer, TemplateDetailSerializer, 

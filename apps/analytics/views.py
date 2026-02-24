@@ -253,33 +253,44 @@ class RecommendationView(APIView):
 
 class AnalyticsTrackView(APIView):
     """
-    Track user analytics events — persists to DB via AnalyticsEvent model if available.
+    Track user analytics events — persists to DB via AnalyticsEvent model.
     """
     permission_classes = [permissions.AllowAny]
 
+    # Known event_type choices in the model
+    _VALID_EVENT_TYPES = {
+        'template_view', 'template_usage_start', 'template_completion',
+        'template_copy', 'template_search', 'category_browse', 'user_upgrade',
+        'user_login', 'user_registration', 'api_request', 'page_view',
+        'button_click', 'form_submission', 'error',
+    }
+
     def post(self, request):
-        event_type = request.data.get('event_type', '')
-        event_data = request.data.get('data', {})
+        event_name = request.data.get('event_type', '') or request.data.get('event_name', '')
+        event_data = request.data.get('data', {}) or request.data.get('properties', {})
         user = request.user if request.user and request.user.is_authenticated else None
 
-        # Persist to AnalyticsEvent model if it exists
+        # Map arbitrary event names to a valid choice; default to 'api_request'
+        event_type_choice = event_name if event_name in self._VALID_EVENT_TYPES else 'api_request'
+
         try:
             from apps.analytics.models import AnalyticsEvent
             AnalyticsEvent.objects.create(
                 user=user,
-                event_type=event_type,
-                properties=event_data,
+                event_type=event_type_choice,
+                event_name=event_name[:100],  # model max_length=100
+                properties=event_data if isinstance(event_data, dict) else {},
             )
-        except Exception:
-            # Fallback: log to console (model may not exist yet)
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.info(f"Analytics Event: {event_type} from user {getattr(user, 'id', None)} with data: {event_data}")
+        except Exception as exc:
+            import logging as _log
+            _log.getLogger(__name__).warning(
+                f"Analytics track persist failed ({exc}): {event_name} user={getattr(user, 'id', None)}"
+            )
 
         return Response({
             'status': 'success',
             'message': 'Event tracked successfully',
-            'event_type': event_type,
+            'event_type': event_name,
             'user_id': getattr(user, 'id', None),
             'timestamp': timezone.now().isoformat(),
         }, status=status.HTTP_201_CREATED)

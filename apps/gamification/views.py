@@ -9,7 +9,7 @@ from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 
-from .models import Achievement, UserAchievement, DailyChallenge, UserDailyChallenge, CreditTransaction
+from .models import Achievement, UserAchievement, DailyChallenge, UserDailyChallenge, CreditTransaction, UserLevel
 from .serializers import (
     AchievementSerializer, UserAchievementSerializer, 
     DailyChallengeSerializer, CreditTransactionSerializer
@@ -318,26 +318,81 @@ class DailyChallengeView(APIView):
 
 class UserLevelView(APIView):
     """
-    User level and experience view
+    User level and experience — resolves against the UserLevel table.
+    Falls back to 100-XP-per-level formula when the table is empty.
     """
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request):
-        """Get user level information"""
         user = request.user
-        
-        # Calculate level based on experience (placeholder logic)
         experience = getattr(user, 'experience_points', 0)
-        level = max(1, experience // 100)  # 100 XP per level
-        next_level_xp = (level * 100) + 100
-        current_level_xp = experience - (level - 1) * 100
-        
+        user_level_number = getattr(user, 'level', 1)
+
+        # Try to resolve against the UserLevel ladder
+        try:
+            current_level_obj = UserLevel.objects.filter(
+                experience_required__lte=experience
+            ).order_by('-experience_required').first()
+
+            next_level_obj = UserLevel.objects.filter(
+                experience_required__gt=experience
+            ).order_by('experience_required').first()
+
+            if current_level_obj:
+                level_number = current_level_obj.level
+                level_name = current_level_obj.name
+                current_xp_floor = current_level_obj.experience_required
+                next_xp = next_level_obj.experience_required if next_level_obj else current_xp_floor + 500
+                xp_in_level = experience - current_xp_floor
+                xp_needed = next_xp - current_xp_floor
+                progress_pct = round((xp_in_level / xp_needed) * 100, 1) if xp_needed > 0 else 100.0
+                points_to_next = max(0, next_xp - experience)
+
+                # Collect benefits from next level
+                level_benefits = []
+                if next_level_obj:
+                    if getattr(next_level_obj, 'credits_reward', 0):
+                        level_benefits.append(f"{next_level_obj.credits_reward} bonus credits")
+                    if getattr(next_level_obj, 'title_reward', ''):
+                        level_benefits.append(f'Title: "{next_level_obj.title_reward}"')
+                    if getattr(next_level_obj, 'can_create_premium', False):
+                        level_benefits.append("Unlock premium templates")
+                    if getattr(next_level_obj, 'ai_requests_per_day', 0):
+                        level_benefits.append(f"{next_level_obj.ai_requests_per_day} AI requests/day")
+
+                return Response({
+                    'current_level': level_number,
+                    'level_name': level_name,
+                    'experience_points': experience,
+                    'current_level_progress': xp_in_level,
+                    'next_level_requirement': next_xp,
+                    'points_to_next_level': points_to_next,
+                    'progress_percentage': progress_pct,
+                    'level_benefits': level_benefits,
+                    'perks': {
+                        'max_templates': getattr(current_level_obj, 'max_templates', 10),
+                        'ai_requests_per_day': getattr(current_level_obj, 'ai_requests_per_day', 5),
+                        'can_create_premium': getattr(current_level_obj, 'can_create_premium', False),
+                    },
+                })
+        except Exception:
+            pass  # Fall through to formula-based fallback
+
+        # Formula fallback (100 XP per level)
+        level = max(1, user_level_number or (experience // 100 + 1))
+        xp_floor = (level - 1) * 100
+        next_level_xp = level * 100
+        xp_in_level = experience - xp_floor
         return Response({
             'current_level': level,
+            'level_name': f'Level {level}',
             'experience_points': experience,
-            'current_level_progress': current_level_xp,
+            'current_level_progress': xp_in_level,
             'next_level_requirement': next_level_xp,
-            'progress_percentage': (current_level_xp / 100) * 100
+            'points_to_next_level': max(0, next_level_xp - experience),
+            'progress_percentage': round((xp_in_level / 100) * 100, 1),
+            'level_benefits': [],
+            'perks': {'max_templates': 10, 'ai_requests_per_day': 5, 'can_create_premium': False},
         })
 
 
