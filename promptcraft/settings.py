@@ -66,6 +66,7 @@ TEMPLATES = [
 ]
 # Application definition - only include apps that exist
 DJANGO_APPS = [
+    "daphne",  # Must be first for ASGI/WebSocket support
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

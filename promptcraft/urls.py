@@ -115,18 +115,7 @@ urlpatterns = [
     path('socket.io/', SocketIOCompatibilityView.as_view(), name='socketio-compatibility'),
     path('ws/info/', WebSocketInfoView.as_view(), name='websocket-info'),
 
-    # Catch-all /ws/ routes — Heroku uses Gunicorn (WSGI), WebSockets are not
-    # supported.  Return a helpful JSON response directing the frontend to SSE.
-    re_path(r'^ws/(?P<path>.*)$', lambda request, path='': JsonResponse({
-        'error': 'WebSocket endpoints are not available on this deployment',
-        'message': 'This server uses HTTP/SSE. Use the REST API instead.',
-        'sse_endpoints': {
-            'optimization_stream': '/api/v2/ai/optimization/stream/',
-            'optimization': '/api/v2/ai/optimization/',
-            'deepseek_stream': '/api/v2/ai/deepseek/stream/',
-            'agent_optimize': '/api/v2/ai/agent/optimize/',
-        },
-    }, status=426)),  # 426 Upgrade Required
+    # WebSocket routes are now handled by Daphne/ASGI (see asgi.py routing)
     
     # API root
     path('api/', api_root, name='api-root'),
