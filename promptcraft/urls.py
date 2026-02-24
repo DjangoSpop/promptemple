@@ -21,9 +21,11 @@ except ImportError:
 # GraphQL optional
 try:
     from graphene_django.views import GraphQLView
+    from apps.prompt_history.schema import schema as graphql_schema
     GRAPHQL_AVAILABLE = True
 except ImportError:
     GRAPHQL_AVAILABLE = False
+    graphql_schema = None
 
 from django.views.generic import TemplateView
 from apps.core.views import HealthCheckView, health_simple, redis_health
@@ -141,9 +143,9 @@ if DRF_SPECTACULAR_AVAILABLE:
     ])
 
 # GraphQL endpoint (optional - requires graphene-django)
-if GRAPHQL_AVAILABLE:
+if GRAPHQL_AVAILABLE and graphql_schema:
     urlpatterns.extend([
-        path('api/graphql/', csrf_exempt(GraphQLView.as_view(graphiql=settings.DEBUG)), name='graphql'),
+        path('api/graphql/', csrf_exempt(GraphQLView.as_view(schema=graphql_schema, graphiql=settings.DEBUG)), name='graphql'),
     ])
 
 urlpatterns.extend([
