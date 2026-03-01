@@ -237,7 +237,39 @@ class Template(models.Model):
         default=True,
         help_text="Whether template is active"
     )
-    
+
+    # Monetization / freemium gating
+    is_premium_required = models.BooleanField(
+        default=False,
+        null=True,
+        blank=True,
+        help_text="Whether a premium subscription is required to use this template"
+    )
+    required_subscription = models.CharField(
+        max_length=20,
+        choices=[
+            ('free', 'Free'),
+            ('basic', 'Basic'),
+            ('premium', 'Premium'),
+            ('enterprise', 'Enterprise'),
+        ],
+        default='free',
+        null=True,
+        blank=True,
+        help_text="Minimum subscription tier required to access this template"
+    )
+    token_cost = models.PositiveIntegerField(
+        default=0,
+        null=True,
+        blank=True,
+        help_text="Credit cost deducted per use (0 = free)"
+    )
+    copy_limit_per_day = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Maximum number of copies per user per day; null means unlimited"
+    )
+
     # Localization support
     localizations = models.JSONField(
         default=dict, 
