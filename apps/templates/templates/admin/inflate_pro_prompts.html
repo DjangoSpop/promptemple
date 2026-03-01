@@ -1,0 +1,207 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Inflate Pro Prompt Library{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:templates_template_changelist' %}">Templates</a>
+  &rsaquo; Inflate Pro Prompt Library
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .inflate-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 24px;
+    max-width: 780px;
+  }
+  .inflate-card h2 { margin-top: 0; color: #1a1a2e; }
+  .stat-pill {
+    display: inline-block;
+    background: #e8f4fd;
+    color: #1a73e8;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .cat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 20px;
+  }
+  .cat-badge {
+    background: #f0f4ff;
+    border: 1px solid #c7d4ff;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #3d5a99;
+  }
+  .action-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .btn-primary {
+    background: #447e9b;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: #2b5c74; }
+  .btn-danger {
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-danger:hover { background: #96281c; }
+  .btn-secondary {
+    background: #6c757d;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .btn-secondary:hover { background: #545b62; }
+  .result-box {
+    background: #f6fff6;
+    border: 1px solid #82c382;
+    border-radius: 4px;
+    padding: 16px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 13px;
+    max-height: 340px;
+    overflow-y: auto;
+    margin-top: 20px;
+  }
+  .error-box {
+    background: #fff6f6;
+    border: 1px solid #e88;
+    border-radius: 4px;
+    padding: 16px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 340px;
+    overflow-y: auto;
+    margin-top: 20px;
+  }
+  .warning-banner {
+    background: #fff8e1;
+    border-left: 4px solid #f9a825;
+    padding: 12px 16px;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .select-field {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 220px;
+  }
+</style>
+
+<h1>🚀 Inflate Pro Prompt Library</h1>
+
+<div class="inflate-card">
+  <h2>Library Status</h2>
+  <div class="stat-pill">
+    {% if already_seeded > 0 %}
+      ✅  {{ already_seeded }} pro prompts already seeded
+    {% else %}
+      ⚠️  No pro prompts seeded yet
+    {% endif %}
+  </div>
+
+  <p style="color:#555; font-size:14px;">
+    This action seeds <strong>60 curated, professional plain-text prompts</strong> across
+    <strong>10 high-monetisation categories</strong> directly into the public Template library.
+    The Discover page uses these prompts. Running multiple times is safe — duplicates are skipped.
+  </p>
+
+  <strong style="font-size:13px;">Categories included:</strong>
+  <div class="cat-grid">
+    {% for cat in category_names %}
+      <span class="cat-badge">{{ cat }}</span>
+    {% endfor %}
+  </div>
+
+  <form method="post" id="inflate-form">
+    {% csrf_token %}
+
+    <label for="category-select" style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">
+      Filter by category (optional — leave blank for all):
+    </label>
+    <select name="category" id="category-select" class="select-field">
+      <option value="">— All categories —</option>
+      {% for cat in category_names %}
+        <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="action-row">
+      <button type="submit" name="action" value="seed" class="btn-primary">
+        ⬆️  Inflate Pro Library
+      </button>
+      <button type="submit" name="action" value="dry_run" class="btn-secondary">
+        👁  Dry Run (preview only)
+      </button>
+      {% if already_seeded > 0 %}
+        <button type="submit" name="action" value="clear" class="btn-danger"
+          onclick="return confirm('This will DELETE all {{ already_seeded }} seeded pro prompts and re-seed from scratch. Are you sure?')">
+          🗑  Clear &amp; Re-seed
+        </button>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% if result %}
+  <div class="inflate-card">
+    <h2>Result</h2>
+    <div class="result-box">{{ result }}</div>
+  </div>
+{% endif %}
+
+{% if error %}
+  <div class="inflate-card">
+    <h2>Error</h2>
+    <div class="error-box">{{ error }}</div>
+  </div>
+{% endif %}
+
+<div class="inflate-card">
+  <h2>📌 Notes</h2>
+  <ul style="font-size:13px; color:#444; line-height:1.8;">
+    <li>All seeded prompts are created under the system user <code>promptcraft_admin</code>.</li>
+    <li>All prompts are set <strong>public</strong> by default so they appear on the Discover page immediately.</li>
+    <li>The command uses <code>get_or_create(title, category)</code> — running it twice never creates duplicates.</li>
+    <li>Usage counts are pre-seeded (higher numbers simulate community engagement on first launch).</li>
+    <li>You can also run this from the terminal: <code>python manage.py inflate_pro_prompts [--dry-run] [--clear] [--category "Software Engineering"]</code></li>
+  </ul>
+</div>
+{% endblock %}

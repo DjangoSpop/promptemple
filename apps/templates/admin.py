@@ -211,10 +211,12 @@ class TemplateAdmin(admin.ModelAdmin):
         """Add custom admin URLs"""
         urls = super().get_urls()
         custom_urls = [
-            path('bulk-upload/', self.admin_site.admin_view(self.bulk_upload_view), 
+            path('bulk-upload/', self.admin_site.admin_view(self.bulk_upload_view),
                  name='templates_template_bulk_upload'),
             path('analytics/', self.admin_site.admin_view(self.analytics_view),
                  name='templates_template_analytics'),
+            path('inflate-pro-prompts/', self.admin_site.admin_view(self.inflate_pro_prompts_view),
+                 name='templates_template_inflate_pro'),
         ]
         return custom_urls + urls
     
@@ -439,11 +441,65 @@ class TemplateAdmin(admin.ModelAdmin):
         messages.success(request, f'Updated popularity scores for {count} templates')
     bulk_update_popularity.short_description = 'Update popularity scores'
     
+    # ------------------------------------------------------------------
+    # Inflate Pro Prompts admin view
+    # ------------------------------------------------------------------
+
+    def inflate_pro_prompts_view(self, request):
+        """Admin one-click inflate: seeds 60 pro prompts from inflate_pro_prompts command."""
+        from django.core.management import call_command
+        from io import StringIO
+        import traceback
+
+        result = None
+        error = None
+
+        if request.method == 'POST':
+            action = request.POST.get('action', 'seed')
+            dry_run = (action == 'dry_run')
+            clear = (action == 'clear')
+            category_filter = request.POST.get('category', '').strip() or None
+
+            out = StringIO()
+            try:
+                kwargs = {'stdout': out, 'stderr': out, 'dry_run': dry_run, 'clear': clear}
+                if category_filter:
+                    kwargs['category'] = category_filter
+                call_command('inflate_pro_prompts', **kwargs)
+                result = out.getvalue()
+                if not dry_run:
+                    if clear:
+                        messages.success(request, 'Pro prompt library cleared and re-seeded successfully.')
+                    else:
+                        messages.success(request, 'Pro prompt library inflated successfully.')
+            except Exception as exc:
+                error = traceback.format_exc()
+                messages.error(request, f'Error running inflate_pro_prompts: {exc}')
+
+        # Import here to avoid circular at module load
+        from apps.templates.management.commands.inflate_pro_prompts import CATEGORIES
+        category_names = list(CATEGORIES.keys())
+        total_count = Template.objects.filter(
+            performance_metrics__source='inflate_pro_prompts'
+        ).count()
+
+        context = {
+            'title': 'Inflate Pro Prompt Library',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'result': result,
+            'error': error,
+            'category_names': category_names,
+            'already_seeded': total_count,
+        }
+        return render(request, 'admin/templates/inflate_pro_prompts.html', context)
+
     def changelist_view(self, request, extra_context=None):
         """Add custom context to changelist"""
         extra_context = extra_context or {}
         extra_context['bulk_upload_url'] = reverse('admin:templates_template_bulk_upload')
         extra_context['analytics_url'] = reverse('admin:templates_template_analytics')
+        extra_context['inflate_pro_url'] = reverse('admin:templates_template_inflate_pro')
         return super().changelist_view(request, extra_context=extra_context)
 
 
