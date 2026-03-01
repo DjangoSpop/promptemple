@@ -1,0 +1,199 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Import Prompts from Markdown File{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:templates_template_changelist' %}">Templates</a>
+  &rsaquo; Import Prompts from Markdown File
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .import-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 24px;
+    margin-bottom: 24px;
+    max-width: 800px;
+  }
+  .import-card h2 { margin-top: 0; color: #1a1a2e; }
+  .field-row {
+    margin-bottom: 16px;
+  }
+  .field-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  .field-row input[type="file"] {
+    border: 2px dashed #aaa;
+    border-radius: 6px;
+    padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+    background: #f9f9f9;
+  }
+  .field-row input[type="text"] {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    width: 260px;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .checkbox-row label { font-weight: normal; color: #444; margin: 0; }
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover { background: #1558b0; }
+  .btn-secondary {
+    background: #f4f4f4;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 22px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: #e8e8e8; }
+  .output-box {
+    background: #1e1e2e;
+    color: #c5f0a4;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    padding: 16px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 20px;
+  }
+  .error-box {
+    background: #fff0f0;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    padding: 16px;
+    color: #721c24;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 20px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    text-align: center;
+    min-width: 100px;
+  }
+  .stat-found  { background: #e8f4fd; color: #1a73e8; }
+  .stat-create { background: #e6f4ea; color: #1e7e34; }
+  .stat-skip   { background: #fff8e1; color: #f57c00; }
+  .stat-error  { background: #fdecea; color: #c62828; }
+  .stat-dry    { background: #f3e5f5; color: #7b1fa2; }
+  .hint {
+    color: #888;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .divider { border: none; border-top: 1px solid #eee; margin: 20px 0; }
+</style>
+
+<div class="import-card">
+  <h2>📥 Import Prompts from Markdown File</h2>
+  <p>Upload any <code>.md</code> file from your computer — e.g., <code>ultimate_prompt_library.md</code>. The file will be parsed and prompts will be saved directly into the Template library.</p>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="dry_run" value="0" id="dry_run_input">
+
+    <div class="field-row">
+      <label for="md_file">Markdown File (.md)</label>
+      <input type="file" id="md_file" name="md_file" accept=".md,.markdown,.txt" required>
+      <div class="hint">Accepts .md / .markdown / .txt files. No size limit on server side.</div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="field-row">
+      <label for="author_username">Author Username</label>
+      <input type="text" id="author_username" name="author_username" value="admin">
+      <div class="hint">Will be created if it doesn't exist.</div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="make_public" name="make_public" value="1" checked>
+      <label for="make_public">Make imported prompts public</label>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="make_featured" name="make_featured" value="1">
+      <label for="make_featured">Mark as featured</label>
+    </div>
+
+    <div class="action-row">
+      <button type="submit" class="btn-primary" onclick="setDryRun(false)">⬆️ Import Now</button>
+      <button type="submit" class="btn-secondary" onclick="setDryRun(true)">🔍 Dry Run (Preview Only)</button>
+      <a href="{% url 'admin:templates_template_changelist' %}" class="btn-secondary" style="text-decoration:none;line-height:2;">← Back to Templates</a>
+    </div>
+  </form>
+
+  {% if stats %}
+  <div class="stats-row">
+    <div class="stat-box stat-found"><div style="font-size:11px;font-weight:400">Found</div>{{ stats.found }}</div>
+    <div class="stat-box stat-create"><div style="font-size:11px;font-weight:400">Created</div>{{ stats.created }}</div>
+    <div class="stat-box stat-skip"><div style="font-size:11px;font-weight:400">Skipped</div>{{ stats.skipped }}</div>
+    <div class="stat-box stat-error"><div style="font-size:11px;font-weight:400">Errors</div>{{ stats.errors }}</div>
+    {% if stats.dry_run %}<div class="stat-box stat-dry">DRY RUN</div>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="output-box">{{ result }}</div>
+  {% endif %}
+
+  {% if error %}
+  <div class="error-box">{{ error }}</div>
+  {% endif %}
+</div>
+
+<script>
+function setDryRun(isDry) {
+  document.getElementById('dry_run_input').value = isDry ? '1' : '0';
+}
+</script>
+{% endblock %}

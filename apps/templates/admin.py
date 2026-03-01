@@ -217,6 +217,8 @@ class TemplateAdmin(admin.ModelAdmin):
                  name='templates_template_analytics'),
             path('inflate-pro-prompts/', self.admin_site.admin_view(self.inflate_pro_prompts_view),
                  name='templates_template_inflate_pro'),
+            path('import-md-file/', self.admin_site.admin_view(self.import_md_file_view),
+                 name='templates_template_import_md'),
         ]
         return custom_urls + urls
     
@@ -494,12 +496,98 @@ class TemplateAdmin(admin.ModelAdmin):
         }
         return render(request, 'admin/templates/inflate_pro_prompts.html', context)
 
+    # ------------------------------------------------------------------
+    # Import MD File admin view
+    # ------------------------------------------------------------------
+
+    def import_md_file_view(self, request):
+        """Admin view to upload a .md file and ingest its prompts."""
+        import tempfile
+        import os
+        import traceback
+
+        result = None
+        error = None
+        stats = None
+
+        if request.method == 'POST' and request.FILES.get('md_file'):
+            uploaded = request.FILES['md_file']
+            dry_run = request.POST.get('dry_run') == '1'
+            make_public = request.POST.get('make_public', '1') == '1'
+            make_featured = request.POST.get('make_featured') == '1'
+            author_username = request.POST.get('author_username', 'admin').strip() or 'admin'
+
+            # Write upload to a named temp file so ingestion service can open it
+            suffix = os.path.splitext(uploaded.name)[1] or '.md'
+            try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix, mode='wb') as tmp:
+                    for chunk in uploaded.chunks():
+                        tmp.write(chunk)
+                    tmp_path = tmp.name
+
+                manager = MarkdownIngestionManager()
+                prompts = manager.extractor.extract_prompts_from_md(tmp_path)
+
+                lines = [f'Found {len(prompts)} prompt(s) in "{uploaded.name}".']
+
+                if dry_run:
+                    for i, p in enumerate(prompts[:20], 1):
+                        lines.append(f'  [{i}] {p.get("title", "(no title)")} — category: {p.get("category", "-")}')
+                    if len(prompts) > 20:
+                        lines.append(f'  … and {len(prompts) - 20} more (truncated)')
+                    result = '\n'.join(lines)
+                    stats = {'found': len(prompts), 'created': 0, 'skipped': 0, 'errors': 0, 'dry_run': True}
+                else:
+                    # Apply visibility overrides
+                    for p in prompts:
+                        p['is_public'] = make_public
+                        p['is_featured'] = make_featured
+
+                    author = self._get_author(author_username)
+                    manager.ingestion_service.default_author = author
+
+                    res = manager.ingestion_service.bulk_ingest_prompts(prompts)
+                    created = res.get('successfully_created', 0)
+                    skipped = res.get('skipped_duplicates', 0)
+                    errors = res.get('errors', 0)
+
+                    lines.append(f'Created: {created}  |  Skipped (duplicates): {skipped}  |  Errors: {errors}')
+                    result = '\n'.join(lines)
+                    stats = {'found': len(prompts), 'created': created, 'skipped': skipped, 'errors': errors, 'dry_run': False}
+
+                    if created:
+                        messages.success(request, f'Imported {created} prompt(s) from "{uploaded.name}".')
+                    if errors:
+                        messages.warning(request, f'{errors} prompt(s) failed to import.')
+
+            except Exception as exc:
+                error = traceback.format_exc()
+                messages.error(request, f'Error processing file: {exc}')
+            finally:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+        elif request.method == 'POST':
+            messages.error(request, 'No file uploaded. Please select a .md file.')
+
+        context = {
+            'title': 'Import Prompts from Markdown File',
+            'opts': self.model._meta,
+            'has_change_permission': True,
+            'result': result,
+            'error': error,
+            'stats': stats,
+        }
+        return render(request, 'admin/templates/import_md_file.html', context)
+
     def changelist_view(self, request, extra_context=None):
         """Add custom context to changelist"""
         extra_context = extra_context or {}
         extra_context['bulk_upload_url'] = reverse('admin:templates_template_bulk_upload')
         extra_context['analytics_url'] = reverse('admin:templates_template_analytics')
         extra_context['inflate_pro_url'] = reverse('admin:templates_template_inflate_pro')
+        extra_context['import_md_url'] = reverse('admin:templates_template_import_md')
         return super().changelist_view(request, extra_context=extra_context)
 
 
