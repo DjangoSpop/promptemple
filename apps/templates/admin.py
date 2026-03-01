@@ -237,7 +237,7 @@ class TemplateAdmin(admin.ModelAdmin):
             'opts': self.model._meta,
             'has_change_permission': True,
         }
-        return render(request, 'admin/templates/bulk_upload.html', context)
+        return render(request, 'admin/bulk_upload.html', context)
     
     def _process_bulk_upload(self, request, form):
         """Process the bulk upload form"""
@@ -354,7 +354,7 @@ class TemplateAdmin(admin.ModelAdmin):
             'top_templates': top_templates,
         }
         
-        return render(request, 'admin/templates/analytics.html', context)
+        return render(request, 'admin/analytics.html', context)
     
     def save_model(self, request, obj, form, change):
         """Custom save with markdown processing"""
@@ -494,7 +494,7 @@ class TemplateAdmin(admin.ModelAdmin):
             'category_names': category_names,
             'already_seeded': total_count,
         }
-        return render(request, 'admin/templates/inflate_pro_prompts.html', context)
+        return render(request, 'admin/inflate_pro_prompts.html', context)
 
     # ------------------------------------------------------------------
     # Import MD File admin view
@@ -579,7 +579,7 @@ class TemplateAdmin(admin.ModelAdmin):
             'error': error,
             'stats': stats,
         }
-        return render(request, 'admin/templates/import_md_file.html', context)
+        return render(request, 'admin/import_md_file.html', context)
 
     def changelist_view(self, request, extra_context=None):
         """Add custom context to changelist"""
