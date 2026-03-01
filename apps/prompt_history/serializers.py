@@ -126,6 +126,42 @@ class SavedPromptListSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'use_count', 'created_at', 'updated_at']
 
 
+# ==================== Discover Serializer ====================
+
+class DiscoverSerializer(serializers.Serializer):
+    """
+    Read-only serializer that normalises a Template instance into the
+    SavedPrompt wire shape expected by the Discover page.
+
+    Maps:
+        Template.id                 → id
+        Template.title              → title
+        Template.template_content   → content
+        Template.description        → description
+        Template.category.name      → category  (flat string)
+        Template.tags               → tags
+        Template.usage_count        → use_count
+        Template.is_public          → is_public
+    """
+    id = serializers.UUIDField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    content = serializers.SerializerMethodField()
+    description = serializers.CharField(read_only=True)
+    category = serializers.SerializerMethodField()
+    tags = serializers.ListField(child=serializers.CharField(), read_only=True)
+    use_count = serializers.SerializerMethodField()
+    is_public = serializers.BooleanField(read_only=True)
+
+    def get_content(self, obj):
+        return obj.template_content
+
+    def get_category(self, obj):
+        return obj.category.name if obj.category else ''
+
+    def get_use_count(self, obj):
+        return obj.usage_count
+
+
 # ==================== PromptIteration Serializers ====================
 
 class PromptIterationSerializer(serializers.ModelSerializer):

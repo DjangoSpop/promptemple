@@ -62,6 +62,11 @@ def api_root(request):
             'core': '/api/v2/core/',
             'research': '/api/v2/research/',
         },
+        'discover_endpoints': {
+            'discover': '/api/v2/history/saved-prompts/discover/',
+            'categories': '/api/v2/history/saved-prompts/categories/',
+            'copy_from_template': '/api/v2/history/saved-prompts/copy-from-template/',
+        },
         'template_endpoints': {
             'list': '/api/v2/templates/',
             'featured': '/api/v2/templates/featured/',

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action, permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum
@@ -11,6 +11,7 @@ from .models import PromptHistory, SavedPrompt, PromptIteration, ConversationThr
 from .serializers import (
     PromptHistorySerializer, PromptHistoryCreateSerializer, PromptHistoryUpdateSerializer,
     SavedPromptSerializer, SavedPromptCreateSerializer, SavedPromptUpdateSerializer, SavedPromptListSerializer,
+    DiscoverSerializer,
     PromptIterationSerializer, PromptIterationCreateSerializer,
     ConversationThreadSerializer, ConversationThreadCreateSerializer
 )
@@ -300,6 +301,167 @@ class SavedPromptViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = SavedPromptListSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    # ------------------------------------------------------------------
+    # Discover: browse public Templates in SavedPrompt wire shape
+    # ------------------------------------------------------------------
+
+    @extend_schema(
+        summary="Discover public prompts",
+        description=(
+            "Browse the public Template library. Returns prompts normalised to "
+            "the SavedPrompt shape so the Discover page can render them directly. "
+            "Supports ?search=, ?category=, ?sort_by=(use_count|created_at), "
+            "?sort_order=(asc|desc)."
+        ),
+        parameters=[
+            OpenApiParameter(name='search',   description='Full-text search across title, description, tags', required=False, type=str),
+            OpenApiParameter(name='category', description='Filter by category name (case-insensitive)', required=False, type=str),
+            OpenApiParameter(name='sort_by',  description='Field to sort by: use_count (default) or created_at', required=False, type=str),
+            OpenApiParameter(name='sort_order', description='asc or desc (default)', required=False, type=str),
+        ] if OpenApiParameter else [],
+        tags=['Discover'],
+    )
+    @action(detail=False, methods=['get'], url_path='discover', permission_classes=[AllowAny])
+    def discover(self, request):
+        """Browse public Templates normalised to the SavedPrompt wire shape."""
+        from apps.templates.models import Template
+        from django.db.models import Q
+
+        qs = (
+            Template.objects
+            .filter(is_public=True, is_active=True)
+            .select_related('category')
+        )
+
+        # --- search ---
+        search = request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
+                | Q(tags__icontains=search)
+            )
+
+        # --- category filter ---
+        category = request.query_params.get('category', '').strip()
+        if category:
+            qs = qs.filter(category__name__iexact=category)
+
+        # --- sorting ---
+        sort_by = request.query_params.get('sort_by', 'use_count')
+        sort_order = request.query_params.get('sort_order', 'desc')
+        sort_field_map = {
+            'use_count':  'usage_count',
+            'created_at': 'created_at',
+            'title':      'title',
+        }
+        db_field = sort_field_map.get(sort_by, 'usage_count')
+        if sort_order == 'asc':
+            qs = qs.order_by(db_field)
+        else:
+            qs = qs.order_by(f'-{db_field}')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = DiscoverSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = DiscoverSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    # ------------------------------------------------------------------
+    # Copy from template → create private SavedPrompt in user's library
+    # ------------------------------------------------------------------
+
+    @extend_schema(
+        summary="Copy template to personal library",
+        description=(
+            "Create a private SavedPrompt in the authenticated user's library "
+            "from a public Template. Increments the template's usage_count."
+        ),
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {'template_id': {'type': 'string', 'format': 'uuid'}},
+                'required': ['template_id'],
+            }
+        },
+        responses={201: SavedPromptSerializer},
+        tags=['Discover'],
+    )
+    @action(detail=False, methods=['post'], url_path='copy-from-template', permission_classes=[IsAuthenticated])
+    def copy_from_template(self, request):
+        """Copy a public Template into the user's personal SavedPrompt library."""
+        from apps.templates.models import Template
+        from django.db.models import F
+        from django.db import transaction
+
+        template_id = request.data.get('template_id')
+        if not template_id:
+            return Response({'detail': 'template_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            template = Template.objects.select_related('category').get(
+                pk=template_id,
+                is_public=True,
+                is_active=True,
+            )
+        except Template.DoesNotExist:
+            return Response({'detail': 'Template not found or is not publicly available.'}, status=status.HTTP_404_NOT_FOUND)
+
+        with transaction.atomic():
+            # Increment the source template's usage counter
+            Template.objects.filter(pk=template.pk).update(usage_count=F('usage_count') + 1)
+
+            # Build a unique title if the user already has a copy
+            base_title = template.title
+            title = base_title
+            counter = 1
+            while SavedPrompt.objects.filter(user=request.user, title=title, is_deleted=False).exists():
+                title = f"{base_title} (Copy {counter})"
+                counter += 1
+
+            saved = SavedPrompt.objects.create(
+                user=request.user,
+                title=title,
+                content=template.template_content,
+                description=template.description or '',
+                category=template.category.name if template.category else '',
+                tags=list(template.tags) if template.tags else [],
+                is_public=False,
+                metadata={'source_template_id': str(template.pk)},
+            )
+
+        serializer = SavedPromptSerializer(saved, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # ------------------------------------------------------------------
+    # Categories: flat list of TemplateCategory names for Discover filter
+    # ------------------------------------------------------------------
+
+    @extend_schema(
+        summary="List discoverable categories",
+        description="Returns a flat array of category names that have at least one active public template.",
+        tags=['Discover'],
+    )
+    @action(detail=False, methods=['get'], url_path='categories', permission_classes=[AllowAny])
+    def categories(self, request):
+        """Flat list of TemplateCategory names powering the Discover category filter."""
+        from apps.templates.models import TemplateCategory
+
+        names = (
+            TemplateCategory.objects
+            .filter(
+                is_active=True,
+                templates__is_public=True,
+                templates__is_active=True,
+            )
+            .distinct()
+            .order_by('order', 'name')
+            .values_list('name', flat=True)
+        )
+        return Response(list(names))
 
     @action(detail=False, methods=['get'], url_path='stats')
     def stats(self, request):
