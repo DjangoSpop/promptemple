@@ -165,6 +165,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+    'chrome-extension://olojhcohjhnhjnemhpgjiammpkeincon',
 ]
 
 # ============================================
@@ -173,6 +174,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Handles CORS between:
 #   - Web app:   https://www.prompt-temple.com  ->  https://api.prompt-temple.com
 #   - Extension: chrome-extension://bcopclpof... ->  https://api.prompt-temple.com
+#   - Extension: chrome-extension://olojhcohj... ->  https://api.prompt-temple.com
 #   - Dev:       http://localhost:3000           ->  http://localhost:8000
 # ============================================
 
@@ -189,6 +191,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://prompt-temple-2777469a4e35.herokuapp.com',
     # --- Chrome Extension (Manifest V3) ---
     'chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp',
+    'chrome-extension://olojhcohjhnhjnemhpgjiammpkeincon',
     # --- Local development ---
     'http://localhost:3000',
     'http://localhost:3001',
@@ -201,7 +204,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     # Any Heroku review app for this project
     r'^https://prompt-temple.*\.herokuapp\.com$',
     # Any Chrome extension using chromiumapp.org for OAuth redirects
-    r'^chrome-extension://[a-z]+$',
+    r'^chrome-extension://[a-z0-9]+$',
 ]
 
 # Allow credentials (cookies, Authorization header) in cross-origin requests

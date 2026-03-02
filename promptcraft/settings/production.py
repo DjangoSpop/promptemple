@@ -229,6 +229,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://api.prompt-temple.com",
     # Chrome extension
     "chrome-extension://bcopclpofnaghlkpeilijadlbnnfabpp",
+    "chrome-extension://olojhcohjhnhjnemhpgjiammpkeincon",
     # Local development (for testing - REMOVE in strict production!)
     "http://localhost:3000",
     "http://localhost:3001",
